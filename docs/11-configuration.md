@@ -109,8 +109,11 @@ TRUST_PROXY=loopback
 FRONTEND_URL=http://localhost:3000
 # Public sign-up (POST /v1/auth/register)
 REGISTRATION_ENABLED=true
-# console (dev: prints emails, links included), memory (tests), disabled (production for now)
+# smtp (real delivery), console (dev: prints emails), memory (tests), disabled
 MAIL_TRANSPORT=console
+# For MAIL_TRANSPORT=smtp: smtp://user:pass@host:587 (STARTTLS) or smtps://…:465 (TLS)
+# SMTP_URL=smtp://localhost:1025
+# MAIL_FROM=Boilerplate <no-reply@localhost>
 ```
 
 ## Feature flags

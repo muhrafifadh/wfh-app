@@ -24,7 +24,7 @@
       {
         "patterns": [
           {
-            "group": ["../*"],
+            "group": ["../*", "../**"],
             "message": "Use the @/ alias instead of ../ imports."
           }
         ]

@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import { PinoLogger } from "nestjs-pino";
 
 import { AppConfig } from "@/config/config.module.js";
 import { MailService } from "@/infra/mail/mail.service.js";
@@ -19,7 +20,10 @@ export class PasswordResetService {
     private readonly prisma: PrismaService,
     private readonly mail: MailService,
     private readonly config: AppConfig,
-  ) {}
+    private readonly logger: PinoLogger,
+  ) {
+    this.logger.setContext(PasswordResetService.name);
+  }
 
   /** Always succeeds from the caller's view, so it can't reveal which emails exist. */
   async request(email: string): Promise<void> {
@@ -39,15 +43,21 @@ export class PasswordResetService {
 
     const link = new URL("/reset-password", this.config.get("FRONTEND_URL"));
     link.searchParams.set("token", token);
-    await this.mail.send({
-      to: email,
-      subject: "Reset your password",
-      text: [
-        "Someone asked to reset the password for this account.",
-        `Reset it here (valid for 30 minutes): ${link.toString()}`,
-        "If it wasn't you, ignore this email: your password stays the same.",
-      ].join("\n\n"),
-    });
+    try {
+      await this.mail.send({
+        to: email,
+        subject: "Reset your password",
+        text: [
+          "Someone asked to reset the password for this account.",
+          `Reset it here (valid for 30 minutes): ${link.toString()}`,
+          "If it wasn't you, ignore this email: your password stays the same.",
+        ].join("\n\n"),
+      });
+    } catch (error) {
+      // Still answer 202: an error only for existing accounts would reveal which emails exist.
+      // Log the user id and error, never the message (it holds the reset token).
+      this.logger.error({ err: error, userId: user.id }, "Password reset email failed");
+    }
   }
 
   /** Sets the new password and signs the user out everywhere. */

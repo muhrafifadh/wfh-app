@@ -33,10 +33,14 @@ export const envSchema = z
     REGISTRATION_ENABLED: flag.default(false),
 
     /**
-     * console: prints emails, links included (development only).
-     * memory: keeps them for tests. disabled: drops them (until SMTP is added).
+     * smtp: real delivery through SMTP_URL. console: prints emails, links
+     * included (development only). memory: keeps them for tests. disabled: drops them.
      */
-    MAIL_TRANSPORT: z.enum(["console", "memory", "disabled"]).default("console"),
+    MAIL_TRANSPORT: z.enum(["smtp", "console", "memory", "disabled"]).default("console"),
+    /** smtp://user:pass@host:587 (STARTTLS) or smtps://user:pass@host:465 (TLS). */
+    SMTP_URL: z.url({ protocol: /^smtps?$/ }).optional(),
+    /** Sender, e.g. "Boilerplate <no-reply@example.com>". */
+    MAIL_FROM: z.string().min(3).optional(),
     // Who may set X-Forwarded-For (docs/13-security.md). Parsed for Express "trust proxy".
     TRUST_PROXY: z
       .string()
@@ -50,10 +54,20 @@ export const envSchema = z
         }
       }),
   })
-  .refine((env) => env.NODE_ENV !== "production" || env.MAIL_TRANSPORT === "disabled", {
-    // console and memory would print or keep reset links: never in production
-    message: "MAIL_TRANSPORT must be 'disabled' in production until a real transport exists.",
-    path: ["MAIL_TRANSPORT"],
+  .refine(
+    (env) =>
+      env.NODE_ENV !== "production" ||
+      env.MAIL_TRANSPORT === "smtp" ||
+      env.MAIL_TRANSPORT === "disabled",
+    {
+      // console and memory would print or keep reset links: never in production
+      message: "MAIL_TRANSPORT must be 'smtp' or 'disabled' in production.",
+      path: ["MAIL_TRANSPORT"],
+    },
+  )
+  .refine((env) => env.MAIL_TRANSPORT !== "smtp" || (env.SMTP_URL && env.MAIL_FROM), {
+    message: "MAIL_TRANSPORT=smtp needs SMTP_URL and MAIL_FROM.",
+    path: ["SMTP_URL"],
   });
 
 export type Env = z.infer<typeof envSchema>;

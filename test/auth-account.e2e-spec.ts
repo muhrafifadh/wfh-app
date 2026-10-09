@@ -7,6 +7,7 @@ import { MemoryMailer } from "@/infra/mail/mailers.js";
 import { PrismaService } from "@/infra/prisma/prisma.service.js";
 
 import { createTestApp, createUser, resetDatabase } from "./helpers.js";
+import { decodeBody, startSmtpTestServer } from "./support/smtp-test-server.js";
 
 const NEW_PASSWORD = "a-brand-new-long-password";
 
@@ -208,6 +209,54 @@ describe("Registration switched off", () => {
         })
         .expect(404);
       expect(res.body.error.code).toBe("NOT_FOUND");
+    } finally {
+      await app.close();
+    }
+  });
+});
+
+describe("Password reset over SMTP", () => {
+  const smtpConfig = (url: string) => ({
+    MAIL_TRANSPORT: "smtp" as const,
+    SMTP_URL: url,
+    MAIL_FROM: "Boilerplate <no-reply@example.test>",
+  });
+
+  it("delivers the reset email through the SMTP server", async () => {
+    const smtp = await startSmtpTestServer();
+    const app = await createTestApp([], { config: smtpConfig(smtp.url) });
+    try {
+      await resetDatabase(app);
+      const user = await createUser(app);
+
+      await request(app.getHttpServer())
+        .post("/v1/auth/password-reset/request")
+        .send({ email: user.email })
+        .expect(202);
+
+      expect(smtp.received).toHaveLength(1);
+      expect(smtp.received[0]?.to).toEqual([user.email]);
+      expect(decodeBody(smtp.received[0]?.raw ?? "")).toMatch(
+        /http:\/\/localhost:3000\/reset-password\?token=[\w-]{40,}/,
+      );
+    } finally {
+      await app.close();
+      await smtp.close();
+    }
+  });
+
+  it("still answers 202 when SMTP is down, so it can't reveal which emails exist", async () => {
+    const smtp = await startSmtpTestServer();
+    await smtp.close();
+    const app = await createTestApp([], { config: smtpConfig(smtp.url) });
+    try {
+      await resetDatabase(app);
+      const user = await createUser(app);
+
+      await request(app.getHttpServer())
+        .post("/v1/auth/password-reset/request")
+        .send({ email: user.email })
+        .expect(202);
     } finally {
       await app.close();
     }

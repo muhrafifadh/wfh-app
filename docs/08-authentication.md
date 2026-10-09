@@ -100,7 +100,16 @@ export class JwtAuthGuard implements CanActivate {
 - Reset and verification tokens are random, single-use, stored **hashed**, and expire (reset: 30 min, verification: 24 h). Requesting a new reset link retires older unused ones, so only the newest link works.
 - Requesting a reset always returns `202`, whether or not the email exists.
 - A successful reset revokes every session.
-- **Email goes through `MailService`** (`infra/mail`), picked by `MAIL_TRANSPORT`: `console` prints emails, links included (development only), `memory` keeps them for tests, and `disabled` drops them. Production refuses `console` and `memory`, and will need a real transport (SMTP or a provider) before reset emails can be delivered.
+- **Email goes through `MailService`** (`infra/mail`), picked by `MAIL_TRANSPORT`:
+  - `smtp`: real delivery via nodemailer (`SMTP_URL`, `MAIL_FROM`). Works with any provider's SMTP endpoint. Timeouts: 10 s to connect, 20 s per socket.
+  - `console`: prints emails, links included (development only).
+  - `memory`: keeps them for tests.
+  - `disabled`: drops them.
+
+  Production only allows `smtp` or `disabled`.
+
+- **A failed reset email doesn't change the response.** The request still returns `202`, otherwise errors would reveal which emails exist. The failure is logged with the user id, never the message body, which holds the token. _Follow-up:_ send through a queue with retries ([15](15-background-jobs.md)).
+- **Local inbox:** `docker compose --profile mail up -d` starts Mailpit (UI on http://localhost:8025). Then set `MAIL_TRANSPORT=smtp`, `SMTP_URL=smtp://localhost:1025`, and `MAIL_FROM`.
 - Email verification is _not built yet_.
 
 ## Don't

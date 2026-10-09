@@ -17,6 +17,25 @@ describe("envSchema", () => {
     expect(result.success).toBe(false);
   });
 
+  it("accepts MAIL_TRANSPORT=smtp in production with a URL and sender", () => {
+    const result = envSchema.safeParse({
+      ...base,
+      NODE_ENV: "production",
+      MAIL_TRANSPORT: "smtp",
+      SMTP_URL: "smtps://user:pass@smtp.example.com:465",
+      MAIL_FROM: "Boilerplate <no-reply@example.com>",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("requires SMTP_URL and MAIL_FROM for MAIL_TRANSPORT=smtp", () => {
+    expect(envSchema.safeParse({ ...base, MAIL_TRANSPORT: "smtp" }).success).toBe(false);
+    expect(
+      envSchema.safeParse({ ...base, MAIL_TRANSPORT: "smtp", SMTP_URL: "https://smtp.example.com" })
+        .success,
+    ).toBe(false);
+  });
+
   it("accepts MAIL_TRANSPORT=disabled in production", () => {
     const result = envSchema.safeParse({
       ...base,
