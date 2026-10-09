@@ -71,5 +71,10 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: openapi.json matches the code (run `pnpm openapi` and commit if this fails)
+        run: |
+          node dist/scripts/export-openapi.js
+          git diff --exit-code openapi.json
+
       - name: Audit production dependencies
         run: pnpm audit --prod --audit-level high

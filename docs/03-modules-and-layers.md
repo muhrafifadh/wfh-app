@@ -35,14 +35,14 @@ export class InvoicesController {
 
   @Post()
   @RequirePermissions("invoice:create")
-  @ZodSerializerDto(InvoiceResponse)
+  @ZodResponse({ status: 200, type: InvoiceResponse })
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateInvoiceDto) {
     return this.invoices.create(user, dto);
   }
 
   @Get(":id")
   @RequirePermissions("invoice:read")
-  @ZodSerializerDto(InvoiceResponse)
+  @ZodResponse({ status: 200, type: InvoiceResponse })
   findOne(@CurrentUser() user: AuthUser, @Param("id", ParseUUIDPipe) id: string) {
     return this.invoices.findOne(user, id);
   }

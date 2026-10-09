@@ -5,7 +5,7 @@ DTOs are written as **Zod schemas** with [`nestjs-zod`](https://github.com/BenLo
 ## Rules
 
 - **Every body, query, and param input has a DTO.** The global `ZodValidationPipe` (registered as `APP_PIPE`) validates them before the controller runs.
-- **Every response goes through a response DTO** (`@ZodSerializerDto(...)`). The global `ZodSerializerInterceptor` removes any field not in the schema, so internal fields can't leak even if the service returns a whole Prisma row.
+- **Every response goes through a response DTO** (`@ZodResponse({ type })`, which also documents it in `openapi.json`). The global `ZodSerializerInterceptor` removes any field not in the schema, so internal fields can't leak even if the service returns a whole Prisma row.
 - **Input schemas are strict:** `z.strictObject(...)`. Requests with unknown keys are rejected, which stops clients from setting fields they shouldn't (mass assignment).
 - **Convert and clean values in the schema:** `.trim()` on strings, `.toLowerCase()` on emails, `z.coerce.number()` for query params.
 - **Limit everything:** max string lengths, max array sizes, numeric ranges, and `pageSize` ≤ 100.

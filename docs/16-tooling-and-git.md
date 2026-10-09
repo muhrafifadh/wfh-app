@@ -46,6 +46,7 @@ pnpm db:migrate     # prisma migrate dev (then pnpm db:generate: Prisma 7 no lon
 pnpm db:deploy      # prisma migrate deploy (CI / prod)
 pnpm db:seed        # prisma db seed
 pnpm db:studio      # prisma studio
+pnpm openapi        # regenerate openapi.json (the API contract) after API changes
 ```
 
 ## CI

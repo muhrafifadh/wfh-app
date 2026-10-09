@@ -9,7 +9,7 @@ import {
 } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
 import type { Request } from "express";
-import { ZodSerializerDto } from "nestjs-zod";
+import { ZodResponse } from "nestjs-zod";
 
 import { Authenticated } from "@/common/decorators/authenticated.decorator.js";
 import { CurrentUser } from "@/common/decorators/current-user.decorator.js";
@@ -45,7 +45,7 @@ export class AuthController {
   @Post("register")
   @Public()
   @Throttle({ default: { limit: 3, ttl: 60 * 60_000 } })
-  @ZodSerializerDto(TokenPairResponse)
+  @ZodResponse({ status: 201, type: TokenPairResponse })
   @ApiConflictResponse({ description: "EMAIL_TAKEN" })
   register(@Body() dto: RegisterDto, @Req() req: Request) {
     return this.auth.register(dto, clientInfo(req));
@@ -57,7 +57,7 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 60_000 }, perIp: { limit: 20, ttl: 60_000 } })
   @ThrottleKey("email")
   @HttpCode(HttpStatus.OK)
-  @ZodSerializerDto(TokenPairResponse)
+  @ZodResponse({ status: 200, type: TokenPairResponse })
   @ApiUnauthorizedResponse({ description: "INVALID_CREDENTIALS" })
   login(@Body() dto: LoginDto, @Req() req: Request) {
     return this.auth.login(dto, clientInfo(req));
@@ -67,7 +67,7 @@ export class AuthController {
   @Public()
   @Throttle({ default: { limit: 30, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
-  @ZodSerializerDto(TokenPairResponse)
+  @ZodResponse({ status: 200, type: TokenPairResponse })
   @ApiUnauthorizedResponse({ description: "INVALID_REFRESH_TOKEN or REFRESH_TOKEN_REUSED" })
   refresh(@Body() dto: RefreshDto, @Req() req: Request) {
     return this.auth.refresh(dto.refreshToken, clientInfo(req));
@@ -112,7 +112,7 @@ export class AuthController {
   @Get("me")
   @Authenticated()
   @ApiBearerAuth()
-  @ZodSerializerDto(MeResponse)
+  @ZodResponse({ status: 200, type: MeResponse })
   @ApiUnauthorizedResponse({ description: "UNAUTHENTICATED or TOKEN_EXPIRED" })
   me(@CurrentUser() user: AuthUser) {
     return this.auth.me(user);

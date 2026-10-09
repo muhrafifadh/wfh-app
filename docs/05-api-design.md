@@ -86,11 +86,14 @@ Every error has the same body ([10](10-error-handling.md)):
 
 The frontend uses `code` to decide what to do, and `message` to show the user. **Codes never change once released.** Messages can be reworded.
 
-## Documentation
+## Documentation & the contract file
 
-- **OpenAPI/Swagger is generated** from controllers and Zod DTOs, and served at `/docs` (outside production).
-- **Every endpoint has `@ApiTags`, a summary, and documented error responses** (`@ApiNotFoundResponse()`, etc.).
-- If you change the contract, mention it in the PR description and link the matching frontend PR.
+- **OpenAPI is generated** from controllers and Zod DTOs, served at `/docs` outside production, and **committed as `openapi.json`**.
+- **`openapi.json` is the contract.** The frontend generates its TypeScript types from it, and its type check fails when its Zod schemas don't match.
+- **After any API change, run `pnpm openapi` and commit the result.** CI regenerates the file and fails if it differs from the committed one.
+- **Document every response with `@ZodResponse({ status, type })`.** It filters the response, puts its shape in the spec, and type-checks the handler's return value. Don't use `@ZodSerializerDto`: it skips the spec.
+- **Every endpoint has `@ApiTags` and documented error responses** (`@ApiNotFoundResponse()`, …). The shared error body is the `ErrorResponse` schema.
+- If you change the contract, say so in the PR description and link the matching frontend PR.
 
 ## Don't
 

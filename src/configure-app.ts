@@ -1,12 +1,11 @@
-import { RequestMethod } from "@nestjs/common";
 import type { NestExpressApplication } from "@nestjs/platform-express";
-import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import { SwaggerModule } from "@nestjs/swagger";
 
 import helmet from "helmet";
 import { Logger } from "nestjs-pino";
-import { cleanupOpenApiDoc } from "nestjs-zod";
 
 import { AppConfig } from "@/config/config.module.js";
+import { applyGlobalPrefix, buildOpenApiDocument } from "@/openapi.js";
 
 /**
  * Everything that makes the HTTP app behave like production.
@@ -16,12 +15,7 @@ export function configureApp(app: NestExpressApplication): NestExpressApplicatio
   const config = app.get(AppConfig);
 
   app.useLogger(app.get(Logger));
-  app.setGlobalPrefix("v1", {
-    exclude: [
-      { path: "health/live", method: RequestMethod.GET },
-      { path: "health/ready", method: RequestMethod.GET },
-    ],
-  });
+  applyGlobalPrefix(app);
 
   // docs/13-security.md
   app.use(helmet());
@@ -32,11 +26,7 @@ export function configureApp(app: NestExpressApplication): NestExpressApplicatio
   app.enableShutdownHooks();
 
   if (!config.isProduction) {
-    const document = SwaggerModule.createDocument(
-      app,
-      new DocumentBuilder().setTitle("API").setVersion("1").addBearerAuth().build(),
-    );
-    SwaggerModule.setup("docs", app, cleanupOpenApiDoc(document));
+    SwaggerModule.setup("docs", app, buildOpenApiDocument(app));
   }
 
   return app;

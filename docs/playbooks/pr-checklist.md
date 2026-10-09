@@ -13,7 +13,7 @@ Go through this list before you request a review. Reviewers check the same list.
 - [ ] Endpoints follow the URL, status code, and pagination conventions ([05](../05-api-design.md)).
 - [ ] Every input has a strict Zod DTO. Every response has a response DTO ([06](../06-validation-and-dtos.md)).
 - [ ] Swagger docs are complete (tags, summaries, error responses).
-- [ ] **If the contract changed:** the description says so, and links the frontend PR.
+- [ ] **If the contract changed:** `pnpm openapi` was run and `openapi.json` committed; the description says so, and links the frontend PR (which regenerates its types).
 
 ## Security
 

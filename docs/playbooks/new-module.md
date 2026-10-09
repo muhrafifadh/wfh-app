@@ -53,7 +53,7 @@ You can create the skeleton with `pnpm nest g resource modules/invoices --no-spe
 
 ## 8. Controller: `<m>.controller.ts`
 
-- [ ] `@Controller("invoices")`, `@ApiTags`, and on every route: `@RequirePermissions`, `@ZodSerializerDto`, and the documented error responses.
+- [ ] `@Controller("invoices")`, `@ApiTags`, and on every route: `@RequirePermissions`, `@ZodResponse`, and the documented error responses.
 - [ ] Each method calls one service method.
 
 ## 9. Module wiring
@@ -65,7 +65,7 @@ You can create the skeleton with `pnpm nest g resource modules/invoices --no-spe
 ## 10. Verify
 
 - [ ] E2E tests for each endpoint: the authorization matrix, validation, the main flow, and the business-rule errors ([14](../14-testing.md)).
-- [ ] Check the Swagger page at `/docs`.
+- [ ] Check the Swagger page at `/docs`, then run `pnpm openapi` and commit `openapi.json`.
 - [ ] `pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e`
 - [ ] Go through the [PR checklist](pr-checklist.md), and link the frontend PR if one exists.
 

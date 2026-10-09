@@ -14,7 +14,7 @@ Full list: [docs/playbooks/pr-checklist.md](https://github.com/muhrafifadh/backe
 - [ ] Controller → service → repository; no module reads another module's tables
 - [ ] Every new route has `@Public()`, `@Authenticated()` or `@RequirePermissions(...)`
 - [ ] Records loaded by ID are checked against the caller's organization (404 if not theirs)
-- [ ] Strict Zod DTOs for inputs; response DTOs for outputs
+- [ ] Strict Zod DTOs for inputs; `@ZodResponse` for outputs; `pnpm openapi` run if the API changed
 - [ ] Services throw `AppError` subclasses with stable codes
 - [ ] Multi-row writes use a transaction; no network calls inside it
 - [ ] Unit tests for business rules; e2e covers 401 / 403 / other-org 404 / success
