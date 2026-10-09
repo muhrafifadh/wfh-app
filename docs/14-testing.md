@@ -32,6 +32,8 @@ Repositories are covered by E2E tests against a real database, not by unit tests
 - **Get tokens with a helper** that signs a real JWT for a factory user (`authHeader(user)`). Don't call `/auth/login` in every test.
 - **Every endpoint has the authorization matrix:** 401 / 403 / other-organization 404 / success ([09](09-authorization.md)).
 - **Every endpoint has a validation test** that checks the `400 VALIDATION_FAILED` body shape.
+- **Jobs run for real** (Redis from `redis-test`). After a request that queues a job, `await waitForJobs(app)` before checking its effect (an email in the `MemoryMailer`, a row). Each test app gets its own `QUEUE_PREFIX`, so a job left over from one test never runs in the next.
+- **Uploads hit real storage** (the `storage` container), through the signed URLs, like a browser would.
 
 ## Examples
 

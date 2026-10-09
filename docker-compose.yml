@@ -31,6 +31,28 @@ services:
     image: redis:7-alpine
     ports: ["${REDIS_PORT:-6379}:6379"]
 
+  # Separate Redis for e2e tests (BullMQ queues), nothing persisted
+  redis-test:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports: ["${REDIS_TEST_PORT:-6380}:6379"]
+
+  # S3-compatible storage for uploads (RustFS, a MinIO drop-in: MinIO no longer publishes
+  # images). Console: http://localhost:9001, sign in with the keys below.
+  # Outside production the API creates its bucket (and CORS rules) on startup.
+  storage:
+    image: rustfs/rustfs:1.0.0
+    environment:
+      RUSTFS_ACCESS_KEY: devaccesskey
+      RUSTFS_SECRET_KEY: devsecretkey
+      RUSTFS_ADDRESS: ":9000"
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_CONSOLE_ADDRESS: ":9001"
+    ports:
+      - "${STORAGE_PORT:-9000}:9000"
+      - "${STORAGE_CONSOLE_PORT:-9001}:9001"
+    volumes: [storage-data:/data]
+
   # Optional dev inbox: `docker compose --profile mail up -d`, then open
   # http://localhost:8025 and set MAIL_TRANSPORT=smtp, SMTP_URL=smtp://localhost:1025
   mailpit:
@@ -42,3 +64,4 @@ services:
 
 volumes:
   postgres-data:
+  storage-data:

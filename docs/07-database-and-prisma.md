@@ -50,7 +50,17 @@ model Invoice {
 - **Every foreign key has an index.** Postgres doesn't create them automatically.
 - **Enforce data integrity in the database:** use `@unique`, foreign keys, `NOT NULL`, and check constraints (added in the migration SQL). App code can have bugs, and the database still protects the data.
 - **Choose `onDelete` on purpose for every relation.** The default is `Restrict`. Use `Cascade` only for child rows that can't exist without their parent (e.g. invoice lines).
-- **Soft-delete user-facing business records** with `deletedAt`. Every query on those records filters on `deletedAt: null` (in the repository). Hard-delete technical data (sessions, tokens) when it expires.
+- **Every table falls into one of three kinds**, and the kind decides its timestamp columns:
+
+  | Kind                                                                    | Columns                                                  | Deleting                            |
+  | ----------------------------------------------------------------------- | -------------------------------------------------------- | ----------------------------------- |
+  | **Business record** (organizations, roles, users, uploads, invoices, …) | `createdAt`, `updatedAt`, `deletedAt?`                   | Soft delete: set `deletedAt`        |
+  | **Technical data** (sessions, refresh/reset/invitation tokens)          | `createdAt` (+ state columns like `usedAt`, `revokedAt`) | Hard delete when it expires         |
+  | **Append-only log** (audit logs)                                        | `createdAt` only                                         | Never updated or deleted by the app |
+
+- **Soft-deleted rows are invisible.** Every query on a business record spreads `notDeleted` (`src/infra/prisma/soft-delete.ts`) into its `where`, inside the repository.
+- **Unique columns stay reserved after a soft delete** (e.g. `users.email`), because the unique index covers deleted rows too. If a value must become reusable, add a partial unique index (`WHERE deleted_at IS NULL`) in the migration SQL, or overwrite the value when deleting.
+- **"Deactivated" isn't "deleted".** A state the user can come back from gets its own column (`users.disabledAt`) and stays visible in lists; `deletedAt` is for records that are gone.
 
 ### Migrations
 

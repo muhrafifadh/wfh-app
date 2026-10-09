@@ -26,6 +26,7 @@ New here? Read [quick-reference.md](quick-reference.md) first. When you work on 
 | 14  | [Testing](14-testing.md)                                   | write tests                                              |
 | 15  | [Background jobs](15-background-jobs.md)                   | do work outside the request (emails, retries, schedules) |
 | 16  | [Tooling & Git](16-tooling-and-git.md)                     | set up locally, commit, or open a PR                     |
+| 17  | [File uploads](17-file-uploads.md)                         | accept files from users                                  |
 
 ## Playbooks
 

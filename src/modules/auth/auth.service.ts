@@ -1,8 +1,11 @@
 import { Injectable } from "@nestjs/common";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import { JwtService, TokenExpiredError } from "@nestjs/jwt";
 
 import { hash, verify } from "@node-rs/argon2";
+import { PinoLogger } from "nestjs-pino";
 
+import { generateToken, hashToken } from "@/common/crypto/tokens.js";
 import { UnauthenticatedError } from "@/common/errors/app-error.js";
 import type { AuthUser } from "@/common/types/auth.js";
 import { AppConfig } from "@/config/config.module.js";
@@ -19,10 +22,10 @@ import {
   RefreshTokenReusedError,
   RegistrationDisabledError,
 } from "@/modules/auth/auth.errors.js";
-import { generateToken, hashToken } from "@/modules/auth/auth.tokens.js";
 import type { LoginDto } from "@/modules/auth/dto/login.dto.js";
 import type { RegisterDto } from "@/modules/auth/dto/register.dto.js";
 import { SessionsRepository, type ClientInfo } from "@/modules/auth/sessions.repository.js";
+import { USER_EVENTS, UserEvent } from "@/modules/users/users.events.js";
 import { UsersService, type ActiveUser } from "@/modules/users/users.service.js";
 
 export type TokenPair = {
@@ -49,24 +52,63 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
     private readonly config: AppConfig,
-  ) {}
+    private readonly events: EventEmitter2,
+    private readonly logger: PinoLogger,
+  ) {
+    this.logger.setContext(AuthService.name);
+  }
 
   async login(input: LoginDto, client: ClientInfo): Promise<TokenPair> {
     const candidate = await this.users.findLoginCandidate(input.email);
-    // Always verify against some hash so response time doesn't reveal whether the email exists.
+    // Always verify against some hash so response time doesn't reveal whether the email
+    // exists. Invited users have no password yet: they look like a wrong password.
     const passwordHash = candidate?.passwordHash ?? (await this.getDummyHash());
     const passwordMatches = await verify(passwordHash, input.password);
-    if (!candidate || !passwordMatches || candidate.isDisabled) {
+    if (!candidate?.passwordHash || !passwordMatches || candidate.isDisabled) {
+      if (candidate) {
+        // docs/12-logging-and-observability.md#audit-log — failed sign-ins on real accounts.
+        // Not awaited: waiting for the write only when the email exists would make this
+        // path slower than the unknown-email one, a timing leak. The audit service
+        // catches its own errors, so nothing is left unhandled.
+        this.events.emit(
+          USER_EVENTS.signInFailed,
+          new UserEvent(USER_EVENTS.signInFailed, candidate.organizationId, null, candidate.id, {
+            ip: client.ip,
+          }),
+        );
+      }
       throw new InvalidCredentialsError();
     }
 
-    return this.startSession(candidate.id, client);
+    const tokens = await this.startSession(candidate.id, client);
+    const user = await this.users.findActive(candidate.id);
+    if (user) {
+      await this.events.emitAsync(
+        USER_EVENTS.signedIn,
+        new UserEvent(USER_EVENTS.signedIn, user.organizationId, user.id, user.id, {
+          ip: client.ip,
+        }),
+      );
+    }
+    return tokens;
   }
 
   /** Public sign-up: a new organization owned by the new user, signed in right away. */
   async register(input: RegisterDto, client: ClientInfo): Promise<TokenPair> {
     if (!this.config.get("REGISTRATION_ENABLED")) throw new RegistrationDisabledError();
     const user = await this.users.registerOwner(input);
+    try {
+      await this.users.requestEmailVerification(user.id);
+    } catch (error) {
+      // The account works without it; they can resend from the app
+      this.logger.error({ err: error, userId: user.id }, "Queueing verification email failed");
+    }
+    return this.startSession(user.id, client);
+  }
+
+  /** Sets the invited user's password and signs them in. */
+  async acceptInvitation(token: string, password: string, client: ClientInfo): Promise<TokenPair> {
+    const user = await this.users.acceptInvitation(token, password);
     return this.startSession(user.id, client);
   }
 
@@ -147,6 +189,10 @@ export class AuthService {
   /** Ends every session of this user, including the current one. */
   async logoutAll(user: AuthUser): Promise<void> {
     await this.sessions.revokeAllForUser(user.id, new Date());
+    await this.events.emitAsync(
+      USER_EVENTS.signedOutEverywhere,
+      new UserEvent(USER_EVENTS.signedOutEverywhere, user.organizationId, user.id, user.id),
+    );
   }
 
   async me(user: AuthUser): Promise<ActiveUser> {

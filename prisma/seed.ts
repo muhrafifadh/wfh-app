@@ -38,13 +38,14 @@ async function main(): Promise<void> {
 
   await prisma.user.upsert({
     where: { email },
-    update: { roleId: owner.id, disabledAt: null },
+    update: { roleId: owner.id, disabledAt: null, deletedAt: null },
     create: {
       email,
       name: "Admin",
       organizationId: organization.id,
       roleId: owner.id,
       passwordHash: await hash(SEED_ADMIN_PASSWORD as string),
+      emailVerifiedAt: new Date(),
     },
   });
 

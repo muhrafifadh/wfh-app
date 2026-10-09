@@ -16,6 +16,8 @@ A one-page summary of the rules. Each line links to the doc that explains it.
 | An env var                                               | `src/config/env.ts` + `.env.example` → [11](11-configuration.md)                   |
 | A schema change                                          | `prisma/schema.prisma` + a migration → [playbook](playbooks/database-migration.md) |
 | A background job                                         | `src/modules/<m>/jobs/` → [15](15-background-jobs.md)                              |
+| Something to audit                                       | A domain event `<m>.events.ts` → [12](12-logging-and-observability.md#audit-log)   |
+| A file upload                                            | Store an upload id from `modules/uploads` → [17](17-file-uploads.md)               |
 
 ## Request lifecycle
 

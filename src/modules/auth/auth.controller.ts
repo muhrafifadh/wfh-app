@@ -18,6 +18,8 @@ import { Public } from "@/common/decorators/public.decorator.js";
 import { ThrottleKey } from "@/common/throttling/throttle-key.decorator.js";
 import type { AuthUser } from "@/common/types/auth.js";
 import { AuthService } from "@/modules/auth/auth.service.js";
+import { EmailVerificationConfirmDto } from "@/modules/auth/dto/email-verification.dto.js";
+import { AcceptInvitationDto } from "@/modules/auth/dto/invitation.dto.js";
 import { LoginDto } from "@/modules/auth/dto/login.dto.js";
 import { MeResponse } from "@/modules/auth/dto/me.response.js";
 import {
@@ -29,6 +31,7 @@ import { RegisterDto } from "@/modules/auth/dto/register.dto.js";
 import { TokenPairResponse } from "@/modules/auth/dto/token-pair.response.js";
 import { PasswordResetService } from "@/modules/auth/password-reset.service.js";
 import type { ClientInfo } from "@/modules/auth/sessions.repository.js";
+import { UsersService } from "@/modules/users/users.service.js";
 
 const clientInfo = (req: Request): ClientInfo => ({
   ip: req.ip ?? null,
@@ -41,6 +44,7 @@ export class AuthController {
   constructor(
     private readonly auth: AuthService,
     private readonly passwordReset: PasswordResetService,
+    private readonly users: UsersService,
   ) {}
 
   @Post("register")
@@ -108,6 +112,37 @@ export class AuthController {
   @ApiBadRequestResponse({ description: "INVALID_RESET_TOKEN or VALIDATION_FAILED" })
   async confirmPasswordReset(@Body() dto: PasswordResetConfirmDto): Promise<void> {
     await this.passwordReset.confirm(dto.token, dto.password);
+  }
+
+  /** Sets the invited user's password and signs them in. */
+  @Post("invitations/accept")
+  @Public()
+  @Throttle({ default: { limit: 10, ttl: 60 * 60_000 } })
+  @HttpCode(HttpStatus.OK)
+  @ZodResponse({ status: 200, type: TokenPairResponse })
+  @ApiBadRequestResponse({ description: "INVALID_INVITATION_TOKEN or VALIDATION_FAILED" })
+  acceptInvitation(@Body() dto: AcceptInvitationDto, @Req() req: Request) {
+    return this.auth.acceptInvitation(dto.token, dto.password, clientInfo(req));
+  }
+
+  @Post("email-verification/confirm")
+  @Public()
+  @Throttle({ default: { limit: 10, ttl: 60 * 60_000 } })
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiBadRequestResponse({ description: "INVALID_VERIFICATION_TOKEN or VALIDATION_FAILED" })
+  async confirmEmailVerification(@Body() dto: EmailVerificationConfirmDto): Promise<void> {
+    await this.users.verifyEmail(dto.token);
+  }
+
+  /** Emails a new verification link, unless the address is already verified. */
+  @Post("email-verification/resend")
+  @Authenticated()
+  @ApiBearerAuth()
+  @Throttle({ default: { limit: 3, ttl: 60 * 60_000 } })
+  @HttpCode(HttpStatus.ACCEPTED)
+  @ApiAcceptedResponse({ description: "Queued, or nothing to do if already verified" })
+  async resendEmailVerification(@CurrentUser() user: AuthUser): Promise<void> {
+    await this.users.requestEmailVerification(user.id);
   }
 
   @Get("me")

@@ -32,6 +32,22 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
+      # Same ports as .env.test (the redis-test and storage containers in docker-compose.yml)
+      redis:
+        image: redis:7-alpine
+        ports: ["6380:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      storage:
+        image: rustfs/rustfs:1.0.0
+        env:
+          RUSTFS_ACCESS_KEY: devaccesskey
+          RUSTFS_SECRET_KEY: devsecretkey
+          RUSTFS_ADDRESS: ":9000"
+        ports: ["9000:9000"]
 
     env:
       # prisma.config.ts loads .env.test when NODE_ENV=test
@@ -61,6 +77,14 @@ jobs:
 
       - name: Unit tests
         run: pnpm test
+
+      - name: Wait for storage
+        run: |
+          for i in $(seq 1 30); do
+            curl -s -o /dev/null http://localhost:9000/ && exit 0
+            sleep 1
+          done
+          echo "storage did not start" && exit 1
 
       - name: E2E tests (applies migrations to the test database)
         run: pnpm test:e2e

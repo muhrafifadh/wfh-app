@@ -46,8 +46,11 @@
 
 ### Audit log
 
-- Security-relevant and admin actions write a row to the `audit_logs` table: who, what, which record, when, IP, and before/after values for changes. Examples: login, failed login, password change, permission change, data export, admin viewing another organization.
-- Audit rows are append-only. No update or delete endpoints exist for them.
+- Security-relevant and admin actions write a row to the `audit_logs` table: who (`actorId`, null when no signed-in user did it), what (`action`), which record (`targetType`, `targetId`), when, the `requestId` (to find the matching log lines), and small details in `metadata` (IP for sign-ins, changed field names, old/new role). Examples: login, failed login, password change, permission change, data export, admin viewing another organization.
+- **Modules don't write audit rows themselves.** They emit a domain event that implements `AuditableEvent` (`src/common/events/auditable-event.ts`), and `AuditListener` (`modules/audit`) records it. To audit a new module, add a handler for its namespace (`@OnEvent("invoice.*")`).
+- **Emit with `emitAsync()` and await it**, so the row exists before the response is sent. The one exception: failed sign-ins aren't awaited, because waiting only when the email exists would leak which emails exist through response time.
+- `metadata` never holds tokens, passwords, or whole records.
+- Audit rows are append-only. No update or delete endpoints exist for them. `GET /v1/audit-logs` (permission `audit:read`) lists the caller's organization, newest first.
 
 ### Health checks
 

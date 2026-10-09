@@ -5,8 +5,9 @@ import request from "supertest";
 import { MailService } from "@/infra/mail/mail.service.js";
 import { MemoryMailer } from "@/infra/mail/mailers.js";
 import { PrismaService } from "@/infra/prisma/prisma.service.js";
+import { PasswordResetService } from "@/modules/auth/password-reset.service.js";
 
-import { createTestApp, createUser, resetDatabase } from "./helpers.js";
+import { createTestApp, createUser, resetDatabase, waitForJobs } from "./helpers.js";
 import { decodeBody, startSmtpTestServer } from "./support/smtp-test-server.js";
 
 const NEW_PASSWORD = "a-brand-new-long-password";
@@ -55,8 +56,14 @@ describe("Account (e2e)", () => {
       expect(me.body).toMatchObject({
         email: "ada@example.test",
         name: "Ada",
-        permissions: ["user:read", "user:manage"],
+        emailVerified: false,
+        permissions: ["user:read", "user:manage", "audit:read"],
       });
+
+      // A verification link is on its way
+      await waitForJobs(app);
+      expect(mailbox()).toHaveLength(1);
+      expect(mailbox()[0]?.text).toContain("http://localhost:3000/verify-email?token=");
 
       const roles = await app.get(PrismaService).role.findMany({
         where: { organizationId: me.body.organizationId },
@@ -119,6 +126,7 @@ describe("Account (e2e)", () => {
         .post("/v1/auth/password-reset/request")
         .send({ email: "nobody@example.test" })
         .expect(202);
+      await waitForJobs(app);
       expect(mailbox()).toHaveLength(0);
     });
 
@@ -127,6 +135,7 @@ describe("Account (e2e)", () => {
       const before = (await login(user.email, user.password).expect(200)).body;
 
       await http().post("/v1/auth/password-reset/request").send({ email: user.email }).expect(202);
+      await waitForJobs(app);
       expect(mailbox()).toHaveLength(1);
       const message = mailbox()[0];
       expect(message?.to).toBe(user.email);
@@ -150,6 +159,7 @@ describe("Account (e2e)", () => {
     it("accepts each link only once", async () => {
       const user = await createUser(app);
       await http().post("/v1/auth/password-reset/request").send({ email: user.email }).expect(202);
+      await waitForJobs(app);
       const token = resetTokenFrom(mailbox()[0]?.text ?? "");
 
       await http()
@@ -163,10 +173,23 @@ describe("Account (e2e)", () => {
       expect(res.body.error.code).toBe("INVALID_RESET_TOKEN");
     });
 
+    it("sends one email for repeated requests within a minute", async () => {
+      const user = await createUser(app);
+      for (let i = 0; i < 3; i++) {
+        await http()
+          .post("/v1/auth/password-reset/request")
+          .send({ email: user.email })
+          .expect(202);
+      }
+      await waitForJobs(app);
+      expect(mailbox()).toHaveLength(1);
+    });
+
     it("only honours the newest link", async () => {
       const user = await createUser(app);
-      await http().post("/v1/auth/password-reset/request").send({ email: user.email }).expect(202);
-      await http().post("/v1/auth/password-reset/request").send({ email: user.email }).expect(202);
+      // What two jobs a minute apart do (the queue dedupes requests within a minute)
+      await app.get(PasswordResetService).send(user.id);
+      await app.get(PasswordResetService).send(user.id);
       const [older, newer] = mailbox().map((m) => resetTokenFrom(m.text));
 
       await http()
@@ -182,6 +205,7 @@ describe("Account (e2e)", () => {
     it("rejects expired links", async () => {
       const user = await createUser(app);
       await http().post("/v1/auth/password-reset/request").send({ email: user.email }).expect(202);
+      await waitForJobs(app);
       const token = resetTokenFrom(mailbox()[0]?.text ?? "");
       await app
         .get(PrismaService)
@@ -233,6 +257,7 @@ describe("Password reset over SMTP", () => {
         .post("/v1/auth/password-reset/request")
         .send({ email: user.email })
         .expect(202);
+      await waitForJobs(app);
 
       expect(smtp.received).toHaveLength(1);
       expect(smtp.received[0]?.to).toEqual([user.email]);

@@ -5,9 +5,25 @@ const base = {
   REDIS_URL: "redis://localhost:6379",
   JWT_ACCESS_SECRET: "x".repeat(32),
   CORS_ORIGINS: "http://localhost:3000",
+  S3_BUCKET: "uploads",
 };
 
 describe("envSchema", () => {
+  it("needs both S3 keys or neither (neither: the SDK uses the instance role)", () => {
+    expect(envSchema.safeParse(base).success).toBe(true);
+    expect(envSchema.safeParse({ ...base, S3_ACCESS_KEY_ID: "key" }).success).toBe(false);
+    expect(
+      envSchema.safeParse({ ...base, S3_ACCESS_KEY_ID: "key", S3_SECRET_ACCESS_KEY: "secret" })
+        .success,
+    ).toBe(true);
+  });
+
+  it("accepts only lowercase queue prefixes", () => {
+    expect(envSchema.parse(base).QUEUE_PREFIX).toBe("bull");
+    expect(envSchema.safeParse({ ...base, QUEUE_PREFIX: "test" }).success).toBe(true);
+    expect(envSchema.safeParse({ ...base, QUEUE_PREFIX: "Bad:Prefix" }).success).toBe(false);
+  });
+
   it.each(["console", "memory"])("refuses MAIL_TRANSPORT=%s in production", (transport) => {
     const result = envSchema.safeParse({
       ...base,

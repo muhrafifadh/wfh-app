@@ -8,6 +8,8 @@ export const meResponseSchema = z.object({
   email: z.email(),
   name: z.string(),
   organizationId: z.uuid(),
+  /** False until the user clicks the link in the verification email. */
+  emailVerified: z.boolean(),
   permissions: z.array(z.enum(PERMISSIONS)),
 });
 

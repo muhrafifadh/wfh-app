@@ -1,5 +1,7 @@
 allowBuilds:
   "@scarf/scarf": false
+  # Optional native speed-up for BullMQ; it falls back to plain JS
+  msgpackr-extract: false
   esbuild: true
   "@prisma/engines": true
   prisma: true

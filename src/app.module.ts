@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE, DiscoveryModule } from "@nestjs/core";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 import { ThrottlerModule } from "@nestjs/throttler";
 
 import { ClsModule } from "nestjs-cls";
@@ -15,9 +16,13 @@ import { AppConfig, ConfigModule } from "@/config/config.module.js";
 import { HealthModule } from "@/infra/health/health.module.js";
 import { MailModule } from "@/infra/mail/mail.module.js";
 import { PrismaModule } from "@/infra/prisma/prisma.module.js";
+import { QueueModule } from "@/infra/queue/queue.module.js";
+import { StorageModule } from "@/infra/storage/storage.module.js";
+import { AuditModule } from "@/modules/audit/audit.module.js";
 import { AuthModule } from "@/modules/auth/auth.module.js";
 import { JwtAuthGuard } from "@/modules/auth/guards/jwt-auth.guard.js";
 import { PermissionsGuard } from "@/modules/auth/guards/permissions.guard.js";
+import { UploadsModule } from "@/modules/uploads/uploads.module.js";
 import { UsersModule } from "@/modules/users/users.module.js";
 
 @Module({
@@ -72,11 +77,18 @@ import { UsersModule } from "@/modules/users/users.module.js";
         skipIf: (context) => !Reflect.getMetadata(THROTTLE_KEY_FIELD, context.getHandler()),
       },
     ]),
+    // docs/15-background-jobs.md — in-process events; listeners must not throw.
+    // Wildcards let the audit log subscribe to "user.*" instead of listing each event.
+    EventEmitterModule.forRoot({ wildcard: true, delimiter: "." }),
     PrismaModule,
     MailModule,
+    QueueModule,
+    StorageModule,
     HealthModule,
     UsersModule,
     AuthModule,
+    AuditModule,
+    UploadsModule,
   ],
   providers: [
     // Global guards run in this order (docs/09-authorization.md)

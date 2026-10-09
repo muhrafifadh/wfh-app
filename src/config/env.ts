@@ -20,6 +20,22 @@ export const envSchema = z
 
     DATABASE_URL: z.url(),
     REDIS_URL: z.url(),
+    /** Redis key prefix for BullMQ, so tests (and other apps) never share queues with dev. */
+    QUEUE_PREFIX: z
+      .string()
+      .regex(/^[a-z0-9-]+$/, "Use lowercase letters, digits and dashes")
+      .default("bull"),
+
+    /** Object storage (docs/17-file-uploads.md). Any S3-compatible service; RustFS locally. */
+    S3_BUCKET: z.string().min(3),
+    S3_REGION: z.string().default("us-east-1"),
+    /** Leave unset for AWS. Local storage container: http://localhost:9000 */
+    S3_ENDPOINT: z.url().optional(),
+    /** Unset in production on AWS to use the instance/task role instead of keys. */
+    S3_ACCESS_KEY_ID: z.string().min(1).optional(),
+    S3_SECRET_ACCESS_KEY: z.string().min(1).optional(),
+    /** Local storage needs path-style URLs (http://host/bucket/key). */
+    S3_FORCE_PATH_STYLE: flag.default(false),
 
     JWT_ACCESS_SECRET: z.string().min(32),
     JWT_ISSUER: z.string().default("backend-boilerplate"),
@@ -68,6 +84,10 @@ export const envSchema = z
   .refine((env) => env.MAIL_TRANSPORT !== "smtp" || (env.SMTP_URL && env.MAIL_FROM), {
     message: "MAIL_TRANSPORT=smtp needs SMTP_URL and MAIL_FROM.",
     path: ["SMTP_URL"],
+  })
+  .refine((env) => !env.S3_ACCESS_KEY_ID === !env.S3_SECRET_ACCESS_KEY, {
+    message: "Set both S3_ACCESS_KEY_ID and S3_SECRET_ACCESS_KEY, or neither.",
+    path: ["S3_ACCESS_KEY_ID"],
   });
 
 export type Env = z.infer<typeof envSchema>;

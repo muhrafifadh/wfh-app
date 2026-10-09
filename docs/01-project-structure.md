@@ -22,16 +22,21 @@
 │   │   ├── filters/           # AllExceptionsFilter
 │   │   ├── errors/            # AppError + generic subclasses
 │   │   ├── dto/               # Pagination query/response, shared DTOs
-│   │   └── utils/
+│   │   ├── events/            # AuditableEvent (the shape of domain events)
+│   │   └── crypto/            # Random tokens and their hashes
 │   ├── infra/                 # Clients for external systems
 │   │   ├── prisma/            # PrismaModule, PrismaService
 │   │   ├── health/            # /health endpoints
-│   │   ├── mail/                # MailService: console (dev) / memory (tests) / disabled
-│   │   └── queue/
+│   │   ├── mail/              # MailService: smtp / console (dev) / memory (tests) / disabled
+│   │   ├── queue/             # BullMQ on Redis, default job options
+│   │   ├── redis/             # Readiness ping
+│   │   └── storage/           # S3-compatible storage: signed URLs
 │   ├── modules/               # Domain modules, one per area of the business
 │   │   ├── auth/
-│   │   ├── users/
-│   │   └── invoices/
+│   │   ├── users/             # Users and roles, invitations, email verification
+│   │   ├── audit/             # Audit log (records domain events)
+│   │   ├── uploads/           # File uploads
+│   │   └── invoices/          # (example layout)
 │   │       ├── dto/
 │   │       │   ├── create-invoice.dto.ts
 │   │       │   ├── update-invoice.dto.ts
@@ -49,7 +54,7 @@
 ├── test/                      # E2E tests + setup
 │   ├── setup.ts
 │   └── invoices.e2e-spec.ts
-├── docker-compose.yml         # Postgres (+ Redis) for local dev and tests
+├── docker-compose.yml         # Postgres, Redis and storage for local dev and tests
 └── .env.example
 ```
 

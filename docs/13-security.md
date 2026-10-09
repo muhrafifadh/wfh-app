@@ -31,6 +31,7 @@ Authentication and authorization have their own docs ([08](08-authentication.md)
 - **Uploads go straight to object storage through presigned URLs.** The API only issues the URL and records the file's metadata.
 - **Check file type by content (magic bytes), not by extension or `Content-Type`.** Enforce size limits when issuing the presigned URL.
 - **Store files with generated keys (UUIDs), never with the name the user gave.** Serve them through short-lived signed URLs.
+- The flow and its implementation: [17 File uploads](17-file-uploads.md).
 
 ### Outgoing requests
 

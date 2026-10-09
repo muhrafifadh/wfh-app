@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 
-/** 32 random bytes for refresh and reset tokens. Returned once, never stored. */
+/** 32 random bytes for refresh, reset, invitation and verification tokens. Returned once, never stored. */
 export const generateToken = (): string => randomBytes(32).toString("base64url");
 
 /** What the database stores instead of the token itself. */

@@ -13,16 +13,19 @@ The Next.js server is the only client that holds the tokens. It sends the access
 
 ## Endpoints
 
-| Method & path                          | Auth                             | Purpose                                                                                                 |
-| -------------------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `POST /v1/auth/register`               | Public                           | Create a new organization with the caller as owner, and sign in. 404 unless `REGISTRATION_ENABLED=true` |
-| `POST /v1/auth/login`                  | Public                           | Email + password → `{ accessToken, refreshToken, accessTokenExpiresAt }`                                |
-| `POST /v1/auth/refresh`                | Public (needs the refresh token) | Exchange the refresh token for a **new pair of tokens**                                                 |
-| `POST /v1/auth/logout`                 | Bearer                           | End the current session                                                                                 |
-| `POST /v1/auth/logout-all`             | Bearer                           | End all of this user's sessions                                                                         |
-| `POST /v1/auth/password-reset/request` | Public                           | Email a reset link. Always `202`                                                                        |
-| `POST /v1/auth/password-reset/confirm` | Public                           | `{ token, password }` → `204`; signs out every session                                                  |
-| `GET /v1/auth/me`                      | Bearer                           | Current user + `permissions[]`. The frontend's `getSession()` calls this                                |
+| Method & path                              | Auth                             | Purpose                                                                                                 |
+| ------------------------------------------ | -------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `POST /v1/auth/register`                   | Public                           | Create a new organization with the caller as owner, and sign in. 404 unless `REGISTRATION_ENABLED=true` |
+| `POST /v1/auth/login`                      | Public                           | Email + password → `{ accessToken, refreshToken, accessTokenExpiresAt }`                                |
+| `POST /v1/auth/refresh`                    | Public (needs the refresh token) | Exchange the refresh token for a **new pair of tokens**                                                 |
+| `POST /v1/auth/logout`                     | Bearer                           | End the current session                                                                                 |
+| `POST /v1/auth/logout-all`                 | Bearer                           | End all of this user's sessions                                                                         |
+| `POST /v1/auth/password-reset/request`     | Public                           | Email a reset link. Always `202`                                                                        |
+| `POST /v1/auth/password-reset/confirm`     | Public                           | `{ token, password }` → `204`; signs out every session                                                  |
+| `POST /v1/auth/invitations/accept`         | Public                           | `{ token, password }` from the invitation email → token pair; marks the email verified                  |
+| `POST /v1/auth/email-verification/confirm` | Public                           | `{ token }` from the verification email → `204`                                                         |
+| `POST /v1/auth/email-verification/resend`  | Bearer                           | Email a new verification link. `202`; nothing is sent if already verified                               |
+| `GET /v1/auth/me`                          | Bearer                           | Current user + `permissions[]`. The frontend's `getSession()` calls this                                |
 
 ## Rules
 
@@ -86,20 +89,24 @@ export class JwtAuthGuard implements CanActivate {
 
 ### Rate limits
 
-| Endpoint               | Limit                                                                                                                                                    |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `POST /auth/login`     | 5 / minute per client IP + email (`@ThrottleKey("email")`), and 20 / minute per client IP across all emails (`perIp` throttler: credential-stuffing cap) |
-| `POST /auth/register`  | 3 / hour per IP                                                                                                                                          |
-| `POST /auth/refresh`   | 30 / minute per IP                                                                                                                                       |
-| Password reset request | 3 / hour per client IP + email, 10 / hour per client IP                                                                                                  |
+| Endpoint                                | Limit                                                                                                                                                    |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /auth/login`                      | 5 / minute per client IP + email (`@ThrottleKey("email")`), and 20 / minute per client IP across all emails (`perIp` throttler: credential-stuffing cap) |
+| `POST /auth/register`                   | 3 / hour per IP                                                                                                                                          |
+| `POST /auth/refresh`                    | 30 / minute per IP                                                                                                                                       |
+| Password reset request                  | 3 / hour per client IP + email, 10 / hour per client IP                                                                                                  |
+| Accept invitation, confirm verification | 10 / hour per IP                                                                                                                                         |
+| Resend verification                     | 3 / hour per IP                                                                                                                                          |
 
 "Client IP" is the forwarded IP when the request comes through a proxy listed in `TRUST_PROXY`. The frontend calls the backend server-to-server, so without that every user would share the Next server's IP and one budget. See [13 Security](13-security.md) for the throttler setup.
 
-## Password reset & email verification
+## Email links: password reset, invitations, verification
 
-- Reset and verification tokens are random, single-use, stored **hashed**, and expire (reset: 30 min, verification: 24 h). Requesting a new reset link retires older unused ones, so only the newest link works.
-- Requesting a reset always returns `202`, whether or not the email exists.
-- A successful reset revokes every session.
+- Link tokens are random, single-use, stored **hashed**, and expire: reset 30 min, verification 24 h, invitation 7 days. Issuing a new link retires older unused ones of the same kind, so only the newest works. Invitation and verification tokens live in `user_tokens` (with a `purpose`); reset tokens in `password_reset_tokens`.
+- Requesting a reset always returns `202`, whether or not the email exists. A successful reset revokes every session.
+- **Invited users have no password** (`passwordHash` is null) until they accept. Until then, signing in fails like a wrong password. Accepting sets the password, marks the email verified (they received the email), and signs them in.
+- **Registering sends a verification email.** `/me` returns `emailVerified`; nothing is blocked while it's false (the frontend shows a reminder). Accounts created before verification existed were marked verified by the migration.
+- **Every email is sent by a background job** ([15](15-background-jobs.md)): the request only queues `{ userId }`, and the processor creates the token and sends the link. Retries happen with backoff; a failure never changes the response, so it can't reveal which emails exist. Queues: `password-reset-emails` (auth), `user-emails` (users: invitations and verification).
 - **Email goes through `MailService`** (`infra/mail`), picked by `MAIL_TRANSPORT`:
   - `smtp`: real delivery via nodemailer (`SMTP_URL`, `MAIL_FROM`). Works with any provider's SMTP endpoint. Timeouts: 10 s to connect, 20 s per socket.
   - `console`: prints emails, links included (development only).
@@ -108,9 +115,7 @@ export class JwtAuthGuard implements CanActivate {
 
   Production only allows `smtp` or `disabled`.
 
-- **A failed reset email doesn't change the response.** The request still returns `202`, otherwise errors would reveal which emails exist. The failure is logged with the user id, never the message body, which holds the token. _Follow-up:_ send through a queue with retries ([15](15-background-jobs.md)).
 - **Local inbox:** `docker compose --profile mail up -d` starts Mailpit (UI on http://localhost:8025). Then set `MAIL_TRANSPORT=smtp`, `SMTP_URL=smtp://localhost:1025`, and `MAIL_FROM`.
-- Email verification is _not built yet_.
 
 ## Don't
 
