@@ -1,0 +1,13 @@
+// docs/07-database-and-prisma.md — conventions for every model.
+// Auth models (users, organizations, sessions) arrive with the auth module.
+
+generator client {
+  provider               = "prisma-client"
+  output                 = "../src/generated/prisma"
+  moduleFormat           = "esm"
+  importFileExtension    = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}

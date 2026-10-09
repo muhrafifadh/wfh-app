@@ -9,14 +9,14 @@ This doc is the **contract with `frontend-boilerplate`**. Changing anything here
 - **Nest routes at most one level deep:** `/v1/invoices/:id/lines`. For anything deeper, use top-level routes with filters (`/v1/payments?invoiceId=…`).
 - **For actions that aren't create/read/update/delete, use a verb sub-resource with `POST`:** `POST /v1/invoices/:id/send`, `POST /v1/invoices/:id/void`.
 
-| Operation | Method & path | Success |
-|---|---|---|
-| List | `GET /v1/invoices` | `200` + `Paginated<T>` |
-| Get one | `GET /v1/invoices/:id` | `200` + resource |
-| Create | `POST /v1/invoices` | `201` + created resource |
-| Partial update | `PATCH /v1/invoices/:id` | `200` + updated resource |
-| Delete | `DELETE /v1/invoices/:id` | `204`, empty body |
-| Action | `POST /v1/invoices/:id/send` | `200` + updated resource, or `202` if the work is queued |
+| Operation      | Method & path                | Success                                                  |
+| -------------- | ---------------------------- | -------------------------------------------------------- |
+| List           | `GET /v1/invoices`           | `200` + `Paginated<T>`                                   |
+| Get one        | `GET /v1/invoices/:id`       | `200` + resource                                         |
+| Create         | `POST /v1/invoices`          | `201` + created resource                                 |
+| Partial update | `PATCH /v1/invoices/:id`     | `200` + updated resource                                 |
+| Delete         | `DELETE /v1/invoices/:id`    | `204`, empty body                                        |
+| Action         | `POST /v1/invoices/:id/send` | `200` + updated resource, or `202` if the work is queued |
 
 Don't use `PUT`. Updates are partial (`PATCH`).
 
@@ -34,13 +34,13 @@ Don't use `PUT`. Updates are partial (`PATCH`).
 
 **Query params:**
 
-| Param | Example | Rules |
-|---|---|---|
-| `page` | `1` | Starts at 1. Default 1 |
-| `pageSize` | `20` | Default 20, max 100 |
-| `q` | `acme` | Free-text search, if the endpoint supports it |
-| `sort` | `-createdAt` | A field name; a `-` prefix means descending. Only allowed fields |
-| Filters | `status=paid&customerId=…` | Named after fields. Repeat the param for multiple values: `status=sent&status=paid` |
+| Param      | Example                    | Rules                                                                               |
+| ---------- | -------------------------- | ----------------------------------------------------------------------------------- |
+| `page`     | `1`                        | Starts at 1. Default 1                                                              |
+| `pageSize` | `20`                       | Default 20, max 100                                                                 |
+| `q`        | `acme`                     | Free-text search, if the endpoint supports it                                       |
+| `sort`     | `-createdAt`               | A field name; a `-` prefix means descending. Only allowed fields                    |
+| Filters    | `status=paid&customerId=…` | Named after fields. Repeat the param for multiple values: `status=sent&status=paid` |
 
 **Response:**
 
@@ -64,23 +64,25 @@ Every error has the same body ([10](10-error-handling.md)):
   "error": {
     "code": "VALIDATION_FAILED",
     "message": "Some fields are invalid.",
-    "details": { "fieldErrors": { "amount": ["Amount must be greater than 0"] } },
+    "details": {
+      "fieldErrors": { "amount": ["Amount must be greater than 0"] }
+    },
     "requestId": "01J9Z6…"
   }
 }
 ```
 
-| Status | When | `code` examples |
-|---|---|---|
-| `400` | The input failed validation | `VALIDATION_FAILED` |
-| `401` | Missing, invalid, or expired token | `UNAUTHENTICATED`, `TOKEN_EXPIRED` |
-| `403` | Signed in, but missing the permission | `FORBIDDEN` |
-| `404` | Doesn't exist, **or** the user isn't allowed to know it exists | `NOT_FOUND` |
-| `409` | Conflicts with the current state (duplicate value, wrong status for this action) | `INVOICE_NUMBER_TAKEN`, `INVOICE_ALREADY_PAID` |
-| `413` | The request body is too large | `PAYLOAD_TOO_LARGE` |
-| `422` | Valid input, but a business rule rejects it | `DUE_DATE_IN_PAST` |
-| `429` | Rate limited | `RATE_LIMITED` |
-| `500` | Unexpected error | `INTERNAL_ERROR` |
+| Status | When                                                                             | `code` examples                                |
+| ------ | -------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `400`  | The input failed validation                                                      | `VALIDATION_FAILED`                            |
+| `401`  | Missing, invalid, or expired token                                               | `UNAUTHENTICATED`, `TOKEN_EXPIRED`             |
+| `403`  | Signed in, but missing the permission                                            | `FORBIDDEN`                                    |
+| `404`  | Doesn't exist, **or** the user isn't allowed to know it exists                   | `NOT_FOUND`                                    |
+| `409`  | Conflicts with the current state (duplicate value, wrong status for this action) | `INVOICE_NUMBER_TAKEN`, `INVOICE_ALREADY_PAID` |
+| `413`  | The request body is too large                                                    | `PAYLOAD_TOO_LARGE`                            |
+| `422`  | Valid input, but a business rule rejects it                                      | `DUE_DATE_IN_PAST`                             |
+| `429`  | Rate limited                                                                     | `RATE_LIMITED`                                 |
+| `500`  | Unexpected error                                                                 | `INTERNAL_ERROR`                               |
 
 The frontend uses `code` to decide what to do, and `message` to show the user. **Codes never change once released.** Messages can be reworded.
 

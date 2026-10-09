@@ -2,18 +2,20 @@
 
 ## Toolchain
 
-| Tool | Rule |
-|---|---|
-| **Node** | The version pinned in `.nvmrc` and `package.json#engines`. |
-| **pnpm** | The only package manager. Commit `pnpm-lock.yaml`. |
-| **Docker Compose** | Runs local Postgres (dev + test) and Redis: `docker compose up -d`. |
-| **TypeScript** | `strict`; `pnpm typecheck` must pass with zero errors. |
-| **ESLint** | `typescript-eslint` `strictTypeChecked`, import order, `no-floating-promises`, plus the project rules (no `console`, no `process.env` outside `config/`, no `../../` imports). |
-| **Prettier** | Formatting is never discussed in reviews. |
-| **Husky + lint-staged** | Pre-commit: ESLint + Prettier on staged files. |
-| **commitlint** | Checks every commit message against Conventional Commits. |
+| Tool                    | Rule                                                                                                                                                                                              |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Node**                | The version pinned in `.nvmrc` and `package.json#engines`.                                                                                                                                        |
+| **pnpm**                | The only package manager. Commit `pnpm-lock.yaml`.                                                                                                                                                |
+| **Docker Compose**      | Runs local Postgres (dev + test) and Redis: `docker compose up -d`.                                                                                                                               |
+| **TypeScript**          | `strict`; `pnpm typecheck` must pass with zero errors.                                                                                                                                            |
+| **oxlint**              | Type-aware (`--type-aware`). Project rules in `.oxlintrc.json`: no `any`, no `!`, no `console`, `no-floating-promises`, no `process.env` outside `config/`, no `../` imports, no default exports. |
+| **Prettier**            | Plus `@ianvs/prettier-plugin-sort-imports`, which sorts imports. Formatting is never discussed in reviews.                                                                                        |
+| **Husky + lint-staged** | Pre-commit: oxlint + Prettier on staged files.                                                                                                                                                    |
+| **commitlint**          | Checks every commit message against Conventional Commits.                                                                                                                                         |
 
-The `@/` path alias is resolved by `nest build` (tsconfig paths) and by Jest (`moduleNameMapper`).
+The project is **ESM**: relative and `@/` imports end in `.js` (`@/config/env.js`). The `@/` alias is rewritten to relative paths by `nest build`, and resolved by Vite in tests (`resolve.tsconfigPaths`).
+
+Docker Compose ports are set in `.env` (`POSTGRES_PORT`, `POSTGRES_TEST_PORT`, `REDIS_PORT`). Change them if another project already uses the defaults.
 
 ## First-time setup
 
@@ -35,11 +37,11 @@ The API runs on `http://localhost:8000/v1`. Swagger is at `http://localhost:8000
 pnpm dev            # nest start --watch
 pnpm build          # nest build
 pnpm start:prod     # node dist/main
-pnpm lint           # eslint
+pnpm lint           # oxlint --type-aware
 pnpm format         # prettier --write
 pnpm typecheck      # tsc --noEmit
 pnpm test           # unit tests
-pnpm test:e2e       # e2e tests against postgres-test
+pnpm test:e2e       # migrate + e2e tests against postgres-test
 pnpm db:migrate     # prisma migrate dev
 pnpm db:deploy      # prisma migrate deploy (CI / prod)
 pnpm db:seed        # prisma db seed
@@ -65,7 +67,7 @@ Every PR must pass all of these before it can be merged:
 
 ## Suppressing a check
 
-- Every `eslint-disable-next-line <rule>` has a comment explaining why.
+- Every `oxlint-disable-next-line <rule>` has a comment explaining why.
 - Use `@ts-expect-error` with an explanation. Never use `@ts-ignore`.
 
 ## Git workflow

@@ -9,7 +9,8 @@
 │   └── seed.ts                # Seed data for development and tests
 ├── prisma.config.ts
 ├── src/
-│   ├── main.ts                # Bootstrap: global prefix, helmet, CORS, Swagger, shutdown hooks
+│   ├── main.ts                # Bootstrap: create the app, configureApp(), listen
+│   ├── configure-app.ts       # Global prefix, helmet, CORS, body limit, Swagger, shutdown hooks (shared with e2e)
 │   ├── app.module.ts          # Root module: imports config, infra, modules; registers global providers
 │   ├── config/
 │   │   ├── env.ts             # Zod schema for env vars
@@ -63,6 +64,7 @@
   ```
 
   `common/` and `infra/` never import from `modules/`.
+
 - **Modules use other modules only through their exported service.** `InvoicesModule` imports `CustomersModule` and injects `CustomersService`. It never imports `customers.repository.ts` or reads the `customers` table itself.
 - **No circular module dependencies.** If two modules need each other, move the shared logic into a third module, or communicate with events ([15](15-background-jobs.md)). Don't use `forwardRef` (except in third-party code you can't change).
 - **A module only creates the files it needs.** A module with no jobs doesn't need a `jobs/` folder.

@@ -1,26 +1,26 @@
 # 08 · Authentication
 
-**Who is calling?** This doc covers login and tokens. *What* a caller is allowed to do is in [09 Authorization](09-authorization.md).
+**Who is calling?** This doc covers login and tokens. _What_ a caller is allowed to do is in [09 Authorization](09-authorization.md).
 
 ## Model
 
-| Token | Format | Lifetime | Stored by the backend | Stored by the frontend |
-|---|---|---|---|---|
-| **Access token** | JWT (HS256), claims: `sub`, `sid`, `iat`, `exp` | **15 minutes** | Not stored | httpOnly cookie on the Next.js server |
-| **Refresh token** | 32 random bytes, base64url | **30 days** (sliding) | **SHA-256 hash** in the `sessions` table | httpOnly cookie on the Next.js server |
+| Token             | Format                                          | Lifetime              | Stored by the backend                    | Stored by the frontend                |
+| ----------------- | ----------------------------------------------- | --------------------- | ---------------------------------------- | ------------------------------------- |
+| **Access token**  | JWT (HS256), claims: `sub`, `sid`, `iat`, `exp` | **15 minutes**        | Not stored                               | httpOnly cookie on the Next.js server |
+| **Refresh token** | 32 random bytes, base64url                      | **30 days** (sliding) | **SHA-256 hash** in the `sessions` table | httpOnly cookie on the Next.js server |
 
 The Next.js server is the only client that holds the tokens. It sends the access token as `Authorization: Bearer <token>` on every request, and calls `/auth/refresh` when the token expires.
 
 ## Endpoints
 
-| Method & path | Auth | Purpose |
-|---|---|---|
-| `POST /v1/auth/register` | Public | Create an account (if self-signup is enabled) |
-| `POST /v1/auth/login` | Public | Email + password → `{ accessToken, refreshToken, accessTokenExpiresAt }` |
-| `POST /v1/auth/refresh` | Public (needs the refresh token) | Exchange the refresh token for a **new pair of tokens** |
-| `POST /v1/auth/logout` | Bearer | End the current session |
-| `POST /v1/auth/logout-all` | Bearer | End all of this user's sessions |
-| `GET /v1/auth/me` | Bearer | Current user + `permissions[]`. The frontend's `getSession()` calls this |
+| Method & path              | Auth                             | Purpose                                                                  |
+| -------------------------- | -------------------------------- | ------------------------------------------------------------------------ |
+| `POST /v1/auth/register`   | Public                           | Create an account (if self-signup is enabled)                            |
+| `POST /v1/auth/login`      | Public                           | Email + password → `{ accessToken, refreshToken, accessTokenExpiresAt }` |
+| `POST /v1/auth/refresh`    | Public (needs the refresh token) | Exchange the refresh token for a **new pair of tokens**                  |
+| `POST /v1/auth/logout`     | Bearer                           | End the current session                                                  |
+| `POST /v1/auth/logout-all` | Bearer                           | End all of this user's sessions                                          |
+| `GET /v1/auth/me`          | Bearer                           | Current user + `permissions[]`. The frontend's `getSession()` calls this |
 
 ## Rules
 
@@ -62,7 +62,10 @@ export class JwtAuthGuard implements CanActivate {
   ) {}
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
-    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC, [ctx.getHandler(), ctx.getClass()]);
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC, [
+      ctx.getHandler(),
+      ctx.getClass(),
+    ]);
     if (isPublic) return true;
 
     const req = ctx.switchToHttp().getRequest<Request>();
@@ -70,7 +73,9 @@ export class JwtAuthGuard implements CanActivate {
     if (!token) throw new UnauthenticatedError();
 
     const payload = await this.jwt.verifyAsync<AccessTokenPayload>(token).catch((e: unknown) => {
-      throw e instanceof TokenExpiredError ? new TokenExpiredAppError() : new UnauthenticatedError();
+      throw e instanceof TokenExpiredError
+        ? new TokenExpiredAppError()
+        : new UnauthenticatedError();
     });
 
     req.user = await this.users.getAuthUser(payload.sub, payload.sid); // throws if the user is disabled
@@ -81,12 +86,12 @@ export class JwtAuthGuard implements CanActivate {
 
 ### Rate limits
 
-| Endpoint | Limit |
-|---|---|
-| `POST /auth/login` | 5 / minute per IP + email, then backoff |
-| `POST /auth/register` | 3 / hour per IP |
-| `POST /auth/refresh` | 30 / minute per IP |
-| Password reset request | 3 / hour per email |
+| Endpoint               | Limit                                   |
+| ---------------------- | --------------------------------------- |
+| `POST /auth/login`     | 5 / minute per IP + email, then backoff |
+| `POST /auth/register`  | 3 / hour per IP                         |
+| `POST /auth/refresh`   | 30 / minute per IP                      |
+| Password reset request | 3 / hour per email                      |
 
 See [13 Security](13-security.md) for the throttler setup.
 

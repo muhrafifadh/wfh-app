@@ -4,11 +4,11 @@ Anything slow, unreliable, or not needed for the response happens outside the re
 
 ## Stack
 
-| Need | Tool |
-|---|---|
-| Durable jobs with retries | **BullMQ** (`@nestjs/bullmq`) on Redis |
-| Recurring / scheduled jobs | BullMQ **job schedulers** (repeatable jobs) |
-| Decoupling modules within one process | `@nestjs/event-emitter` |
+| Need                                  | Tool                                        |
+| ------------------------------------- | ------------------------------------------- |
+| Durable jobs with retries             | **BullMQ** (`@nestjs/bullmq`) on Redis      |
+| Recurring / scheduled jobs            | BullMQ **job schedulers** (repeatable jobs) |
+| Decoupling modules within one process | `@nestjs/event-emitter`                     |
 
 ## Rules
 
@@ -25,7 +25,7 @@ Anything slow, unreliable, or not needed for the response happens outside the re
 
 ### Consistency: enqueue after commit
 
-If a database change and a job have to happen together, never enqueue the job *inside* the transaction. If the transaction rolls back, the job still runs. If the queue is down, the request fails even though the data was fine.
+If a database change and a job have to happen together, never enqueue the job _inside_ the transaction. If the transaction rolls back, the job still runs. If the queue is down, the request fails even though the data was fine.
 
 - **Simple case:** enqueue the job **after** the transaction commits. Accept the small risk that the job is lost if the process crashes in between, or have a scheduled job that finds and repairs missed work.
 - **When a lost job isn't acceptable** (payments, external notifications users rely on): use an **outbox** table. Write an `outbox_events` row in the same transaction, and have a dispatcher job that publishes pending rows and marks them done.
@@ -45,7 +45,10 @@ const sendInvoiceJobSchema = z.object({ invoiceId: z.uuid() });
 
 @Processor(SEND_INVOICE_QUEUE, { concurrency: 5 })
 export class SendInvoiceProcessor extends WorkerHost {
-  constructor(private readonly invoices: InvoicesService, private readonly logger: PinoLogger) {
+  constructor(
+    private readonly invoices: InvoicesService,
+    private readonly logger: PinoLogger,
+  ) {
     super();
   }
 

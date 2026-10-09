@@ -3,7 +3,7 @@
 **What may this caller do?** There are two checks, and **both are required**:
 
 1. **Permission check** (on the route): does the user have `invoice:update` at all?
-2. **Resource check** (in the service): is *this* invoice one the user is allowed to access?
+2. **Resource check** (in the service): is _this_ invoice one the user is allowed to access?
 
 Skipping the second check causes **IDOR** bugs (Insecure Direct Object Reference): any signed-in user can read or change another user's data by guessing or changing an ID.
 
@@ -30,14 +30,18 @@ Skipping the second check causes **IDOR** bugs (Insecure Direct Object Reference
 ```ts
 // common/decorators/require-permissions.decorator.ts
 export const PERMISSIONS_KEY = "permissions";
-export const RequirePermissions = (...permissions: Permission[]) => SetMetadata(PERMISSIONS_KEY, permissions);
+export const RequirePermissions = (...permissions: Permission[]) =>
+  SetMetadata(PERMISSIONS_KEY, permissions);
 ```
 
 ```ts
 // common/guards/permissions.guard.ts
 @Injectable()
 export class PermissionsGuard implements CanActivate {
-  constructor(private readonly reflector: Reflector, private readonly users: UsersService) {}
+  constructor(
+    private readonly reflector: Reflector,
+    private readonly users: UsersService,
+  ) {}
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
     const required = this.reflector.getAllAndOverride<Permission[] | undefined>(PERMISSIONS_KEY, [

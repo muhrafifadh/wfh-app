@@ -3,7 +3,7 @@
 ## Rules
 
 - **All env vars are validated with Zod at startup** in `src/config/env.ts`. A missing or invalid variable stops the app before it starts listening.
-- **Inject the typed `AppConfig` to read config.** Never read `process.env` outside `src/config/` (ESLint enforces this). The one exception is `prisma.config.ts`, which runs outside Nest.
+- **Inject the typed `AppConfig` to read config.** Never read `process.env` outside `src/config/` (oxlint's `node/no-process-env` enforces this). The one exception is `prisma.config.ts`, which runs outside Nest.
 - **`.env.example` lists every variable** with a placeholder value and a comment, and is committed. `.env` files are never committed.
 - **When you add a variable, update `env.ts`, `.env.example`, the CI config, and the deployment's environment settings in the same PR.**
 - **Secrets come from the environment** (or the platform's secret manager). They never appear in code, config files, or Docker images.
@@ -15,7 +15,12 @@
 // src/config/env.ts
 import { z } from "zod";
 
-const csv = z.string().transform((s) => s.split(",").map((v) => v.trim()).filter(Boolean));
+const csv = z.string().transform((s) =>
+  s
+    .split(",")
+    .map((v) => v.trim())
+    .filter(Boolean),
+);
 
 export const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
@@ -30,7 +35,11 @@ export const envSchema = z.object({
   JWT_AUDIENCE: z.string().default("frontend-boilerplate"),
 
   CORS_ORIGINS: csv, // e.g. "http://localhost:3000,https://app.example.com"
-  TRUST_PROXY: z.coerce.boolean().default(false),
+  // Not z.coerce.boolean(): that turns the string "false" into true
+  TRUST_PROXY: z
+    .enum(["true", "false"])
+    .transform((v) => v === "true")
+    .default(false),
 });
 
 export type Env = z.infer<typeof envSchema>;

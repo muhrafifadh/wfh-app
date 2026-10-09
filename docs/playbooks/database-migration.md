@@ -4,16 +4,16 @@ Schema changes are the riskiest changes we ship, because the database can't be r
 
 ## 1. Classify the change
 
-| Change | Safe in one deploy? |
-|---|---|
-| Add a table | ✅ |
-| Add a nullable column, or one with a default | ✅ |
-| Add an index | ✅ on small tables. On large tables, use `CREATE INDEX CONCURRENTLY` (hand-edited SQL, see below) |
-| Add a `NOT NULL` column without a default | ❌ Use expand/contract |
-| Rename a column or table | ❌ Use expand/contract |
-| Change a column's type | ❌ Use expand/contract |
-| Drop a column or table | ❌ Stop using it in code first, drop it in a later release |
-| Add a unique constraint or foreign key to existing data | ⚠️ Clean up the data first, in a separate migration |
+| Change                                                  | Safe in one deploy?                                                                               |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Add a table                                             | ✅                                                                                                |
+| Add a nullable column, or one with a default            | ✅                                                                                                |
+| Add an index                                            | ✅ on small tables. On large tables, use `CREATE INDEX CONCURRENTLY` (hand-edited SQL, see below) |
+| Add a `NOT NULL` column without a default               | ❌ Use expand/contract                                                                            |
+| Rename a column or table                                | ❌ Use expand/contract                                                                            |
+| Change a column's type                                  | ❌ Use expand/contract                                                                            |
+| Drop a column or table                                  | ❌ Stop using it in code first, drop it in a later release                                        |
+| Add a unique constraint or foreign key to existing data | ⚠️ Clean up the data first, in a separate migration                                               |
 
 During a deploy, the old version of the app runs alongside the new database schema for a while. **Every migration must work with both the code currently running and the new code.**
 

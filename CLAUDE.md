@@ -4,19 +4,19 @@ NestJS + TypeScript + PostgreSQL (Prisma) + JWT auth boilerplate. The client is 
 
 The rules live in [`docs/`](docs/README.md). **Before you write or review code, read [`docs/quick-reference.md`](docs/quick-reference.md), then the topic docs for the task:**
 
-| Task | Read |
-|---|---|
-| Adding a whole module | `docs/playbooks/new-module.md` |
+| Task                           | Read                                                                                  |
+| ------------------------------ | ------------------------------------------------------------------------------------- |
+| Adding a whole module          | `docs/playbooks/new-module.md`                                                        |
 | Adding or changing an endpoint | `docs/05-api-design.md`, `docs/06-validation-and-dtos.md`, `docs/09-authorization.md` |
-| Business logic | `docs/03-modules-and-layers.md`, `docs/10-error-handling.md` |
-| Queries, transactions | `docs/07-database-and-prisma.md` |
-| Schema changes | `docs/playbooks/database-migration.md` |
-| Login, tokens, sessions | `docs/08-authentication.md`, `docs/13-security.md` |
-| Emails, async work, schedules | `docs/15-background-jobs.md` |
-| Env vars | `docs/11-configuration.md` |
-| Logging, health checks | `docs/12-logging-and-observability.md` |
-| Tests | `docs/14-testing.md` |
-| Commits / PRs | `docs/16-tooling-and-git.md`, `docs/playbooks/pr-checklist.md` |
+| Business logic                 | `docs/03-modules-and-layers.md`, `docs/10-error-handling.md`                          |
+| Queries, transactions          | `docs/07-database-and-prisma.md`                                                      |
+| Schema changes                 | `docs/playbooks/database-migration.md`                                                |
+| Login, tokens, sessions        | `docs/08-authentication.md`, `docs/13-security.md`                                    |
+| Emails, async work, schedules  | `docs/15-background-jobs.md`                                                          |
+| Env vars                       | `docs/11-configuration.md`                                                            |
+| Logging, health checks         | `docs/12-logging-and-observability.md`                                                |
+| Tests                          | `docs/14-testing.md`                                                                  |
+| Commits / PRs                  | `docs/16-tooling-and-git.md`, `docs/playbooks/pr-checklist.md`                        |
 
 ## Never break these
 

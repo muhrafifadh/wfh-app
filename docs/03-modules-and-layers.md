@@ -7,11 +7,11 @@ Controller  ──►  Service  ──►  Repository  ──►  Prisma
    HTTP          business        database
 ```
 
-| Layer | Does | Must not |
-|---|---|---|
-| **Controller** | Routing, decorators (auth, permissions, DTOs, docs), reads the current user, calls one service method, returns the result | Contain `if` business rules, touch Prisma, catch errors |
-| **Service** | Business rules, orchestration, ownership checks, transactions, calls other modules' services, emits events | Know about HTTP (`Request`, `HttpException`, status codes), run Prisma queries itself (except `$transaction`) |
-| **Repository** | Prisma queries for one aggregate, `select`/`include` shapes, mapping Prisma errors it expects | Contain business rules, call other repositories or services |
+| Layer          | Does                                                                                                                      | Must not                                                                                                      |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| **Controller** | Routing, decorators (auth, permissions, DTOs, docs), reads the current user, calls one service method, returns the result | Contain `if` business rules, touch Prisma, catch errors                                                       |
+| **Service**    | Business rules, orchestration, ownership checks, transactions, calls other modules' services, emits events                | Know about HTTP (`Request`, `HttpException`, status codes), run Prisma queries itself (except `$transaction`) |
+| **Repository** | Prisma queries for one aggregate, `select`/`include` shapes, mapping Prisma errors it expects                             | Contain business rules, call other repositories or services                                                   |
 
 **Why have repositories?** They keep database code in one place, make services easy to unit-test (mock the repository, not Prisma), and leave one place to change if a query needs to be optimized or written as raw SQL.
 
@@ -63,12 +63,17 @@ export class InvoicesService {
     if (await this.repo.existsByNumber(user.organizationId, dto.number)) {
       throw new InvoiceNumberTakenError(dto.number);
     }
-    return this.repo.insert({ ...dto, organizationId: user.organizationId, createdById: user.id });
+    return this.repo.insert({
+      ...dto,
+      organizationId: user.organizationId,
+      createdById: user.id,
+    });
   }
 
   async findOne(user: AuthUser, id: string): Promise<Invoice> {
     const invoice = await this.repo.findById(id);
-    if (!invoice || invoice.organizationId !== user.organizationId) throw new NotFoundError("Invoice");
+    if (!invoice || invoice.organizationId !== user.organizationId)
+      throw new NotFoundError("Invoice");
     return invoice;
   }
 }
@@ -85,7 +90,11 @@ export class InvoicesRepository {
   }
 
   async existsByNumber(organizationId: string, number: string, tx: Tx = this.prisma) {
-    return (await tx.invoice.count({ where: { organizationId, number, deletedAt: null } })) > 0;
+    return (
+      (await tx.invoice.count({
+        where: { organizationId, number, deletedAt: null },
+      })) > 0
+    );
   }
 
   insert(data: Prisma.InvoiceUncheckedCreateInput, tx: Tx = this.prisma) {

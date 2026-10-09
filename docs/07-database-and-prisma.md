@@ -4,14 +4,14 @@
 
 ## Schema conventions
 
-| Thing | Convention | Example |
-|---|---|---|
-| Models | `PascalCase`, singular | `model Invoice` |
-| Fields | `camelCase` | `dueDate` |
-| Tables / columns in Postgres | `snake_case` via `@@map` / `@map` | `invoices`, `due_date` |
-| Enums | `PascalCase` type, lowercase values (same strings the API returns) | `enum InvoiceStatus { draft sent paid void }` |
-| Primary key | `id String @id @default(uuid(7)) @db.Uuid` | |
-| Foreign keys | `<relation>Id`, always indexed | `customerId` + `@@index([customerId])` |
+| Thing                        | Convention                                                         | Example                                       |
+| ---------------------------- | ------------------------------------------------------------------ | --------------------------------------------- |
+| Models                       | `PascalCase`, singular                                             | `model Invoice`                               |
+| Fields                       | `camelCase`                                                        | `dueDate`                                     |
+| Tables / columns in Postgres | `snake_case` via `@@map` / `@map`                                  | `invoices`, `due_date`                        |
+| Enums                        | `PascalCase` type, lowercase values (same strings the API returns) | `enum InvoiceStatus { draft sent paid void }` |
+| Primary key                  | `id String @id @default(uuid(7)) @db.Uuid`                         |                                               |
+| Foreign keys                 | `<relation>Id`, always indexed                                     | `customerId` + `@@index([customerId])`        |
 
 **Every model has:**
 
@@ -102,7 +102,9 @@ import { PrismaClient } from "@/generated/prisma/client";
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   constructor(config: AppConfig) {
-    super({ adapter: new PrismaPg({ connectionString: config.get("DATABASE_URL") }) });
+    super({
+      adapter: new PrismaPg({ connectionString: config.get("DATABASE_URL") }),
+    });
   }
 
   async onModuleInit() {

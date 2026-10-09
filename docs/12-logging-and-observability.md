@@ -2,29 +2,29 @@
 
 ## Stack
 
-| Concern | Tool |
-|---|---|
-| Logging | `nestjs-pino`: structured JSON in production, pretty-printed in dev |
-| Request context | `nestjs-cls`: request ID, user ID |
-| Health checks | `@nestjs/terminus` |
-| Tracing / metrics | OpenTelemetry (optional; set up in `src/instrumentation.ts`) |
+| Concern           | Tool                                                                |
+| ----------------- | ------------------------------------------------------------------- |
+| Logging           | `nestjs-pino`: structured JSON in production, pretty-printed in dev |
+| Request context   | `nestjs-cls`: request ID, user ID                                   |
+| Health checks     | `@nestjs/terminus`                                                  |
+| Tracing / metrics | OpenTelemetry (optional; set up in `src/instrumentation.ts`)        |
 
 ## Rules
 
 ### Logging
 
-- **Use the injected `PinoLogger` / Nest `Logger`. Never use `console.*`** (ESLint enforces this).
+- **Use the injected `PinoLogger` / Nest `Logger`. Never use `console.*`** (oxlint enforces this).
 - **Log structured fields, not values glued into the message:** `logger.info({ invoiceId, amount }, "Invoice sent")`, not `` `Invoice ${id} sent` ``.
 - **Every log line includes `requestId`** (added automatically from CLS) and `userId` when one is known.
 - **Request IDs:** use the incoming `x-request-id` header if it's a valid ID, otherwise generate a UUID. The ID is sent back in the `x-request-id` response header and in error bodies.
 - **Use the right level:**
 
-  | Level | Use for |
-  |---|---|
+  | Level   | Use for                                                                                     |
+  | ------- | ------------------------------------------------------------------------------------------- |
   | `error` | Unexpected failures that need someone to look at them (500s, failed jobs after all retries) |
-  | `warn` | Expected but notable events: 4xx from business rules, retries, approaching a limit |
-  | `info` | Business events: user registered, invoice sent, job completed |
-  | `debug` | Details for development. Off in production |
+  | `warn`  | Expected but notable events: 4xx from business rules, retries, approaching a limit          |
+  | `info`  | Business events: user registered, invoice sent, job completed                               |
+  | `debug` | Details for development. Off in production                                                  |
 
 - **Never log secrets or personal data.** The pino `redact` config removes these paths automatically:
 
@@ -37,10 +37,11 @@
     "*.refreshToken",
     "*.accessToken",
     "*.token",
-  ]
+  ];
   ```
 
   Don't log whole request or response bodies. Log IDs instead.
+
 - **Don't log 2xx requests and successful health checks one by one in production.** The HTTP request log is enough.
 
 ### Audit log
@@ -50,16 +51,16 @@
 
 ### Health checks
 
-| Endpoint | Checks | Used by |
-|---|---|---|
-| `GET /health/live` | Only that the process responds | Liveness probe: restart the app if this fails |
+| Endpoint            | Checks                          | Used by                                             |
+| ------------------- | ------------------------------- | --------------------------------------------------- |
+| `GET /health/live`  | Only that the process responds  | Liveness probe: restart the app if this fails       |
 | `GET /health/ready` | Database `SELECT 1`, Redis ping | Readiness probe: stop sending traffic if this fails |
 
 Health endpoints are `@Public()`, outside `/v1`, and excluded from rate limiting and request logs.
 
 ### Graceful shutdown
 
-- `app.enableShutdownHooks()` is called in `main.ts`. When the app receives `SIGTERM`, it: stops accepting traffic (readiness fails) → finishes requests already in progress → closes queue workers → disconnects Prisma/Redis.
+- `app.enableShutdownHooks()` is called in `configureApp()`. When the app receives `SIGTERM`, it: stops accepting traffic (readiness fails) → finishes requests already in progress → closes queue workers → disconnects Prisma/Redis.
 
 ## Don't
 

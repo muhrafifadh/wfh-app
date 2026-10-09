@@ -6,7 +6,7 @@ Authentication and authorization have their own docs ([08](08-authentication.md)
 
 ### HTTP
 
-- **Use `helmet()`** with default settings. Content Security Policy is off, because this server only returns JSON.
+- **Use `helmet()`** with default settings (set in `configureApp()`).
 - **CORS uses an allowlist** from `CORS_ORIGINS`. Never use `origin: "*"`, and never allow credentials together with a wildcard origin.
 - **Set `trust proxy` only when the app runs behind a known proxy** (`TRUST_PROXY=true`). Otherwise clients can fake their IP with `X-Forwarded-For` and get around rate limits.
 - **Limit body size:** JSON 1 MB by default. Endpoints that need more set their own limit.

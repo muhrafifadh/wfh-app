@@ -23,12 +23,12 @@
 
 ## Where types live
 
-| Type | Location |
-|---|---|
-| Request/response shapes | `modules/<m>/dto/` (from Zod) |
-| Database rows | generated Prisma client. Don't write them by hand |
-| Domain types for one module | `modules/<m>/<m>.types.ts` |
-| Shared (`AuthUser`, `Permission`, `Paginated<T>`) | `src/common/types/` |
+| Type                                              | Location                                          |
+| ------------------------------------------------- | ------------------------------------------------- |
+| Request/response shapes                           | `modules/<m>/dto/` (from Zod)                     |
+| Database rows                                     | generated Prisma client. Don't write them by hand |
+| Domain types for one module                       | `modules/<m>/<m>.types.ts`                        |
+| Shared (`AuthUser`, `Permission`, `Paginated<T>`) | `src/common/types/`                               |
 
 ## Examples
 

@@ -2,13 +2,13 @@
 
 ## Two kinds of failure
 
-| | Expected | Unexpected |
-|---|---|---|
-| Examples | Not found, conflict, validation, forbidden, business rule | Bug, database down, timeout, unexpected Prisma error |
-| Thrown as | An `AppError` subclass with a stable `code` | Anything else |
-| HTTP | The status set on the error class (4xx) | `500 INTERNAL_ERROR` |
-| Message to client | The error's message, written for users | A generic message only |
-| Logged as | `warn` (or not logged, for 404s) | `error`, with the stack trace |
+|                   | Expected                                                  | Unexpected                                           |
+| ----------------- | --------------------------------------------------------- | ---------------------------------------------------- |
+| Examples          | Not found, conflict, validation, forbidden, business rule | Bug, database down, timeout, unexpected Prisma error |
+| Thrown as         | An `AppError` subclass with a stable `code`               | Anything else                                        |
+| HTTP              | The status set on the error class (4xx)                   | `500 INTERNAL_ERROR`                                 |
+| Message to client | The error's message, written for users                    | A generic message only                               |
+| Logged as         | `warn` (or not logged, for 404s)                          | `error`, with the stack trace                        |
 
 ## Rules
 
@@ -28,7 +28,10 @@ export abstract class AppError extends Error {
   abstract readonly status: number;
   abstract readonly code: string;
 
-  constructor(message: string, readonly details?: Record<string, unknown>) {
+  constructor(
+    message: string,
+    readonly details?: Record<string, unknown>,
+  ) {
     super(message);
     this.name = new.target.name;
   }
@@ -57,7 +60,9 @@ export class InvoiceNumberTakenError extends AppError {
   readonly status = 409;
   readonly code = "INVOICE_NUMBER_TAKEN";
   constructor(number: string) {
-    super("An invoice with this number already exists.", { fieldErrors: { number: ["Already in use"] } });
+    super("An invoice with this number already exists.", {
+      fieldErrors: { number: ["Already in use"] },
+    });
   }
 }
 ```
@@ -68,7 +73,10 @@ export class InvoiceNumberTakenError extends AppError {
 // common/filters/all-exceptions.filter.ts
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
-  constructor(private readonly logger: PinoLogger, private readonly cls: ClsService) {}
+  constructor(
+    private readonly logger: PinoLogger,
+    private readonly cls: ClsService,
+  ) {}
 
   catch(exception: unknown, host: ArgumentsHost) {
     const res = host.switchToHttp().getResponse<Response>();
@@ -85,13 +93,13 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
 `toErrorResponse` maps:
 
-| Input | Output |
-|---|---|
-| `AppError` | its `status`, `code`, `message`, `details` |
-| `ZodValidationException` (from `nestjs-zod`) | `400 VALIDATION_FAILED` + `details.fieldErrors` |
-| `ThrottlerException` | `429 RATE_LIMITED` |
+| Input                                                            | Output                                                      |
+| ---------------------------------------------------------------- | ----------------------------------------------------------- |
+| `AppError`                                                       | its `status`, `code`, `message`, `details`                  |
+| `ZodValidationException` (from `nestjs-zod`)                     | `400 VALIDATION_FAILED` + `details.fieldErrors`             |
+| `ThrottlerException`                                             | `429 RATE_LIMITED`                                          |
 | Nest `HttpException` (from framework code, e.g. `ParseUUIDPipe`) | its status + a generic code (`BAD_REQUEST`, `NOT_FOUND`, …) |
-| Anything else | `500 INTERNAL_ERROR`, `"Something went wrong."` |
+| Anything else                                                    | `500 INTERNAL_ERROR`, `"Something went wrong."`             |
 
 ## Prisma errors
 

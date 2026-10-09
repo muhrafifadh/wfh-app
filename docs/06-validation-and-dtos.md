@@ -48,7 +48,12 @@ export const paginationQuerySchema = z.object({
 });
 
 export const paginated = <T extends z.ZodType>(item: T) =>
-  z.object({ items: z.array(item), page: z.int(), pageSize: z.int(), total: z.int() });
+  z.object({
+    items: z.array(item),
+    page: z.int(),
+    pageSize: z.int(),
+    total: z.int(),
+  });
 ```
 
 ```ts
@@ -58,9 +63,7 @@ const SORTABLE = ["createdAt", "dueDate", "amount", "number"] as const;
 export const listInvoicesQuerySchema = paginationQuerySchema.extend({
   q: z.string().trim().max(100).optional(),
   status: z.union([z.enum(INVOICE_STATUSES), z.array(z.enum(INVOICE_STATUSES))]).optional(),
-  sort: z
-    .enum([...SORTABLE, ...SORTABLE.map((f) => `-${f}` as const)])
-    .default("-createdAt"),
+  sort: z.enum([...SORTABLE, ...SORTABLE.map((f) => `-${f}` as const)]).default("-createdAt"),
 });
 
 export class ListInvoicesQuery extends createZodDto(listInvoicesQuerySchema) {}
