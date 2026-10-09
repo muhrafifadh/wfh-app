@@ -60,5 +60,7 @@ export async function apiFetch<S extends z.ZodType>(
     throw new ApiError(res.status, "UNKNOWN_ERROR", `API ${init.method ?? "GET"} ${path} failed`);
   }
 
-  return schema.parse(res.status === 204 ? undefined : await res.json());
+  // 204, and 202 from fire-and-forget endpoints, have no body
+  const text = await res.text();
+  return schema.parse(text ? JSON.parse(text) : undefined);
 }

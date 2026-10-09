@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { siteConfig } from "@/config/site";
 import { CurrentUserProvider } from "@/features/auth/components/current-user-provider";
-import { SignOutButton } from "@/features/auth/components/sign-out-button";
+import { UserMenu } from "@/features/auth/components/user-menu";
 import { requireUser } from "@/lib/auth/session";
 
 /**
@@ -29,10 +29,7 @@ async function SignedInShell({ children }: { children: React.ReactNode }) {
           <Link href="/" className="font-semibold">
             {siteConfig.name}
           </Link>
-          <div className="flex items-center gap-3">
-            <span className="hidden text-sm text-muted-foreground sm:inline">{user.name}</span>
-            <SignOutButton />
-          </div>
+          <UserMenu />
         </div>
       </header>
       <main id="main" className="mx-auto max-w-5xl px-4 py-8">

@@ -93,10 +93,23 @@ async function SignedInShell({ children }: { children: React.ReactNode }) {
 
 Client components then read it with `useCurrentUser()`. This value is for display only. Authorization happens on the server.
 
-## Login & logout
+## Auth pages & actions
 
-- Login and logout are Server Actions in `features/auth/actions.ts`. Login sets the cookie and then redirects to the validated `next` path. Logout calls the backend to end the session, deletes the cookie, and redirects to `/login`.
-- On login failure, show a generic message ("Email or password is incorrect"). Never tell the user which of the two was wrong, because that tells an attacker which emails are registered.
+The `(auth)` route group uses one layout (the shadcn `login-02` block: form on the left, brand panel on the right at `lg`). Every page is static. Forms that read the URL (`next`, `reset`, `token`) sit behind `<Suspense>`.
+
+| Page                                                 | Action (`features/auth/actions.ts`)                                   | Backend                             |
+| ---------------------------------------------------- | --------------------------------------------------------------------- | ----------------------------------- |
+| `/login`                                             | `loginAction` → sets cookies, redirects to the validated `next`       | `POST /auth/login`                  |
+| `/register` (404 unless `REGISTRATION_ENABLED=true`) | `registerAction` → sets cookies, redirects to `/`                     | `POST /auth/register`               |
+| `/forgot-password`                                   | `requestPasswordResetAction` → always shows "check your email"        | `POST /auth/password-reset/request` |
+| `/reset-password?token=…`                            | `resetPasswordAction` → clears cookies, redirects to `/login?reset=1` | `POST /auth/password-reset/confirm` |
+| User menu → Sign out                                 | `logoutAction`                                                        | `POST /auth/logout`                 |
+| User menu → Sign out everywhere                      | `logoutAllAction`                                                     | `POST /auth/logout-all`             |
+
+- `REGISTRATION_ENABLED` is read at **build time** (the pages are static). Keep it in sync with the backend's flag, and rebuild after changing it.
+- `/reset-password` sets `referrer: "no-referrer"`, so the token in its URL never leaks to other sites.
+- All of these pages are in `proxy.ts`'s `PUBLIC_PATHS`. Signed-in users are sent from `/login` and `/register` to `/`.
+- On login failure, show a generic message ("Email or password is incorrect"). Never tell the user which of the two was wrong. Registration is the exception: it says when an email is taken, and the backend rate-limits it.
 
 ## Don't
 

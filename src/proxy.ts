@@ -3,7 +3,16 @@ import { NextResponse, type NextRequest } from "next/server";
 import { ACCESS_COOKIE, REFRESH_COOKIE, tokenCookies } from "@/lib/auth/cookies";
 import { refreshTokens } from "@/lib/auth/refresh";
 
-const PUBLIC_PATHS = ["/login", "/auth/session-expired"];
+const PUBLIC_PATHS = [
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/reset-password",
+  "/auth/session-expired",
+];
+
+/** Signed-in users don't need these; send them home. */
+const GUEST_ONLY_PATHS = ["/login", "/register"];
 
 const isPublicPath = (pathname: string) =>
   PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
@@ -44,7 +53,9 @@ export async function proxy(request: NextRequest) {
   }
 
   if (!hasAccess && !isPublic) return redirectToLogin(request, pathname + search);
-  if (hasAccess && pathname === "/login") return NextResponse.redirect(new URL("/", request.url));
+  if (hasAccess && GUEST_ONLY_PATHS.includes(pathname)) {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
   return NextResponse.next();
 }
 
