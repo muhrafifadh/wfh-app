@@ -26,7 +26,7 @@
 │   ├── infra/                 # Clients for external systems
 │   │   ├── prisma/            # PrismaModule, PrismaService
 │   │   ├── health/            # /health endpoints
-│   │   ├── mail/
+│   │   ├── mail/                # MailService: console (dev) / memory (tests) / disabled
 │   │   └── queue/
 │   ├── modules/               # Domain modules, one per area of the business
 │   │   ├── auth/

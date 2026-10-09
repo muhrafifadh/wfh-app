@@ -12,6 +12,7 @@ import { THROTTLE_KEY_FIELD, THROTTLERS } from "@/common/throttling/throttle-key
 import { REQUEST_ID_HEADER, resolveRequestId } from "@/common/http/request-id.js";
 import { AppConfig, ConfigModule } from "@/config/config.module.js";
 import { HealthModule } from "@/infra/health/health.module.js";
+import { MailModule } from "@/infra/mail/mail.module.js";
 import { PrismaModule } from "@/infra/prisma/prisma.module.js";
 import { AuthModule } from "@/modules/auth/auth.module.js";
 import { JwtAuthGuard } from "@/modules/auth/guards/jwt-auth.guard.js";
@@ -71,6 +72,7 @@ import { UsersModule } from "@/modules/users/users.module.js";
       },
     ]),
     PrismaModule,
+    MailModule,
     HealthModule,
     UsersModule,
     AuthModule,

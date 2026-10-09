@@ -3,6 +3,7 @@ import { JwtService, TokenExpiredError } from "@nestjs/jwt";
 import { hash, verify } from "@node-rs/argon2";
 
 import { UnauthenticatedError } from "@/common/errors/app-error.js";
+import { AppConfig } from "@/config/config.module.js";
 import type { AuthUser } from "@/common/types/auth.js";
 import { PrismaService } from "@/infra/prisma/prisma.service.js";
 import {
@@ -15,10 +16,12 @@ import {
   InvalidCredentialsError,
   InvalidRefreshTokenError,
   RefreshTokenReusedError,
+  RegistrationDisabledError,
 } from "@/modules/auth/auth.errors.js";
-import { generateRefreshToken, hashRefreshToken } from "@/modules/auth/auth.tokens.js";
+import { generateToken, hashToken } from "@/modules/auth/auth.tokens.js";
 import { SessionsRepository, type ClientInfo } from "@/modules/auth/sessions.repository.js";
 import type { LoginDto } from "@/modules/auth/dto/login.dto.js";
+import type { RegisterDto } from "@/modules/auth/dto/register.dto.js";
 import { UsersService, type ActiveUser } from "@/modules/users/users.service.js";
 
 export type TokenPair = {
@@ -44,6 +47,7 @@ export class AuthService {
     private readonly sessions: SessionsRepository,
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
+    private readonly config: AppConfig,
   ) {}
 
   async login(input: LoginDto, client: ClientInfo): Promise<TokenPair> {
@@ -55,13 +59,14 @@ export class AuthService {
       throw new InvalidCredentialsError();
     }
 
-    const expiresAt = new Date(Date.now() + SESSION_TTL_MS);
-    const session = await this.sessions.createSession({
-      userId: candidate.id,
-      expiresAt,
-      ...client,
-    });
-    return this.issueTokens(candidate.id, session.id, expiresAt);
+    return this.startSession(candidate.id, client);
+  }
+
+  /** Public sign-up: a new organization owned by the new user, signed in right away. */
+  async register(input: RegisterDto, client: ClientInfo): Promise<TokenPair> {
+    if (!this.config.get("REGISTRATION_ENABLED")) throw new RegistrationDisabledError();
+    const user = await this.users.registerOwner(input);
+    return this.startSession(user.id, client);
   }
 
   /**
@@ -72,7 +77,7 @@ export class AuthService {
     const now = new Date();
 
     const outcome = await this.prisma.$transaction(async (tx): Promise<RefreshOutcome> => {
-      const token = await this.sessions.findRefreshTokenByHash(hashRefreshToken(refreshToken), tx);
+      const token = await this.sessions.findRefreshTokenByHash(hashToken(refreshToken), tx);
       if (!token) return { kind: "invalid" };
 
       const { session } = token;
@@ -138,10 +143,21 @@ export class AuthService {
     await this.sessions.revokeSession(user.sessionId, new Date());
   }
 
+  /** Ends every session of this user, including the current one. */
+  async logoutAll(user: AuthUser): Promise<void> {
+    await this.sessions.revokeAllForUser(user.id, new Date());
+  }
+
   async me(user: AuthUser): Promise<ActiveUser> {
     const active = await this.users.findActive(user.id);
     if (!active) throw new UnauthenticatedError();
     return active;
+  }
+
+  private async startSession(userId: string, client: ClientInfo): Promise<TokenPair> {
+    const expiresAt = new Date(Date.now() + SESSION_TTL_MS);
+    const session = await this.sessions.createSession({ userId, expiresAt, ...client });
+    return this.issueTokens(userId, session.id, expiresAt);
   }
 
   private async issueTokens(
@@ -149,10 +165,10 @@ export class AuthService {
     sessionId: string,
     sessionExpiresAt: Date,
   ): Promise<TokenPair> {
-    const refreshToken = generateRefreshToken();
+    const refreshToken = generateToken();
     await this.sessions.insertRefreshToken({
       sessionId,
-      tokenHash: hashRefreshToken(refreshToken),
+      tokenHash: hashToken(refreshToken),
       expiresAt: sessionExpiresAt,
     });
 

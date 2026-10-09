@@ -32,6 +32,10 @@ export class SessionsRepository {
     await tx.session.updateMany({ where: { id, revokedAt: null }, data: { revokedAt: now } });
   }
 
+  async revokeAllForUser(userId: string, now: Date, tx: Tx = this.prisma): Promise<void> {
+    await tx.session.updateMany({ where: { userId, revokedAt: null }, data: { revokedAt: now } });
+  }
+
   insertRefreshToken(
     data: { sessionId: string; tokenHash: string; expiresAt: Date },
     tx: Tx = this.prisma,

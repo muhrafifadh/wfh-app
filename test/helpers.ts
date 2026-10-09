@@ -1,4 +1,5 @@
 import type { Type } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import type { NestExpressApplication } from "@nestjs/platform-express";
 import { Test } from "@nestjs/testing";
@@ -7,12 +8,39 @@ import { hash } from "@node-rs/argon2";
 
 import { AppModule } from "@/app.module.js";
 import type { Permission } from "@/common/types/auth.js";
+import { AppConfig } from "@/config/config.module.js";
+import type { Env } from "@/config/env.js";
 import { configureApp } from "@/configure-app.js";
 import { PrismaService } from "@/infra/prisma/prisma.service.js";
 
+/** AppConfig with some values replaced, for tests of config-dependent behavior. */
+class OverriddenConfig extends AppConfig {
+  constructor(
+    config: ConfigService<Env, true>,
+    private readonly overrides: Partial<Env>,
+  ) {
+    super(config);
+  }
+
+  override get<K extends keyof Env>(key: K): Env[K] {
+    return key in this.overrides ? (this.overrides[key] as Env[K]) : super.get(key);
+  }
+}
+
 /** The real app with the production setup, plus optional test-only controllers. */
-export async function createTestApp(controllers: Type[] = []): Promise<NestExpressApplication> {
-  const moduleRef = await Test.createTestingModule({ imports: [AppModule], controllers }).compile();
+export async function createTestApp(
+  controllers: Type[] = [],
+  options: { config?: Partial<Env> } = {},
+): Promise<NestExpressApplication> {
+  const builder = Test.createTestingModule({ imports: [AppModule], controllers });
+  const { config } = options;
+  if (config) {
+    builder.overrideProvider(AppConfig).useFactory({
+      factory: (nestConfig: ConfigService<Env, true>) => new OverriddenConfig(nestConfig, config),
+      inject: [ConfigService],
+    });
+  }
+  const moduleRef = await builder.compile();
   const app = configureApp(
     moduleRef.createNestApplication<NestExpressApplication>({
       bodyParser: false,
@@ -25,7 +53,7 @@ export async function createTestApp(controllers: Type[] = []): Promise<NestExpre
 
 export async function resetDatabase(app: NestExpressApplication): Promise<void> {
   await app.get(PrismaService)
-    .$executeRaw`TRUNCATE refresh_tokens, sessions, users, roles, organizations RESTART IDENTITY CASCADE`;
+    .$executeRaw`TRUNCATE password_reset_tokens, refresh_tokens, sessions, users, roles, organizations RESTART IDENTITY CASCADE`;
 }
 
 export type TestUser = { id: string; email: string; password: string; organizationId: string };

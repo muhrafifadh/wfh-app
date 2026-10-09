@@ -13,21 +13,24 @@ The Next.js server is the only client that holds the tokens. It sends the access
 
 ## Endpoints
 
-| Method & path              | Auth                             | Purpose                                                                  |
-| -------------------------- | -------------------------------- | ------------------------------------------------------------------------ |
-| `POST /v1/auth/register`   | Public                           | Create an account (if self-signup is enabled)                            |
-| `POST /v1/auth/login`      | Public                           | Email + password → `{ accessToken, refreshToken, accessTokenExpiresAt }` |
-| `POST /v1/auth/refresh`    | Public (needs the refresh token) | Exchange the refresh token for a **new pair of tokens**                  |
-| `POST /v1/auth/logout`     | Bearer                           | End the current session                                                  |
-| `POST /v1/auth/logout-all` | Bearer                           | End all of this user's sessions                                          |
-| `GET /v1/auth/me`          | Bearer                           | Current user + `permissions[]`. The frontend's `getSession()` calls this |
+| Method & path                          | Auth                             | Purpose                                                                                                 |
+| -------------------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `POST /v1/auth/register`               | Public                           | Create a new organization with the caller as owner, and sign in. 404 unless `REGISTRATION_ENABLED=true` |
+| `POST /v1/auth/login`                  | Public                           | Email + password → `{ accessToken, refreshToken, accessTokenExpiresAt }`                                |
+| `POST /v1/auth/refresh`                | Public (needs the refresh token) | Exchange the refresh token for a **new pair of tokens**                                                 |
+| `POST /v1/auth/logout`                 | Bearer                           | End the current session                                                                                 |
+| `POST /v1/auth/logout-all`             | Bearer                           | End all of this user's sessions                                                                         |
+| `POST /v1/auth/password-reset/request` | Public                           | Email a reset link. Always `202`                                                                        |
+| `POST /v1/auth/password-reset/confirm` | Public                           | `{ token, password }` → `204`; signs out every session                                                  |
+| `GET /v1/auth/me`                      | Bearer                           | Current user + `permissions[]`. The frontend's `getSession()` calls this                                |
 
 ## Rules
 
 ### Passwords
 
 - **Hash passwords with Argon2id** (`argon2` package, default settings or stronger). Never use bcrypt with a low cost factor, SHA, or MD5.
-- **Passwords must be at least 12 characters**, with no rules about which kinds of characters to include. Reject passwords that appear in known breaches (k-anonymity check against HaveIBeenPwned) when the user registers or changes their password.
+- **Passwords must be at least 12 characters** (max 256), with no rules about which kinds of characters to include (`newPasswordSchema` in `modules/auth/dto/password.ts`). Reject passwords that appear in known breaches (k-anonymity check against HaveIBeenPwned) when the user registers or changes their password. _Not built yet._
+- **Registration says when an email is taken** (`409 EMAIL_TAKEN`): the user needs to know. Its rate limit (3/hour per client) keeps that from being a way to list registered emails.
 - **When login fails, return the same error and take the same time** whether or not the email exists: `401 INVALID_CREDENTIALS`. If the user isn't found, verify the password against a dummy hash anyway, so response timing doesn't reveal which emails are registered.
 
 ### Access tokens
@@ -88,15 +91,17 @@ export class JwtAuthGuard implements CanActivate {
 | `POST /auth/login`     | 5 / minute per client IP + email (`@ThrottleKey("email")`), and 20 / minute per client IP across all emails (`perIp` throttler: credential-stuffing cap) |
 | `POST /auth/register`  | 3 / hour per IP                                                                                                                                          |
 | `POST /auth/refresh`   | 30 / minute per IP                                                                                                                                       |
-| Password reset request | 3 / hour per email                                                                                                                                       |
+| Password reset request | 3 / hour per client IP + email, 10 / hour per client IP                                                                                                  |
 
 "Client IP" is the forwarded IP when the request comes through a proxy listed in `TRUST_PROXY`. The frontend calls the backend server-to-server, so without that every user would share the Next server's IP and one budget. See [13 Security](13-security.md) for the throttler setup.
 
 ## Password reset & email verification
 
-- Reset and verification tokens are random, single-use, stored **hashed**, and expire (reset: 30 min, verification: 24 h).
+- Reset and verification tokens are random, single-use, stored **hashed**, and expire (reset: 30 min, verification: 24 h). Requesting a new reset link retires older unused ones, so only the newest link works.
 - Requesting a reset always returns `202`, whether or not the email exists.
 - A successful reset revokes every session.
+- **Email goes through `MailService`** (`infra/mail`), picked by `MAIL_TRANSPORT`: `console` prints emails, links included (development only), `memory` keeps them for tests, and `disabled` drops them. Production refuses `console` and `memory`, and will need a real transport (SMTP or a provider) before reset emails can be delivered.
+- Email verification is _not built yet_.
 
 ## Don't
 

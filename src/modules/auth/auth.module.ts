@@ -5,6 +5,8 @@ import { AppConfig } from "@/config/config.module.js";
 import { ACCESS_TOKEN_TTL_SECONDS } from "@/modules/auth/auth.constants.js";
 import { AuthController } from "@/modules/auth/auth.controller.js";
 import { AuthService } from "@/modules/auth/auth.service.js";
+import { PasswordResetRepository } from "@/modules/auth/password-reset.repository.js";
+import { PasswordResetService } from "@/modules/auth/password-reset.service.js";
 import { SessionsRepository } from "@/modules/auth/sessions.repository.js";
 import { UsersModule } from "@/modules/users/users.module.js";
 
@@ -24,7 +26,7 @@ import { UsersModule } from "@/modules/users/users.module.js";
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, SessionsRepository],
+  providers: [AuthService, SessionsRepository, PasswordResetService, PasswordResetRepository],
   // The global guards (registered in AppModule) need AuthService.
   exports: [AuthService],
 })

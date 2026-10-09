@@ -7,3 +7,5 @@ export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // sliding; extended on 
  * It gets a fresh pair for the same session instead of revoking it.
  */
 export const REFRESH_REUSE_GRACE_MS = 10_000;
+
+export const PASSWORD_RESET_TTL_MS = 30 * 60 * 1000;

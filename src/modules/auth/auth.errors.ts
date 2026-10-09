@@ -36,3 +36,22 @@ export class RefreshTokenReusedError extends AppError {
     super("Your session has ended. Please sign in again.");
   }
 }
+
+export class InvalidResetTokenError extends AppError {
+  readonly status = 400;
+  readonly code = "INVALID_RESET_TOKEN";
+
+  constructor() {
+    super("This reset link is invalid or has expired. Request a new one.");
+  }
+}
+
+/** Hidden as 404 so a disabled feature looks like a missing route. */
+export class RegistrationDisabledError extends AppError {
+  readonly status = 404;
+  readonly code = "NOT_FOUND";
+
+  constructor() {
+    super("Not found.");
+  }
+}

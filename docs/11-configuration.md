@@ -104,6 +104,13 @@ JWT_ACCESS_SECRET=replace-me-with-at-least-32-random-characters
 CORS_ORIGINS=http://localhost:3000
 # Proxies allowed to set X-Forwarded-For. The frontend server must be listed.
 TRUST_PROXY=loopback
+
+# Links in emails point here
+FRONTEND_URL=http://localhost:3000
+# Public sign-up (POST /v1/auth/register)
+REGISTRATION_ENABLED=true
+# console (dev: prints emails, links included), memory (tests), disabled (production for now)
+MAIL_TRANSPORT=console
 ```
 
 ## Feature flags
