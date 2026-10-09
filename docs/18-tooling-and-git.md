@@ -23,6 +23,7 @@ pnpm format       # prettier --write
 pnpm typecheck    # tsc --noEmit
 pnpm test         # vitest
 pnpm test:e2e     # playwright
+pnpm api:types    # regenerate API types from the backend's openapi.json
 pnpm analyze      # bundle analyzer
 ```
 

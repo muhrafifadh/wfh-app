@@ -2,22 +2,12 @@ import "server-only";
 
 import { headers as requestHeaders } from "next/headers";
 
-import { z } from "zod";
+import { type z } from "zod";
 
-import { ApiError } from "@/lib/api/errors";
+import { ApiError, errorBodySchema } from "@/lib/api/errors";
 import { forwardedForHeader } from "@/lib/api/forwarded";
 import { getAccessToken } from "@/lib/auth/cookies";
 import { env } from "@/lib/env";
-
-// Backend error body (backend docs/05-api-design.md#errors)
-const errorBodySchema = z.object({
-  error: z.object({
-    code: z.string(),
-    message: z.string(),
-    details: z.record(z.string(), z.unknown()).optional(),
-    requestId: z.string().optional(),
-  }),
-});
 
 type ApiFetchOptions<S extends z.ZodType> = Omit<RequestInit, "body"> & {
   schema: S;
