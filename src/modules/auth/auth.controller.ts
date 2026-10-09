@@ -7,6 +7,7 @@ import { ZodSerializerDto } from "nestjs-zod";
 import { Authenticated } from "@/common/decorators/authenticated.decorator.js";
 import { CurrentUser } from "@/common/decorators/current-user.decorator.js";
 import { Public } from "@/common/decorators/public.decorator.js";
+import { ThrottleKey } from "@/common/throttling/throttle-key.decorator.js";
 import type { AuthUser } from "@/common/types/auth.js";
 import { AuthService } from "@/modules/auth/auth.service.js";
 import { LoginDto } from "@/modules/auth/dto/login.dto.js";
@@ -27,7 +28,9 @@ export class AuthController {
 
   @Post("login")
   @Public()
-  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  // 5/min per client + email; 20/min per client across all emails (stuffing cap)
+  @Throttle({ default: { limit: 5, ttl: 60_000 }, perIp: { limit: 20, ttl: 60_000 } })
+  @ThrottleKey("email")
   @HttpCode(HttpStatus.OK)
   @ZodSerializerDto(TokenPairResponse)
   @ApiUnauthorizedResponse({ description: "INVALID_CREDENTIALS" })

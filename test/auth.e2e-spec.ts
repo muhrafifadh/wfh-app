@@ -82,9 +82,35 @@ describe("Auth (e2e)", () => {
       expect(Object.keys(res.body.error.details.fieldErrors)).toEqual(["email", "password"]);
     });
 
-    it("rate limits repeated attempts", async () => {
+    it("rate limits repeated attempts for the same client and email", async () => {
       for (let i = 0; i < 5; i++) await login(app, "nobody@example.test", "x").expect(401);
       const res = await login(app, "nobody@example.test", "x").expect(429);
+      expect(res.body.error.code).toBe("RATE_LIMITED");
+    });
+
+    // The frontend calls login server-to-server, so every user arrives from the
+    // same socket address. The limit must follow the forwarded client IP.
+    it("gives each forwarded client IP its own budget", async () => {
+      const from = (ip: string) =>
+        request(app.getHttpServer())
+          .post("/v1/auth/login")
+          .set("X-Forwarded-For", ip)
+          .send({ email: "nobody@example.test", password: "x" });
+
+      for (let i = 0; i < 5; i++) await from("203.0.113.10").expect(401);
+      await from("203.0.113.10").expect(429);
+      await from("203.0.113.20").expect(401);
+    });
+
+    it("gives each email its own budget from the same client", async () => {
+      for (let i = 0; i < 5; i++) await login(app, "first@example.test", "x").expect(401);
+      await login(app, "FIRST@example.test", "x").expect(429); // case-insensitive
+      await login(app, "second@example.test", "x").expect(401);
+    });
+
+    it("caps one client across many emails (credential stuffing)", async () => {
+      for (let i = 0; i < 20; i++) await login(app, `victim${i}@example.test`, "x").expect(401);
+      const res = await login(app, "victim20@example.test", "x").expect(429);
       expect(res.body.error.code).toBe("RATE_LIMITED");
     });
   });

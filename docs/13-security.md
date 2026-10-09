@@ -8,13 +8,14 @@ Authentication and authorization have their own docs ([08](08-authentication.md)
 
 - **Use `helmet()`** with default settings (set in `configureApp()`).
 - **CORS uses an allowlist** from `CORS_ORIGINS`. Never use `origin: "*"`, and never allow credentials together with a wildcard origin.
-- **Set `trust proxy` only when the app runs behind a known proxy** (`TRUST_PROXY=true`). Otherwise clients can fake their IP with `X-Forwarded-For` and get around rate limits.
+- **`TRUST_PROXY` lists exactly the proxies allowed to set `X-Forwarded-For`**: the frontend server, plus any load balancer in front of the backend. Use addresses, CIDRs, `loopback`, or a hop count. `true` is refused at startup, because any client could then pick its own IP and get around rate limits.
+- **Rate limits are per client, not per caller.** All user traffic arrives from the Next server, so the frontend forwards `X-Forwarded-For` on every backend call, and Express takes the rightmost untrusted address as `req.ip`. In production, Next itself must run behind a proxy that appends the real client IP (Vercel, nginx, ALB). Next only fills the header in when it's missing.
 - **Limit body size:** JSON 1 MB by default. Endpoints that need more set their own limit.
 - **Set timeouts:** requests 30 s, outgoing HTTP calls 10 s, database statements 15 s (`statement_timeout`).
 
 ### Rate limiting
 
-- **`@nestjs/throttler` runs globally:** 100 requests/minute per IP by default, with tighter limits on auth endpoints ([08](08-authentication.md)).
+- **`AppThrottlerGuard` runs globally:** 100 requests/minute per client IP by default, with tighter limits on auth endpoints ([08](08-authentication.md)). `@ThrottleKey("field")` also keys a route by a body field (login uses the email). Routes with `@ThrottleKey` also get the `perIp` throttler, which counts by client IP only, so one client can't spread attempts across many accounts.
 - **When more than one instance runs, store the counters in Redis.** Otherwise each instance keeps its own counter and the real limit is multiplied by the number of instances.
 - **Use `@SkipThrottle()` only for health checks** and authenticated webhooks.
 

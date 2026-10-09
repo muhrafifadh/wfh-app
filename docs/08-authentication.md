@@ -83,14 +83,14 @@ export class JwtAuthGuard implements CanActivate {
 
 ### Rate limits
 
-| Endpoint               | Limit                                   |
-| ---------------------- | --------------------------------------- |
-| `POST /auth/login`     | 5 / minute per IP + email, then backoff |
-| `POST /auth/register`  | 3 / hour per IP                         |
-| `POST /auth/refresh`   | 30 / minute per IP                      |
-| Password reset request | 3 / hour per email                      |
+| Endpoint               | Limit                                                                                                                                                    |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /auth/login`     | 5 / minute per client IP + email (`@ThrottleKey("email")`), and 20 / minute per client IP across all emails (`perIp` throttler: credential-stuffing cap) |
+| `POST /auth/register`  | 3 / hour per IP                                                                                                                                          |
+| `POST /auth/refresh`   | 30 / minute per IP                                                                                                                                       |
+| Password reset request | 3 / hour per email                                                                                                                                       |
 
-See [13 Security](13-security.md) for the throttler setup.
+"Client IP" is the forwarded IP when the request comes through a proxy listed in `TRUST_PROXY`. The frontend calls the backend server-to-server, so without that every user would share the Next server's IP and one budget. See [13 Security](13-security.md) for the throttler setup.
 
 ## Password reset & email verification
 

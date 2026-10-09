@@ -15,6 +15,8 @@
 // src/config/env.ts
 import { z } from "zod";
 
+import { parseTrustProxy } from "@/config/trust-proxy.js";
+
 const csv = z.string().transform((s) =>
   s
     .split(",")
@@ -36,10 +38,18 @@ export const envSchema = z.object({
 
   CORS_ORIGINS: csv, // e.g. "http://localhost:3000,https://app.example.com"
   // Not z.coerce.boolean(): that turns the string "false" into true
+  // Who may set X-Forwarded-For (docs/13-security.md). Parsed for Express "trust proxy".
   TRUST_PROXY: z
-    .enum(["true", "false"])
-    .transform((v) => v === "true")
-    .default(false),
+    .string()
+    .default("")
+    .transform((raw, ctx) => {
+      try {
+        return parseTrustProxy(raw);
+      } catch (error) {
+        ctx.addIssue({ code: "custom", message: (error as Error).message });
+        return z.NEVER;
+      }
+    }),
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -92,7 +102,8 @@ JWT_ACCESS_SECRET=replace-me-with-at-least-32-random-characters
 
 # Comma-separated list of allowed frontend origins
 CORS_ORIGINS=http://localhost:3000
-TRUST_PROXY=false
+# Proxies allowed to set X-Forwarded-For. The frontend server must be listed.
+TRUST_PROXY=loopback
 ```
 
 ## Feature flags
