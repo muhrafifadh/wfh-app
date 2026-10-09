@@ -1,6 +1,7 @@
 import "server-only";
 
 import { tokenPairSchema } from "@/features/auth/schemas";
+import { forwardedForHeader } from "@/lib/api/forwarded";
 import type { TokenPair } from "@/lib/auth/cookies";
 import { env } from "@/lib/env";
 
@@ -10,11 +11,18 @@ export type RefreshResult =
   | { status: "unavailable" }; // backend unreachable: keep cookies, try again later
 
 /** Exchanges a refresh token for a new pair. Used by proxy.ts. */
-export async function refreshTokens(refreshToken: string): Promise<RefreshResult> {
+export async function refreshTokens(
+  refreshToken: string,
+  clientChain: string | null,
+): Promise<RefreshResult> {
   try {
     const res = await fetch(`${env.API_URL}/auth/refresh`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        ...forwardedForHeader(clientChain),
+      },
       body: JSON.stringify({ refreshToken }),
       signal: AbortSignal.timeout(5_000),
       cache: "no-store",

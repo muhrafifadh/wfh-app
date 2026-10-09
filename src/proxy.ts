@@ -21,7 +21,7 @@ export async function proxy(request: NextRequest) {
   const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value;
 
   if (!hasAccess && refreshToken) {
-    const result = await refreshTokens(refreshToken);
+    const result = await refreshTokens(refreshToken, request.headers.get("x-forwarded-for"));
 
     if (result.status === "ok") {
       const cookies = tokenCookies(result.tokens);

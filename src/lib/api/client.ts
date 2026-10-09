@@ -1,8 +1,11 @@
 import "server-only";
 
+import { headers as requestHeaders } from "next/headers";
+
 import { z } from "zod";
 
 import { ApiError } from "@/lib/api/errors";
+import { forwardedForHeader } from "@/lib/api/forwarded";
 import { getAccessToken } from "@/lib/auth/cookies";
 import { env } from "@/lib/env";
 
@@ -32,6 +35,7 @@ export async function apiFetch<S extends z.ZodType>(
   { schema, body, auth = true, headers, ...init }: ApiFetchOptions<S>,
 ): Promise<z.infer<S>> {
   const token = auth ? await getAccessToken() : undefined;
+  const clientChain = (await requestHeaders()).get("x-forwarded-for");
 
   const res = await fetch(`${env.API_URL}${path}`, {
     ...init,
@@ -39,6 +43,7 @@ export async function apiFetch<S extends z.ZodType>(
       Accept: "application/json",
       ...(body !== undefined && { "Content-Type": "application/json" }),
       ...(token && { Authorization: `Bearer ${token}` }),
+      ...forwardedForHeader(clientChain),
       ...headers,
     },
     body: body === undefined ? undefined : JSON.stringify(body),

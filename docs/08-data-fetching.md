@@ -18,7 +18,8 @@ Client Component ──► TanStack Query ──► app/api/<f>/route.ts ──�
 ## Rules
 
 - **Fetch in Server Components by default.** Pages call functions from `queries.ts` directly.
-- **All calls to the backend go through `lib/api/client.ts`.** Nothing else calls `fetch` to the backend.
+- **All calls to the backend go through `lib/api/client.ts`.** Nothing else calls `fetch` to the backend. (`proxy.ts`'s token refresh is the one exception; it can't use `next/headers`.)
+- **Every backend call forwards `X-Forwarded-For`** (`lib/api/forwarded.ts`), so the backend rate-limits per user's IP instead of per Next server. In production, run Next behind a proxy that appends the real client IP.
 - **Every query parses its response with Zod.** If the backend changes its response shape, we get a clear error here instead of a crash somewhere deep in the UI.
 - **Wrap query functions in React `cache()`.** Then calling the same query from a layout, a page, and `generateMetadata` sends only one request.
 - **Run independent requests in parallel** with `Promise.all`, or by putting them in separate `<Suspense>` boundaries. Don't `await` them one after another.
