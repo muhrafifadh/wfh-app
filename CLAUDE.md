@@ -21,7 +21,7 @@ The rules live in [`docs/`](docs/README.md). **Before you write or review code, 
 ## Never break these
 
 - Controller → service → repository. Only repositories call Prisma (services may start `$transaction`).
-- Every route has `@RequirePermissions(...)` or `@Public()`. Every record loaded by ID is checked against the caller's organization (404 if it doesn't match).
+- Every route has `@RequirePermissions(...)`, `@Authenticated()` or `@Public()` (the app won't start otherwise). Every record loaded by ID is checked against the caller's organization (404 if it doesn't match).
 - Strict Zod DTOs for every input. A response DTO for every output. Never return raw Prisma rows.
 - Services throw `AppError` subclasses with stable codes, never `HttpException`.
 - Never edit a migration after it's merged. Never write SQL by concatenating strings. Never read `process.env` outside `src/config/`.

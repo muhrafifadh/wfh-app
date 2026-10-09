@@ -1,19 +1,25 @@
 import { Module } from "@nestjs/common";
-import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from "@nestjs/core";
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE, DiscoveryModule } from "@nestjs/core";
 import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { ClsModule } from "nestjs-cls";
 import { LoggerModule } from "nestjs-pino";
 import { ZodSerializerInterceptor, ZodValidationPipe } from "nestjs-zod";
 
 import { AllExceptionsFilter } from "@/common/filters/all-exceptions.filter.js";
+import { RouteAuthAuditor } from "@/common/guards/route-auth.auditor.js";
 import { REQUEST_ID_HEADER, resolveRequestId } from "@/common/http/request-id.js";
 import { AppConfig, ConfigModule } from "@/config/config.module.js";
 import { HealthModule } from "@/infra/health/health.module.js";
 import { PrismaModule } from "@/infra/prisma/prisma.module.js";
+import { AuthModule } from "@/modules/auth/auth.module.js";
+import { JwtAuthGuard } from "@/modules/auth/guards/jwt-auth.guard.js";
+import { PermissionsGuard } from "@/modules/auth/guards/permissions.guard.js";
+import { UsersModule } from "@/modules/users/users.module.js";
 
 @Module({
   imports: [
     ConfigModule,
+    DiscoveryModule,
     ClsModule.forRoot({
       global: true,
       middleware: {
@@ -55,12 +61,18 @@ import { PrismaModule } from "@/infra/prisma/prisma.module.js";
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
     PrismaModule,
     HealthModule,
+    UsersModule,
+    AuthModule,
   ],
   providers: [
+    // Global guards run in this order (docs/09-authorization.md)
     { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: PermissionsGuard },
     { provide: APP_PIPE, useClass: ZodValidationPipe },
     { provide: APP_INTERCEPTOR, useClass: ZodSerializerInterceptor },
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
+    RouteAuthAuditor,
   ],
 })
 export class AppModule {}

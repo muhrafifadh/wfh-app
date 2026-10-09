@@ -17,8 +17,8 @@ Skipping the second check causes **IDOR** bugs (Insecure Direct Object Reference
 
 ## Rules
 
-- **Every non-public route has `@RequirePermissions(...)`.** A route without either `@Public()` or `@RequirePermissions` fails the boot-time check (a script that lists every route and fails the build if one has neither decorator).
-- **The `PermissionsGuard` loads the user's permissions once per request**, with a short cache (60 s, cleared when roles change).
+- **Every route makes an explicit access decision:** `@Public()`, `@Authenticated()` (any signed-in user, for routes about the caller themselves), or `@RequirePermissions(...)`. `RouteAuthAuditor` (`src/common/guards/route-auth.auditor.ts`) checks every route at startup, and **the app refuses to start** if one has none of the three.
+- **Permissions are loaded once per request**, by `JwtAuthGuard` through `AuthService.authenticate()`, and attached to `AuthUser.permissions`. A role change takes effect on the user's next request. Add a short cache only when you have measured a need for one.
 - **Services scope every query to the caller's organization.** Repository methods that read business records take `organizationId`, or the service checks it right after loading the record.
 - **If the record exists but belongs to someone else, return `404`, not `403`.** Otherwise attackers can tell which IDs exist.
 - **Never take `organizationId`, `userId`, or `role` from the request body** for authorization. Always use `@CurrentUser()`.
@@ -35,24 +35,20 @@ export const RequirePermissions = (...permissions: Permission[]) =>
 ```
 
 ```ts
-// common/guards/permissions.guard.ts
+// modules/auth/guards/permissions.guard.ts
 @Injectable()
 export class PermissionsGuard implements CanActivate {
-  constructor(
-    private readonly reflector: Reflector,
-    private readonly users: UsersService,
-  ) {}
+  constructor(private readonly reflector: Reflector) {}
 
-  async canActivate(ctx: ExecutionContext): Promise<boolean> {
+  canActivate(ctx: ExecutionContext): boolean {
     const required = this.reflector.getAllAndOverride<Permission[] | undefined>(PERMISSIONS_KEY, [
       ctx.getHandler(),
       ctx.getClass(),
     ]);
-    if (!required?.length) return true; // public routes are handled by JwtAuthGuard
+    if (!required?.length) return true;
 
-    const { user } = ctx.switchToHttp().getRequest<Request & { user: AuthUser }>();
-    const granted = await this.users.getPermissions(user.id);
-    if (!required.every((p) => granted.has(p))) throw new ForbiddenError();
+    const { user } = ctx.switchToHttp().getRequest<Request>();
+    if (!user || !required.every((p) => user.permissions.includes(p))) throw new ForbiddenError();
     return true;
   }
 }

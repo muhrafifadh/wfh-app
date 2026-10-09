@@ -34,31 +34,33 @@ The Next.js server is the only client that holds the tokens. It sends the access
 
 - **Sign with `JWT_ACCESS_SECRET`** (at least 32 random bytes) using `@nestjs/jwt`. Verify the algorithm, `exp`, `iss`, and `aud` on every request.
 - **The token contains only `sub` (user ID) and `sid` (session ID).** Don't put permissions or personal data in it. Permissions are loaded on each request ([09](09-authorization.md)), so a change takes effect right away instead of after the token expires.
-- **Revoked sessions are not checked against the database on each request.** That's acceptable because access tokens only live for 15 minutes. For sensitive actions (changing password or email, deleting the account), the endpoint also checks that the session is still active.
+- **Every request checks that the session is still active and the user isn't disabled.** The guard loads the user's permissions anyway, so checking the session as well costs little, and it makes logout and reuse revocation take effect immediately instead of up to 15 minutes later.
 
 ### Refresh tokens & sessions
 
 - **Store only the hash.** The raw token is returned once and never logged.
 - **Issue a new refresh token every time one is used.** Each `/auth/refresh` call invalidates the old token and returns a new one.
-- **Detect reuse:** if someone presents a refresh token that was already used, **revoke every session that descends from it** and return `401`. This means the token was stolen.
-- **A session records** `userId`, `refreshTokenHash`, `expiresAt`, `lastUsedAt`, `userAgent`, `ip`, and `revokedAt`.
+- **Detect reuse:** if someone presents a refresh token that was already used, **revoke its whole session** and return `401 REFRESH_TOKEN_REUSED`. This means the token was stolen.
+- **Concurrent refreshes aren't theft.** If a token comes back within **10 seconds** of being used (two tabs, or parallel requests refreshing at once), the caller gets a new token pair for the same session instead of having it revoked (`REFRESH_REUSE_GRACE_MS`).
+- **The revocation happens outside the refresh transaction.** Throwing inside `$transaction` would roll the revocation back.
+- **A session** (`sessions`) records `userId`, `expiresAt` (sliding: extended on every refresh), `lastUsedAt`, `userAgent`, `ip`, and `revokedAt`. **Each refresh token** (`refresh_tokens`) records its `tokenHash`, `expiresAt` and `usedAt`, and belongs to one session.
 - **Changing your password revokes every other session.**
 - **A scheduled job removes sessions** that expired or were revoked more than 30 days ago.
 
 ### Guards & decorators
 
-- **`JwtAuthGuard` is global** (`APP_GUARD`). **Every route requires a valid token by default.**
+- **`JwtAuthGuard` is global** (`APP_GUARD`). **Every route requires a valid token by default.** It lives in `modules/auth/guards/` because it needs `AuthService`, and `common/` must not import from `modules/`.
 - **Use `@Public()` to make a route public.** Every `@Public()` gets extra attention in review.
-- **Read the current user with `@CurrentUser()`.** It returns `AuthUser` (`{ id, sessionId, organizationId }`). Never read `req.user` directly.
+- **Use `@Authenticated()` for routes any signed-in user may call** (`/auth/me`, `/auth/logout`). Use `@RequirePermissions(...)` for everything else ([09](09-authorization.md)).
+- **Read the current user with `@CurrentUser()`.** It returns `AuthUser` (`{ id, sessionId, organizationId, permissions }`). Never read `req.user` directly.
 
 ```ts
-// common/guards/jwt-auth.guard.ts
+// modules/auth/guards/jwt-auth.guard.ts
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
-    private readonly jwt: JwtService,
-    private readonly users: UsersService,
+    private readonly auth: AuthService,
   ) {}
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
@@ -69,16 +71,11 @@ export class JwtAuthGuard implements CanActivate {
     if (isPublic) return true;
 
     const req = ctx.switchToHttp().getRequest<Request>();
-    const token = extractBearer(req);
+    const token = BEARER.exec(req.get("authorization") ?? "")?.[1];
     if (!token) throw new UnauthenticatedError();
 
-    const payload = await this.jwt.verifyAsync<AccessTokenPayload>(token).catch((e: unknown) => {
-      throw e instanceof TokenExpiredError
-        ? new TokenExpiredAppError()
-        : new UnauthenticatedError();
-    });
-
-    req.user = await this.users.getAuthUser(payload.sub, payload.sid); // throws if the user is disabled
+    // Verifies the JWT (TOKEN_EXPIRED if expired), then checks the session and loads the user
+    req.user = await this.auth.authenticate(token);
     return true;
   }
 }

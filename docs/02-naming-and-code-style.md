@@ -14,7 +14,7 @@ Files follow NestJS conventions: `<name>.<role>.ts`, in `kebab-case`.
 | Query DTO     | `dto/list-invoices.query.ts`                          | `ListInvoicesQuery`       |
 | Response DTO  | `dto/invoice.response.ts`                             | `InvoiceResponse`         |
 | Errors        | `invoices.errors.ts`                                  | `InvoiceNumberTakenError` |
-| Guard         | `permissions.guard.ts`                                | `PermissionsGuard`        |
+| Guard         | `guards/permissions.guard.ts`                         | `PermissionsGuard`        |
 | Decorator     | `current-user.decorator.ts`                           | `CurrentUser`             |
 | Job processor | `jobs/send-invoice.processor.ts`                      | `SendInvoiceProcessor`    |
 | Unit test     | `invoices.service.spec.ts`, next to the file it tests |                           |

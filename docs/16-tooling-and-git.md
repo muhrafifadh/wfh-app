@@ -22,7 +22,7 @@ Docker Compose ports are set in `.env` (`POSTGRES_PORT`, `POSTGRES_TEST_PORT`, `
 ```bash
 nvm use
 pnpm install
-cp .env.example .env
+cp .env.example .env   # then set SEED_ADMIN_PASSWORD
 docker compose up -d
 pnpm db:migrate
 pnpm db:seed
@@ -42,7 +42,7 @@ pnpm format         # prettier --write
 pnpm typecheck      # tsc --noEmit
 pnpm test           # unit tests
 pnpm test:e2e       # migrate + e2e tests against postgres-test
-pnpm db:migrate     # prisma migrate dev
+pnpm db:migrate     # prisma migrate dev (then pnpm db:generate: Prisma 7 no longer regenerates the client)
 pnpm db:deploy      # prisma migrate deploy (CI / prod)
 pnpm db:seed        # prisma db seed
 pnpm db:studio      # prisma studio

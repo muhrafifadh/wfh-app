@@ -16,8 +16,9 @@
 │   │   ├── env.ts             # Zod schema for env vars
 │   │   └── config.module.ts
 │   ├── common/                # Shared code that isn't about any domain
-│   │   ├── decorators/        # @Public, @CurrentUser, @RequirePermissions
-│   │   ├── guards/            # JwtAuthGuard, PermissionsGuard
+│   │   ├── decorators/        # @Public, @Authenticated, @RequirePermissions, @CurrentUser
+│   │   ├── guards/            # RouteAuthAuditor (auth guards live in modules/auth/guards)
+│   │   ├── types/             # AuthUser, Permission, Express request typing
 │   │   ├── filters/           # AllExceptionsFilter
 │   │   ├── errors/            # AppError + generic subclasses
 │   │   ├── dto/               # Pagination query/response, shared DTOs

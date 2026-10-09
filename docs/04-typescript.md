@@ -46,6 +46,7 @@ export type AuthUser = {
   id: string;
   sessionId: string;
   organizationId: string;
+  permissions: readonly Permission[];
 };
 ```
 

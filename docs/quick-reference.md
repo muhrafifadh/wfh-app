@@ -23,7 +23,9 @@ A one-page summary of the rules. Each line links to the doc that explains it.
 request
   → helmet / CORS / rate limit             (13)
   → JwtAuthGuard     (global; @Public() skips it)          (08)
+                     verifies JWT, checks session, loads user + permissions
   → PermissionsGuard (@RequirePermissions(...))            (09)
+                     (RouteAuthAuditor: every route must be @Public, @Authenticated or @RequirePermissions)
   → ZodValidationPipe (DTOs)                               (06)
   → Controller → Service → Repository → Prisma             (03, 07)
   → ZodSerializerInterceptor (response DTO)                (06)

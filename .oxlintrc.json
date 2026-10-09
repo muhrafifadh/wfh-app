@@ -43,6 +43,14 @@
       "rules": {
         "import/no-default-export": "off"
       }
+    },
+    {
+      "files": ["prisma/**"],
+      "rules": {
+        "node/no-process-env": "off",
+        "no-restricted-imports": "off",
+        "no-console": "off"
+      }
     }
   ]
 }

@@ -1,17 +1,18 @@
 import { Body, Controller, Get, Post } from "@nestjs/common";
 import type { NestExpressApplication } from "@nestjs/platform-express";
-import { Test } from "@nestjs/testing";
 import { createZodDto } from "nestjs-zod";
 import request from "supertest";
 import { z } from "zod";
 
-import { AppModule } from "@/app.module.js";
+import { Public } from "@/common/decorators/public.decorator.js";
 import { NotFoundError } from "@/common/errors/app-error.js";
-import { configureApp } from "@/configure-app.js";
+
+import { createTestApp } from "./helpers.js";
 
 // A throwaway controller that exercises the global pipeline.
 class EchoDto extends createZodDto(z.strictObject({ amount: z.int().positive() })) {}
 
+@Public()
 @Controller("echo")
 class EchoController {
   @Post()
@@ -29,18 +30,7 @@ describe("App (e2e)", () => {
   let app: NestExpressApplication;
 
   beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({
-      imports: [AppModule],
-      controllers: [EchoController],
-    }).compile();
-
-    app = configureApp(
-      moduleRef.createNestApplication<NestExpressApplication>({
-        bodyParser: false,
-        bufferLogs: true,
-      }),
-    );
-    await app.init();
+    app = await createTestApp([EchoController]);
   });
 
   afterAll(async () => {
