@@ -6,6 +6,8 @@ import "./src/lib/env";
 const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
+  // There is no home page: "/" (and every post-sign-in fallback to it) lands on the dashboard.
+  redirects: async () => [{ source: "/", destination: "/dashboard", permanent: false }],
   turbopack: {
     rules: {
       "*.css": {

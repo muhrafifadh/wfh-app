@@ -12,7 +12,7 @@ export default function NotFound() {
           The page you&apos;re looking for doesn&apos;t exist or was moved.
         </p>
         <Button asChild>
-          <Link href={routes.home()}>Go home</Link>
+          <Link href={routes.dashboard()}>Go to dashboard</Link>
         </Button>
       </div>
     </main>

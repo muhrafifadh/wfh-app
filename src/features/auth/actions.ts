@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 
 import { z } from "zod";
 
+import { routes } from "@/config/routes";
 import {
   forgotPasswordSchema,
   loginSchema,
@@ -77,7 +78,7 @@ export async function registerAction(input: unknown): Promise<ActionResult<never
   }
 
   await setTokenCookies(tokens);
-  redirect("/");
+  redirect(routes.dashboard());
 }
 
 /** Always "ok" for valid input: the backend never says whether the email exists. */
