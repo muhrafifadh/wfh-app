@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+
 import { PinoLogger } from "nestjs-pino";
 
 import { MailService, type MailMessage } from "@/infra/mail/mail.service.js";

@@ -1,4 +1,5 @@
 import { Global, Module } from "@nestjs/common";
+
 import { PinoLogger } from "nestjs-pino";
 
 import { AppConfig } from "@/config/config.module.js";

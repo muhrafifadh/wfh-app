@@ -94,6 +94,7 @@ async markPaid(user: AuthUser, id: string, payment: RecordPaymentDto) {
 ```ts
 // src/infra/prisma/prisma.service.ts
 import { Injectable, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
+
 import { PrismaPg } from "@prisma/adapter-pg";
 
 import { AppConfig } from "@/config/config.module";

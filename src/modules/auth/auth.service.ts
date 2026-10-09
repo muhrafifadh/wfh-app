@@ -1,10 +1,11 @@
 import { Injectable } from "@nestjs/common";
 import { JwtService, TokenExpiredError } from "@nestjs/jwt";
+
 import { hash, verify } from "@node-rs/argon2";
 
 import { UnauthenticatedError } from "@/common/errors/app-error.js";
-import { AppConfig } from "@/config/config.module.js";
 import type { AuthUser } from "@/common/types/auth.js";
+import { AppConfig } from "@/config/config.module.js";
 import { PrismaService } from "@/infra/prisma/prisma.service.js";
 import {
   ACCESS_TOKEN_TTL_SECONDS,
@@ -19,9 +20,9 @@ import {
   RegistrationDisabledError,
 } from "@/modules/auth/auth.errors.js";
 import { generateToken, hashToken } from "@/modules/auth/auth.tokens.js";
-import { SessionsRepository, type ClientInfo } from "@/modules/auth/sessions.repository.js";
 import type { LoginDto } from "@/modules/auth/dto/login.dto.js";
 import type { RegisterDto } from "@/modules/auth/dto/register.dto.js";
+import { SessionsRepository, type ClientInfo } from "@/modules/auth/sessions.repository.js";
 import { UsersService, type ActiveUser } from "@/modules/users/users.service.js";
 
 export type TokenPair = {

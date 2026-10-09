@@ -1,5 +1,6 @@
 import { Injectable, type ExecutionContext } from "@nestjs/common";
 import { ThrottlerGuard } from "@nestjs/throttler";
+
 import type { Request } from "express";
 
 import { THROTTLE_KEY_FIELD, THROTTLERS } from "@/common/throttling/throttle-key.decorator.js";

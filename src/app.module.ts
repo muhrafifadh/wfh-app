@@ -1,15 +1,16 @@
 import { Module } from "@nestjs/common";
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE, DiscoveryModule } from "@nestjs/core";
 import { ThrottlerModule } from "@nestjs/throttler";
+
 import { ClsModule } from "nestjs-cls";
 import { LoggerModule } from "nestjs-pino";
 import { ZodSerializerInterceptor, ZodValidationPipe } from "nestjs-zod";
 
 import { AllExceptionsFilter } from "@/common/filters/all-exceptions.filter.js";
 import { RouteAuthAuditor } from "@/common/guards/route-auth.auditor.js";
+import { REQUEST_ID_HEADER, resolveRequestId } from "@/common/http/request-id.js";
 import { AppThrottlerGuard } from "@/common/throttling/app-throttler.guard.js";
 import { THROTTLE_KEY_FIELD, THROTTLERS } from "@/common/throttling/throttle-key.decorator.js";
-import { REQUEST_ID_HEADER, resolveRequestId } from "@/common/http/request-id.js";
 import { AppConfig, ConfigModule } from "@/config/config.module.js";
 import { HealthModule } from "@/infra/health/health.module.js";
 import { MailModule } from "@/infra/mail/mail.module.js";

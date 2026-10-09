@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+
 import { PinoLogger } from "nestjs-pino";
 
 import { AppConfig } from "@/config/config.module.js";

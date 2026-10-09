@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+
 import { hash } from "@node-rs/argon2";
 
 import { isPermission, type Permission } from "@/common/types/auth.js";

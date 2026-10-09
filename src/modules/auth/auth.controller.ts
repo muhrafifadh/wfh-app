@@ -8,6 +8,7 @@ import {
   ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
+
 import type { Request } from "express";
 import { ZodResponse } from "nestjs-zod";
 
@@ -18,15 +19,15 @@ import { ThrottleKey } from "@/common/throttling/throttle-key.decorator.js";
 import type { AuthUser } from "@/common/types/auth.js";
 import { AuthService } from "@/modules/auth/auth.service.js";
 import { LoginDto } from "@/modules/auth/dto/login.dto.js";
+import { MeResponse } from "@/modules/auth/dto/me.response.js";
 import {
   PasswordResetConfirmDto,
   PasswordResetRequestDto,
 } from "@/modules/auth/dto/password-reset.dto.js";
-import { RegisterDto } from "@/modules/auth/dto/register.dto.js";
-import { PasswordResetService } from "@/modules/auth/password-reset.service.js";
-import { MeResponse } from "@/modules/auth/dto/me.response.js";
 import { RefreshDto } from "@/modules/auth/dto/refresh.dto.js";
+import { RegisterDto } from "@/modules/auth/dto/register.dto.js";
 import { TokenPairResponse } from "@/modules/auth/dto/token-pair.response.js";
+import { PasswordResetService } from "@/modules/auth/password-reset.service.js";
 import type { ClientInfo } from "@/modules/auth/sessions.repository.js";
 
 const clientInfo = (req: Request): ClientInfo => ({

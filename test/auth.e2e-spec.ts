@@ -1,5 +1,6 @@
 import { Controller, Get } from "@nestjs/common";
 import type { NestExpressApplication } from "@nestjs/platform-express";
+
 import request from "supertest";
 
 import { RequirePermissions } from "@/common/decorators/require-permissions.decorator.js";
