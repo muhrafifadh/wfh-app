@@ -11,20 +11,13 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { mainNav } from "@/config/nav";
+import { navTitleFor } from "@/config/nav";
 import { routes } from "@/config/routes";
 import { siteConfig } from "@/config/site";
 
-const titles = new Map(
-  mainNav.flatMap((item) => [
-    [item.href, item.title] as const,
-    ...(item.items ?? []).map((sub) => [sub.href, sub.title] as const),
-  ]),
-);
-
 export function AppBreadcrumb() {
   const pathname = usePathname();
-  const title = titles.get(pathname);
+  const title = navTitleFor(pathname);
 
   return (
     <Breadcrumb>

@@ -3,10 +3,13 @@ import { Suspense } from "react";
 
 import { AppBreadcrumb } from "@/app/(app)/_components/app-breadcrumb";
 import { AppSidebar } from "@/app/(app)/_components/app-sidebar";
+import { CommandMenu } from "@/app/(app)/_components/command-menu";
+import { SettingsDialog } from "@/app/(app)/_components/settings-dialog";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CurrentUserProvider } from "@/features/auth/components/current-user-provider";
+import { VerifyEmailBanner } from "@/features/auth/components/verify-email-banner";
 import { requireUser } from "@/lib/auth/session";
 
 /** Written by the shadcn sidebar when it's toggled. */
@@ -43,9 +46,17 @@ async function SignedInShell({ children }: { children: React.ReactNode }) {
               />
               <AppBreadcrumb />
             </div>
+            <div className="ml-auto pr-4">
+              <CommandMenu />
+            </div>
           </header>
-          <div className="flex flex-1 flex-col gap-4 p-4 pt-0">{children}</div>
+          <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+            <VerifyEmailBanner />
+            {children}
+          </div>
         </SidebarInset>
+        {/* Here, not in the user menu: on mobile the sidebar isn't mounted until opened. */}
+        <SettingsDialog />
       </SidebarProvider>
     </CurrentUserProvider>
   );

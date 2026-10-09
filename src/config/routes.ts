@@ -1,7 +1,15 @@
 // docs/04-routing-and-layouts.md — build URLs here, not with string concatenation.
 export const routes = {
   dashboard: () => "/dashboard",
+  invoices: () => "/invoices",
+  newInvoice: () => "/invoices/new",
+  users: () => "/users",
+  user: (id: string) => `/users/${encodeURIComponent(id)}`,
+  files: () => "/files",
+  auditLog: () => "/audit-log",
   login: () => "/login",
   register: () => "/register",
   forgotPassword: () => "/forgot-password",
+  acceptInvite: () => "/accept-invite",
+  verifyEmail: () => "/verify-email",
 } as const;

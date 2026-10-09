@@ -2,8 +2,10 @@
 
 import { useTransition } from "react";
 
-import { ChevronsUpDownIcon, LogOutIcon, MonitorSmartphoneIcon } from "lucide-react";
+import { ChevronsUpDownIcon, LogOutIcon, SettingsIcon } from "lucide-react";
 
+import { useSettingsDialog } from "@/app/(app)/_components/settings-dialog";
+import { ThemeMenuSub } from "@/app/(app)/_components/theme-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -19,7 +21,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { logoutAction, logoutAllAction } from "@/features/auth/actions";
+import { logoutAction } from "@/features/auth/actions";
 import { useCurrentUser } from "@/features/auth/components/current-user-provider";
 
 function initials(name: string) {
@@ -34,6 +36,7 @@ export function NavUser() {
   const user = useCurrentUser();
   const { isMobile } = useSidebar();
   const [isPending, startTransition] = useTransition();
+  const settings = useSettingsDialog();
 
   const identity = (
     <>
@@ -71,13 +74,15 @@ export function NavUser() {
               <div className="flex items-center gap-2 px-1 py-1.5">{identity}</div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={() => settings.open()}>
+              <SettingsIcon aria-hidden />
+              Settings
+            </DropdownMenuItem>
+            <ThemeMenuSub />
+            <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={() => startTransition(() => logoutAction())}>
               <LogOutIcon aria-hidden />
               Sign out
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => startTransition(() => logoutAllAction())}>
-              <MonitorSmartphoneIcon aria-hidden />
-              Sign out everywhere
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

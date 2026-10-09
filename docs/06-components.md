@@ -46,6 +46,16 @@ export function InvoiceStatusBadge({ status }: { status: InvoiceStatus }) {
 }
 ```
 
+## Shared building blocks
+
+| Need                                      | Use (`components/shared/`)                                          |
+| ----------------------------------------- | ------------------------------------------------------------------- |
+| Confirm a destructive action              | `<ConfirmDialog>`: controlled, stays open until the action finishes |
+| A sortable column header in a list        | `<SortHeader>`: a link to the list sorted by that column            |
+| Previous / next pages                     | `<ListPagination>`: links built from the list's URL params          |
+| A labelled input wired to React Hook Form | `<TextField>`                                                       |
+| No data                                   | `<EmptyState>`                                                      |
+
 ## Example: wrapping a native element
 
 ```tsx

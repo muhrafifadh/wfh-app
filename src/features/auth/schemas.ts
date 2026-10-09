@@ -41,6 +41,11 @@ export const resetPasswordSchema = z.object({
   password: newPasswordSchema,
 });
 
+/** Accepting an invitation is the reset flow's twin: same form, different token. */
+export const acceptInvitationSchema = resetPasswordSchema;
+
+export const verifyEmailSchema = z.object({ token: z.string().min(20).max(200) });
+
 // Backend response shapes (backend docs/08-authentication.md)
 export const tokenPairSchema = z.object({
   accessToken: z.string(),
@@ -54,6 +59,8 @@ export const sessionUserSchema = z.object({
   email: z.string(),
   name: z.string(),
   organizationId: z.string(),
+  /** False until the user clicks the link in the verification email. */
+  emailVerified: z.boolean(),
   // Ignore permissions this frontend doesn't know yet instead of failing the whole session
   permissions: z
     .array(z.string())

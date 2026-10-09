@@ -6,17 +6,20 @@ import { z } from "zod";
 
 import { routes } from "@/config/routes";
 import {
+  acceptInvitationSchema,
   forgotPasswordSchema,
   loginSchema,
   registerSchema,
   resetPasswordSchema,
   tokenPairSchema,
+  verifyEmailSchema,
 } from "@/features/auth/schemas";
 import { fail, ok, type ActionResult } from "@/lib/actions";
 import { apiFetch } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/errors";
 import { clearTokenCookies, setTokenCookies } from "@/lib/auth/cookies";
 import { safeRedirectPath } from "@/lib/auth/redirect";
+import { requireUser } from "@/lib/auth/session";
 import { reportError } from "@/lib/logger";
 
 const FIX_FIELDS = "Please fix the highlighted fields.";
@@ -119,6 +122,62 @@ export async function resetPasswordAction(input: unknown): Promise<ActionResult<
   // The backend signed this user out everywhere; drop any cookies this browser still has.
   await clearTokenCookies();
   redirect("/login?reset=1");
+}
+
+/** Sets the invited user's password and signs them in. */
+export async function acceptInvitationAction(input: unknown): Promise<ActionResult<never>> {
+  const parsed = acceptInvitationSchema.safeParse(input);
+  if (!parsed.success) return fail(FIX_FIELDS, z.flattenError(parsed.error).fieldErrors);
+
+  let tokens;
+  try {
+    tokens = await apiFetch("/auth/invitations/accept", {
+      method: "POST",
+      body: parsed.data,
+      schema: tokenPairSchema,
+      auth: false,
+    });
+  } catch (error) {
+    return expectedFailure(error, {
+      INVALID_INVITATION_TOKEN:
+        "This invitation link is invalid or has expired. Ask for a new invitation.",
+    });
+  }
+
+  // Replaces whatever session this browser had: the invitation is for this person
+  await setTokenCookies(tokens);
+  redirect(routes.dashboard());
+}
+
+export async function verifyEmailAction(input: unknown): Promise<ActionResult> {
+  const parsed = verifyEmailSchema.safeParse(input);
+  if (!parsed.success) return fail("This verification link is incomplete.");
+
+  try {
+    await apiFetch("/auth/email-verification/confirm", {
+      method: "POST",
+      body: parsed.data,
+      schema: z.undefined(),
+      auth: false,
+    });
+  } catch (error) {
+    return expectedFailure(error, {
+      INVALID_VERIFICATION_TOKEN:
+        "This verification link is invalid or has expired. Request a new one from the app.",
+    });
+  }
+  return ok(undefined);
+}
+
+/** Emails a new verification link to the signed-in user. */
+export async function resendVerificationAction(): Promise<ActionResult> {
+  await requireUser();
+  try {
+    await apiFetch("/auth/email-verification/resend", { method: "POST", schema: z.unknown() });
+  } catch (error) {
+    return expectedFailure(error);
+  }
+  return ok(undefined);
 }
 
 export async function logoutAction(): Promise<void> {

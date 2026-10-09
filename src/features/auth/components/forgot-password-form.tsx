@@ -6,13 +6,13 @@ import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
+import { TextField } from "@/components/shared/text-field";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldGroup } from "@/components/ui/field";
 import { routes } from "@/config/routes";
 import { requestPasswordResetAction } from "@/features/auth/actions";
 import { FormAlert } from "@/features/auth/components/form-alert";
 import { FormHeader } from "@/features/auth/components/form-header";
-import { TextField } from "@/features/auth/components/text-field";
 import { applyServerErrors } from "@/features/auth/form-errors";
 import { forgotPasswordSchema, type ForgotPasswordInput } from "@/features/auth/schemas";
 

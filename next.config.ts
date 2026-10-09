@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
+import { withSentryConfig } from "@sentry/nextjs/config";
+
 // Validate env vars at build/dev start — fail fast instead of at runtime.
-import "./src/lib/env";
+import { env } from "./src/lib/env";
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
@@ -18,4 +20,14 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// docs/13-error-handling.md#error-tracking — source maps are uploaded only when
+// SENTRY_AUTH_TOKEN is set (and then removed from the public build).
+export default withSentryConfig(nextConfig, {
+  org: env.SENTRY_ORG,
+  project: env.SENTRY_PROJECT,
+  authToken: env.SENTRY_AUTH_TOKEN,
+  sourcemaps: { disable: !env.SENTRY_AUTH_TOKEN },
+  silent: true,
+  // Don't send build telemetry to Sentry
+  telemetry: false,
+});

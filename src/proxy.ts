@@ -9,6 +9,8 @@ const PUBLIC_PATHS = [
   "/register",
   "/forgot-password",
   "/reset-password",
+  "/accept-invite",
+  "/verify-email",
   "/auth/session-expired",
 ];
 

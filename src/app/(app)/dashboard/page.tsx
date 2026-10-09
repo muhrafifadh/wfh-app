@@ -1,18 +1,49 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { routes } from "@/config/routes";
+import { InvoiceStats } from "@/features/invoices/components/invoice-stats";
+import { RevenueChart } from "@/features/invoices/components/revenue-chart";
+import { getMonthlyRevenue } from "@/features/invoices/queries";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
-/** Example page from shadcn sidebar-07. Replace the placeholders with real sections. */
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const revenue = await getMonthlyRevenue();
+
   return (
     <>
-      <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
-      <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-        <div className="aspect-video rounded-xl bg-muted/50" />
-        <div className="aspect-video rounded-xl bg-muted/50" />
-        <div className="aspect-video rounded-xl bg-muted/50" />
+      <div className="flex flex-wrap items-center gap-2">
+        <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
+        <Badge variant="secondary">Example data</Badge>
       </div>
-      <div className="min-h-screen flex-1 rounded-xl bg-muted/50 md:min-h-min" />
+
+      <InvoiceStats />
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Revenue collected</CardTitle>
+          <CardDescription>Paid invoices by month issued, 2026</CardDescription>
+          <CardAction>
+            <Button variant="outline" size="sm" asChild>
+              <Link href={routes.invoices()}>View invoices</Link>
+            </Button>
+          </CardAction>
+        </CardHeader>
+        <CardContent>
+          <RevenueChart data={revenue} />
+        </CardContent>
+      </Card>
     </>
   );
 }

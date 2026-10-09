@@ -54,6 +54,13 @@ export default function Error({
 }
 ```
 
+## Error tracking
+
+- **`reportError()` (`lib/logger.ts`) is the one place errors are reported.** It logs and sends to Sentry. Error boundaries (`error.tsx`, `global-error.tsx`) and server code call it; nothing else imports Sentry directly.
+- **Sentry is off unless `NEXT_PUBLIC_SENTRY_DSN` is set.** It's set up in `src/instrumentation.ts` (server and edge, including `onRequestError` for errors in Server Components, route handlers and actions) and `src/instrumentation-client.ts` (browser), with shared options in `lib/sentry.ts`.
+- **No personal data by default:** `sendDefaultPii` is off and Session Replay isn't installed. Adding either needs a privacy review.
+- **Readable stack traces:** set `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` and `SENTRY_PROJECT` at build time to upload source maps, and allow `@sentry/cli`'s build script in `pnpm-workspace.yaml`.
+
 ## Errors in one section of a page
 
 If a non-critical section fails (e.g. a "recent activity" sidebar), the rest of the page should still work. Wrap that section in its own `<Suspense>` and an error boundary, so the failure only affects that section.

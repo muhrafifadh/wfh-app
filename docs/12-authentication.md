@@ -21,7 +21,7 @@ The backend still checks every request it receives. The frontend checks exist to
 - **Permission checks go through `can(user, permission)`.** Don't compare roles inline (`user.role === "admin"`) in components or actions.
 - **Hiding a button isn't access control.** Hide what the user can't use, _and_ check again on the server.
 - **Validate the `next` redirect parameter** with `safeRedirectPath()` (`lib/auth/redirect.ts`). Only relative paths that start with `/` (not `//` or `/\`) are accepted. Otherwise anyone can craft a login link that sends users to another site after they sign in.
-- **Client components only get a minimal user object** (`id`, `name`, `email`, `organizationId`, `permissions`). Never send them tokens or the full user record.
+- **Client components only get a minimal user object** (`id`, `name`, `email`, `organizationId`, `emailVerified`, `permissions`). Never send them tokens or the full user record.
 
 ## The auth module
 
@@ -97,17 +97,21 @@ Client components then read it with `useCurrentUser()`. This value is for displa
 
 The `(auth)` route group uses one layout (the shadcn `login-02` block: form on the left, brand panel on the right at `lg`). Every page is static. Forms that read the URL (`next`, `reset`, `token`) sit behind `<Suspense>`.
 
-| Page                                                 | Action (`features/auth/actions.ts`)                                   | Backend                             |
-| ---------------------------------------------------- | --------------------------------------------------------------------- | ----------------------------------- |
-| `/login`                                             | `loginAction` → sets cookies, redirects to the validated `next`       | `POST /auth/login`                  |
-| `/register` (404 unless `REGISTRATION_ENABLED=true`) | `registerAction` → sets cookies, redirects to `/`                     | `POST /auth/register`               |
-| `/forgot-password`                                   | `requestPasswordResetAction` → always shows "check your email"        | `POST /auth/password-reset/request` |
-| `/reset-password?token=…`                            | `resetPasswordAction` → clears cookies, redirects to `/login?reset=1` | `POST /auth/password-reset/confirm` |
-| User menu → Sign out                                 | `logoutAction`                                                        | `POST /auth/logout`                 |
-| User menu → Sign out everywhere                      | `logoutAllAction`                                                     | `POST /auth/logout-all`             |
+| Page                                                 | Action (`features/auth/actions.ts`)                                   | Backend                                 |
+| ---------------------------------------------------- | --------------------------------------------------------------------- | --------------------------------------- |
+| `/login`                                             | `loginAction` → sets cookies, redirects to the validated `next`       | `POST /auth/login`                      |
+| `/register` (404 unless `REGISTRATION_ENABLED=true`) | `registerAction` → sets cookies, redirects to `/`                     | `POST /auth/register`                   |
+| `/forgot-password`                                   | `requestPasswordResetAction` → always shows "check your email"        | `POST /auth/password-reset/request`     |
+| `/reset-password?token=…`                            | `resetPasswordAction` → clears cookies, redirects to `/login?reset=1` | `POST /auth/password-reset/confirm`     |
+| `/accept-invite?token=…`                             | `acceptInvitationAction` → sets cookies, redirects to the dashboard   | `POST /auth/invitations/accept`         |
+| `/verify-email?token=…` (verifies on click)          | `verifyEmailAction`                                                   | `POST /auth/email-verification/confirm` |
+| Banner in the app shell (until verified)             | `resendVerificationAction`                                            | `POST /auth/email-verification/resend`  |
+| User menu → Sign out                                 | `logoutAction`                                                        | `POST /auth/logout`                     |
+| Settings → Security → Sign out everywhere            | `logoutAllAction`                                                     | `POST /auth/logout-all`                 |
 
 - `REGISTRATION_ENABLED` is read at **build time** (the pages are static). Keep it in sync with the backend's flag, and rebuild after changing it.
-- `/reset-password` sets `referrer: "no-referrer"`, so the token in its URL never leaks to other sites.
+- `/reset-password`, `/accept-invite` and `/verify-email` set `referrer: "no-referrer"`, so the token in their URL never leaks to other sites.
+- **Links in emails act on a click, never on page load.** Email security scanners open links; a page that used the token on load would burn it before the user arrives.
 - All of these pages are in `proxy.ts`'s `PUBLIC_PATHS`. Signed-in users are sent from `/login` and `/register` to `/`.
 - On login failure, show a generic message ("Email or password is incorrect"). Never tell the user which of the two was wrong. Registration is the exception: it says when an email is taken, and the backend rate-limits it.
 

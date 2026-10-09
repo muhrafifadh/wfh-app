@@ -54,12 +54,13 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 App-wide constants go in `src/config/`, never as magic values scattered through the code:
 
-| File                  | Contents                                                  |
-| --------------------- | --------------------------------------------------------- |
-| `config/site.ts`      | App name, description, default metadata, social links     |
-| `config/routes.ts`    | Route builders: `routes.invoice(id)` → `/invoices/${id}`  |
-| `config/nav.ts`       | Navigation items (label, href, icon, required permission) |
-| `config/constants.ts` | `PAGE_SIZE`, `MAX_UPLOAD_BYTES`, debounce delays          |
+| File                  | Contents                                                                                                                      |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `config/site.ts`      | App name, description, default metadata, social links                                                                         |
+| `config/routes.ts`    | Route builders: `routes.invoice(id)` → `/invoices/${id}`                                                                      |
+| `config/nav.ts`       | Navigation items (label, href, icon, required permission); `visibleNav(permissions)` filters them for the sidebar and ⌘K menu |
+| `config/themes.ts`    | Light / dark / system choices (theme menu, settings, ⌘K)                                                                      |
+| `config/constants.ts` | `PAGE_SIZE`, `MAX_UPLOAD_BYTES`, debounce delays                                                                              |
 
 Constants used by only one feature stay in that feature (`features/<f>/constants.ts`).
 

@@ -16,17 +16,19 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-import { mainNav } from "@/config/nav";
+import { visibleNav } from "@/config/nav";
+import { useCurrentUser } from "@/features/auth/components/current-user-provider";
 
 /** Reads the nav config directly: icon components can't be passed from a Server Component. */
 export function NavMain() {
   const pathname = usePathname();
+  const { permissions } = useCurrentUser();
 
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Platform</SidebarGroupLabel>
       <SidebarMenu>
-        {mainNav.map((item) =>
+        {visibleNav(permissions).map((item) =>
           item.items?.length ? (
             <Collapsible
               key={item.title}
@@ -60,7 +62,11 @@ export function NavMain() {
             </Collapsible>
           ) : (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild tooltip={item.title} isActive={item.href === pathname}>
+              <SidebarMenuButton
+                asChild
+                tooltip={item.title}
+                isActive={pathname === item.href || pathname.startsWith(`${item.href}/`)}
+              >
                 <Link href={item.href} aria-current={item.href === pathname ? "page" : undefined}>
                   <item.icon aria-hidden />
                   <span>{item.title}</span>
