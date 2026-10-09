@@ -16,7 +16,7 @@ More rules:
 
 - **Expected failures return `{ ok: false }`:** validation errors, conflicts, permission denied, not found. **Unexpected failures throw**, and the nearest `error.tsx` handles them ([13](13-error-handling.md)).
 - **Error messages are written for users.** Never return raw backend messages or stack traces.
-- **After a successful create, redirect on the server** with `redirect()`, called *outside* any `try/catch` because `redirect` works by throwing.
+- **After a successful create, redirect on the server** with `redirect()`, called _outside_ any `try/catch` because `redirect` works by throwing.
 - **One action does one thing.** Don't build `saveInvoiceAction({ mode })` actions that branch on a mode.
 
 ## The `ActionResult` type
@@ -82,11 +82,11 @@ export async function createInvoiceAction(input: unknown): Promise<ActionResult<
 
 ## Calling actions from the client
 
-| Situation | Use |
-|---|---|
-| A form | React Hook Form `onSubmit` calls the action. See [10](10-validation-and-forms.md) |
-| A single button (delete, mark as paid) | `useTransition` + the action, plus a toast showing the result |
-| Instant feedback (toggle, like, reorder) | `useOptimistic` |
+| Situation                                | Use                                                                               |
+| ---------------------------------------- | --------------------------------------------------------------------------------- |
+| A form                                   | React Hook Form `onSubmit` calls the action. See [10](10-validation-and-forms.md) |
+| A single button (delete, mark as paid)   | `useTransition` + the action, plus a toast showing the result                     |
+| Instant feedback (toggle, like, reorder) | `useOptimistic`                                                                   |
 
 ```tsx
 "use client";

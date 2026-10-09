@@ -2,12 +2,12 @@
 
 ## Two kinds of failure
 
-| | Expected | Unexpected |
-|---|---|---|
-| Examples | Validation failed, not found, no permission, conflict | Backend down, bug, bad response shape |
-| How it's reported | A return value: `ActionResult`, a query returning `null` | `throw` |
-| Shown by | The component that made the request (inline, toast, `notFound()`) | The nearest `error.tsx` |
-| Logged? | No | Yes, reported to the error tracker |
+|                   | Expected                                                          | Unexpected                            |
+| ----------------- | ----------------------------------------------------------------- | ------------------------------------- |
+| Examples          | Validation failed, not found, no permission, conflict             | Backend down, bug, bad response shape |
+| How it's reported | A return value: `ActionResult`, a query returning `null`          | `throw`                               |
+| Shown by          | The component that made the request (inline, toast, `notFound()`) | The nearest `error.tsx`               |
+| Logged?           | No                                                                | Yes, reported to the error tracker    |
 
 ## Rules
 
@@ -30,17 +30,25 @@ import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { reportError } from "@/lib/logger";
 
-export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+export default function Error({
+  error,
+  retry,
+}: {
+  error: Error & { digest?: string };
+  retry: () => void;
+}) {
   useEffect(() => {
-    reportError(error);
+    reportError(error, { digest: error.digest });
   }, [error]);
 
   return (
     <div role="alert" className="grid place-items-center gap-4 py-16 text-center">
       <h2 className="text-lg font-semibold">Something went wrong</h2>
-      <p className="text-muted-foreground text-sm">Please try again. If it keeps happening, contact support.</p>
-      {error.digest && <p className="text-muted-foreground text-xs">Reference: {error.digest}</p>}
-      <Button onClick={reset}>Try again</Button>
+      <p className="text-sm text-muted-foreground">
+        Please try again. If it keeps happening, contact support.
+      </p>
+      {error.digest && <p className="text-xs text-muted-foreground">Reference: {error.digest}</p>}
+      <Button onClick={() => retry()}>Try again</Button>
     </div>
   );
 }
@@ -54,14 +62,14 @@ If a non-critical section fails (e.g. a "recent activity" sidebar), the rest of 
 
 Every component that loads data must handle all of these states:
 
-| State | What to render |
-|---|---|
-| Loading | A skeleton shaped like the content |
-| Empty (no data yet) | `<EmptyState>` with an explanation and the main action |
-| Empty (filters match nothing) | "No results" + a clear-filters button |
-| Error | A message + a retry button |
-| Partial / stale | Old data stays visible, with a subtle refreshing indicator |
-| Success | The content |
+| State                         | What to render                                             |
+| ----------------------------- | ---------------------------------------------------------- |
+| Loading                       | A skeleton shaped like the content                         |
+| Empty (no data yet)           | `<EmptyState>` with an explanation and the main action     |
+| Empty (filters match nothing) | "No results" + a clear-filters button                      |
+| Error                         | A message + a retry button                                 |
+| Partial / stale               | Old data stays visible, with a subtle refreshing indicator |
+| Success                       | The content                                                |
 
 ## Don't
 

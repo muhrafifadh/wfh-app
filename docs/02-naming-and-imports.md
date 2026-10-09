@@ -2,25 +2,25 @@
 
 ## Naming rules
 
-| Thing | Convention | Example |
-|---|---|---|
-| Files & folders | `kebab-case` | `invoice-table.tsx`, `use-debounce.ts` |
-| Components | `PascalCase`, named the same as the file | `invoice-table.tsx` → `InvoiceTable` |
-| Hooks | `use` + `camelCase` | `useDebounce` |
-| Functions, variables | `camelCase` | `formatCurrency` |
-| Module-level constants | `SCREAMING_SNAKE_CASE` | `MAX_UPLOAD_BYTES` |
-| Types | `PascalCase`, no `I` / `T` prefix | `Invoice`, `InvoiceStatus` |
-| Props types | component name + `Props` | `InvoiceTableProps` |
-| Zod schemas | `camelCase` + `Schema` | `createInvoiceSchema` |
-| Types inferred from schemas | `PascalCase`, no suffix | `type CreateInvoiceInput = z.infer<…>` |
-| Server Actions | verb + noun + `Action` | `createInvoiceAction` |
-| Server reads | `get` / `list` + noun | `getInvoice`, `listInvoices` |
-| Booleans | `is` / `has` / `can` / `should` | `isOpen`, `canEdit` |
-| Callback props | `on` + event | `onSelect` |
-| Handlers inside a component | `handle` + event | `handleSelect` |
-| Zustand stores | `use` + noun + `Store` | `useSidebarStore` |
-| Unit/component tests | `<file>.test.ts(x)`, next to the file | `format-currency.test.ts` |
-| E2E tests | `e2e/<flow>.spec.ts` | `e2e/create-invoice.spec.ts` |
+| Thing                       | Convention                               | Example                                |
+| --------------------------- | ---------------------------------------- | -------------------------------------- |
+| Files & folders             | `kebab-case`                             | `invoice-table.tsx`, `use-debounce.ts` |
+| Components                  | `PascalCase`, named the same as the file | `invoice-table.tsx` → `InvoiceTable`   |
+| Hooks                       | `use` + `camelCase`                      | `useDebounce`                          |
+| Functions, variables        | `camelCase`                              | `formatCurrency`                       |
+| Module-level constants      | `SCREAMING_SNAKE_CASE`                   | `MAX_UPLOAD_BYTES`                     |
+| Types                       | `PascalCase`, no `I` / `T` prefix        | `Invoice`, `InvoiceStatus`             |
+| Props types                 | component name + `Props`                 | `InvoiceTableProps`                    |
+| Zod schemas                 | `camelCase` + `Schema`                   | `createInvoiceSchema`                  |
+| Types inferred from schemas | `PascalCase`, no suffix                  | `type CreateInvoiceInput = z.infer<…>` |
+| Server Actions              | verb + noun + `Action`                   | `createInvoiceAction`                  |
+| Server reads                | `get` / `list` + noun                    | `getInvoice`, `listInvoices`           |
+| Booleans                    | `is` / `has` / `can` / `should`          | `isOpen`, `canEdit`                    |
+| Callback props              | `on` + event                             | `onSelect`                             |
+| Handlers inside a component | `handle` + event                         | `handleSelect`                         |
+| Zustand stores              | `use` + noun + `Store`                   | `useSidebarStore`                      |
+| Unit/component tests        | `<file>.test.ts(x)`, next to the file    | `format-currency.test.ts`              |
+| E2E tests                   | `e2e/<flow>.spec.ts`                     | `e2e/create-invoice.spec.ts`           |
 
 ## Rules
 

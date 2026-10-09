@@ -25,7 +25,7 @@ Target: **WCAG 2.2 AA**. Accessibility is part of "done", not something to add l
 - **Images have `alt` text that describes them.** Decorative images use `alt=""`.
 - **Buttons that only contain an icon have an accessible name:** `aria-label`, or `<span className="sr-only">`.
 - **Every form field has a visible label.** Error messages are linked to their field (the shadcn `<FormMessage>` does this).
-- **Don't use color as the only signal.** Pair it with an icon, text, or pattern (e.g. a status badge has a color *and* a word).
+- **Don't use color as the only signal.** Pair it with an icon, text, or pattern (e.g. a status badge has a color _and_ a word).
 - **Text contrast is at least 4.5:1** (3:1 for large text and UI controls). Check new tokens in both themes.
 - **Links describe where they go.** Never write "Click here".
 
@@ -49,7 +49,9 @@ Target: **WCAG 2.2 AA**. Accessibility is part of "done", not something to add l
 
 ```tsx
 // ✅ the status is conveyed by text, not only by color
-<Badge variant="destructive"><AlertCircle aria-hidden /> Overdue</Badge>
+<Badge variant="destructive">
+  <AlertCircle aria-hidden /> Overdue
+</Badge>
 ```
 
 ## How to check

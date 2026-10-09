@@ -26,8 +26,8 @@ export function InvoiceDetail({ invoice }: { invoice: Invoice }) {
   return (
     <article>
       <h1>{invoice.number}</h1>
-      <InvoiceLines lines={invoice.lines} />              {/* server */}
-      <MarkAsPaidButton invoiceId={invoice.id} />         {/* client island */}
+      <InvoiceLines lines={invoice.lines} /> {/* server */}
+      <MarkAsPaidButton invoiceId={invoice.id} /> {/* client island */}
     </article>
   );
 }

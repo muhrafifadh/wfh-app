@@ -61,6 +61,7 @@ A feature only creates the files it needs. Don't add empty `hooks.ts` or `types.
   ```
 
   Code may import from its own level or any level to the right. It must never import from a level to its left.
+
 - **Features don't import from each other.** If `features/invoices` needs something from `features/customers`, move that code down to `components/shared`, `lib`, or `types`. The one exception is a page in `app/`: it may combine components from several features.
 - **Don't use barrel files** (`index.ts` that re-exports a folder). They slow down builds and tree-shaking and cause circular imports.
 - **Prefix private folders in `app/` with `_`** so Next.js doesn't treat them as routes.

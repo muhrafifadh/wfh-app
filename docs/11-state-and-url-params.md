@@ -4,14 +4,14 @@
 
 Go down this list and use the first option that fits:
 
-| # | Kind of state | Where it lives |
-|---|---|---|
-| 1 | Can it be computed from other values? | **Compute it during render.** Don't store it |
-| 2 | Server data | Server Components; TanStack Query on the client ([08](08-data-fetching.md)) |
-| 3 | Should survive a refresh or a shared link (filters, search, tabs, pagination, sort, open item) | **URL search params** via `nuqs` |
-| 4 | Used by one component | `useState` / `useReducer` |
-| 5 | Shared within one subtree | Lift it to the nearest common parent; if that doesn't work, use React Context scoped to that subtree |
-| 6 | Truly global client state (sidebar collapsed, cart, command palette) | **Zustand** store in `src/stores/` |
+| #   | Kind of state                                                                                  | Where it lives                                                                                       |
+| --- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| 1   | Can it be computed from other values?                                                          | **Compute it during render.** Don't store it                                                         |
+| 2   | Server data                                                                                    | Server Components; TanStack Query on the client ([08](08-data-fetching.md))                          |
+| 3   | Should survive a refresh or a shared link (filters, search, tabs, pagination, sort, open item) | **URL search params** via `nuqs`                                                                     |
+| 4   | Used by one component                                                                          | `useState` / `useReducer`                                                                            |
+| 5   | Shared within one subtree                                                                      | Lift it to the nearest common parent; if that doesn't work, use React Context scoped to that subtree |
+| 6   | Truly global client state (sidebar collapsed, cart, command palette)                           | **Zustand** store in `src/stores/`                                                                   |
 
 ## Rules
 
@@ -54,9 +54,9 @@ export default async function InvoicesPage({ searchParams }: PageProps) {
 
   return (
     <>
-      <InvoiceFilters />                                   {/* client island */}
+      <InvoiceFilters /> {/* client island */}
       <Suspense key={JSON.stringify(filters)} fallback={<InvoiceTableSkeleton />}>
-        <InvoiceTable filters={filters} />                 {/* server, calls listInvoices */}
+        <InvoiceTable filters={filters} /> {/* server, calls listInvoices */}
       </Suspense>
     </>
   );

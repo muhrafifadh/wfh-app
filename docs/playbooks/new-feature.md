@@ -31,7 +31,7 @@ Steps for adding a domain feature (e.g. `invoices`) from scratch. Do them in ord
 
 → [08 Data fetching](../08-data-fetching.md)
 
-## 5. URL state — `features/<f>/search-params.ts` *(list pages)*
+## 5. URL state — `features/<f>/search-params.ts` _(list pages)_
 
 - [ ] nuqs parsers + `createLoader`, exporting the `<Entity>Filters` type.
 

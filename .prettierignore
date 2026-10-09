@@ -1,0 +1,6 @@
+.next
+coverage
+pnpm-lock.yaml
+next-env.d.ts
+src/components/ui
+AGENTS.md

@@ -18,12 +18,12 @@
 
 ## Where types live
 
-| Type | Location |
-|---|---|
-| Inferred from a schema | next to the schema in `features/<f>/schemas.ts` |
-| Domain types for one feature | `features/<f>/types.ts` |
-| Shared by 2+ features (`User`, `Paginated<T>`, `ID`) | `src/types/` |
-| Component props | in the component file, just above the component |
+| Type                                                 | Location                                        |
+| ---------------------------------------------------- | ----------------------------------------------- |
+| Inferred from a schema                               | next to the schema in `features/<f>/schemas.ts` |
+| Domain types for one feature                         | `features/<f>/types.ts`                         |
+| Shared by 2+ features (`User`, `Paginated<T>`, `ID`) | `src/types/`                                    |
+| Component props                                      | in the component file, just above the component |
 
 ## Examples
 

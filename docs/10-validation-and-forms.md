@@ -59,7 +59,14 @@ import type { z } from "zod";
 
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { createInvoiceAction } from "../actions";
 import { createInvoiceSchema, type CreateInvoiceInput } from "../schemas";
@@ -94,7 +101,9 @@ export function CreateInvoiceForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Invoice number</FormLabel>
-              <FormControl><Input {...field} /></FormControl>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}

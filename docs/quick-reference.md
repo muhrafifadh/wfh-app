@@ -4,36 +4,36 @@ A one-page summary of the rules. Each line links to the doc that explains it.
 
 ## Where does it go?
 
-| I'm writing… | Put it in |
-|---|---|
-| A page, layout, loading or error state | `src/app/<route>/` → [04](04-routing-and-layouts.md) |
-| A component used by one route only | `src/app/<route>/_components/` |
-| A component used by one feature | `src/features/<feature>/components/` |
-| A component used by 2+ features | `src/components/shared/` |
-| A shadcn primitive | `src/components/ui/` (via the CLI) → [06](06-components.md) |
-| A server-side data read | `src/features/<feature>/queries.ts` → [08](08-data-fetching.md) |
-| A mutation | `src/features/<feature>/actions.ts` → [09](09-server-actions.md) |
-| A Zod schema | `src/features/<feature>/schemas.ts` → [10](10-validation-and-forms.md) |
-| A type used across features | `src/types/` → [03](03-typescript.md) |
-| A framework-agnostic helper | `src/lib/` |
-| Global client state | `src/stores/` (Zustand) → [11](11-state-and-url-params.md) |
-| An env var | `src/lib/env.ts` + `.env.example` → [17](17-environment-and-config.md) |
+| I'm writing…                           | Put it in                                                              |
+| -------------------------------------- | ---------------------------------------------------------------------- |
+| A page, layout, loading or error state | `src/app/<route>/` → [04](04-routing-and-layouts.md)                   |
+| A component used by one route only     | `src/app/<route>/_components/`                                         |
+| A component used by one feature        | `src/features/<feature>/components/`                                   |
+| A component used by 2+ features        | `src/components/shared/`                                               |
+| A shadcn primitive                     | `src/components/ui/` (via the CLI) → [06](06-components.md)            |
+| A server-side data read                | `src/features/<feature>/queries.ts` → [08](08-data-fetching.md)        |
+| A mutation                             | `src/features/<feature>/actions.ts` → [09](09-server-actions.md)       |
+| A Zod schema                           | `src/features/<feature>/schemas.ts` → [10](10-validation-and-forms.md) |
+| A type used across features            | `src/types/` → [03](03-typescript.md)                                  |
+| A framework-agnostic helper            | `src/lib/`                                                             |
+| Global client state                    | `src/stores/` (Zustand) → [11](11-state-and-url-params.md)             |
+| An env var                             | `src/lib/env.ts` + `.env.example` → [17](17-environment-and-config.md) |
 
 ## Which tool for what?
 
-| Need | Use |
-|---|---|
-| Server data on page load | Server Component + `queries.ts` |
-| Server data that changes on the client (polling, infinite scroll) | TanStack Query |
-| Create / update / delete | Server Action returning `ActionResult` |
-| Filters, search, tabs, pagination | URL params via `nuqs` |
-| Local UI state | `useState` / `useReducer` |
-| Global client state (rare) | Zustand |
-| Forms | React Hook Form + Zod + shadcn `<Form>` |
-| Class names | `cn()`; variants with `cva` |
-| Toasts | `sonner` (`toast.success`, `toast.error`) |
-| Current user (server) | `await requireUser()` → [12](12-authentication.md) |
-| Current user (client) | `useCurrentUser()` |
+| Need                                                              | Use                                                |
+| ----------------------------------------------------------------- | -------------------------------------------------- |
+| Server data on page load                                          | Server Component + `queries.ts`                    |
+| Server data that changes on the client (polling, infinite scroll) | TanStack Query                                     |
+| Create / update / delete                                          | Server Action returning `ActionResult`             |
+| Filters, search, tabs, pagination                                 | URL params via `nuqs`                              |
+| Local UI state                                                    | `useState` / `useReducer`                          |
+| Global client state (rare)                                        | Zustand                                            |
+| Forms                                                             | React Hook Form + Zod + shadcn `<Form>`            |
+| Class names                                                       | `cn()`; variants with `cva`                        |
+| Toasts                                                            | `sonner` (`toast.success`, `toast.error`)          |
+| Current user (server)                                             | `await requireUser()` → [12](12-authentication.md) |
+| Current user (client)                                             | `useCurrentUser()`                                 |
 
 ## Ten rules people break most
 

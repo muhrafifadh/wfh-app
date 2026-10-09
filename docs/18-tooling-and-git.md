@@ -2,15 +2,15 @@
 
 ## Toolchain
 
-| Tool | Rule |
-|---|---|
-| **Node** | The version pinned in `.nvmrc` and `package.json#engines`. Run `nvm use`. |
-| **pnpm** | The only package manager. Commit `pnpm-lock.yaml`. Don't commit `package-lock.json` or `yarn.lock`. |
-| **TypeScript** | `strict`. `pnpm typecheck` must pass with zero errors. |
-| **ESLint** | `next/core-web-vitals`, `next/typescript`, `jsx-a11y`, import order, plus the project rules (no `any`, no `process.env`, no `console.log`, no `../` imports). |
-| **Prettier** | Plus `prettier-plugin-tailwindcss`. Formatting is never discussed in reviews. |
-| **Husky + lint-staged** | Pre-commit runs ESLint and Prettier on staged files. |
-| **commitlint** | Checks every commit message against Conventional Commits. |
+| Tool                    | Rule                                                                                                                                                          |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Node**                | The version pinned in `.nvmrc` and `package.json#engines`. Run `nvm use`.                                                                                     |
+| **pnpm**                | The only package manager. Commit `pnpm-lock.yaml`. Don't commit `package-lock.json` or `yarn.lock`.                                                           |
+| **TypeScript**          | `strict`. `pnpm typecheck` must pass with zero errors.                                                                                                        |
+| **ESLint**              | `next/core-web-vitals`, `next/typescript`, `jsx-a11y`, import order, plus the project rules (no `any`, no `process.env`, no `console.log`, no `../` imports). |
+| **Prettier**            | Plus `prettier-plugin-tailwindcss`. Formatting is never discussed in reviews.                                                                                 |
+| **Husky + lint-staged** | Pre-commit runs ESLint and Prettier on staged files.                                                                                                          |
+| **commitlint**          | Checks every commit message against Conventional Commits.                                                                                                     |
 
 ## Scripts
 
@@ -69,14 +69,14 @@ docs: add server actions rules
 
 - Types: `feat`, `fix`, `refactor`, `perf`, `test`, `docs`, `style`, `chore`, `build`, `ci`.
 - Write the subject in the imperative mood ("add", not "added"), in lowercase, with no period, under 72 characters.
-- Write a commit body when the *why* isn't obvious.
+- Write a commit body when the _why_ isn't obvious.
 - `feat!:` or a `BREAKING CHANGE:` footer marks a breaking change.
 
 ### Pull requests
 
 - **Keep PRs small:** aim for under ~400 changed lines. Split big work into PRs that can be merged one after another.
 - **Use the PR template.** It contains the [PR checklist](playbooks/pr-checklist.md).
-- **The description says what changed and why**, and includes screenshots or a recording for any UI change (light *and* dark).
+- **The description says what changed and why**, and includes screenshots or a recording for any UI change (light _and_ dark).
 - **A PR needs 1 approval and passing CI.** Merge with **squash**. The squash commit message follows Conventional Commits.
 - **The author merges their own PR** after approval, and deletes the branch.
 

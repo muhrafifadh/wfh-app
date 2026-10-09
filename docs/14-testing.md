@@ -2,11 +2,11 @@
 
 ## What to test, with what
 
-| Layer | Tool | Test | Location |
-|---|---|---|---|
-| Unit | **Vitest** | `lib/` helpers, schemas, hooks, store logic | `*.test.ts` next to the source file |
-| Component | **Vitest + Testing Library** | What a Client Component shows and does when used | `*.test.tsx` next to the source file |
-| End-to-end | **Playwright** | The critical flows (below), against a running app | `e2e/*.spec.ts` |
+| Layer      | Tool                         | Test                                              | Location                             |
+| ---------- | ---------------------------- | ------------------------------------------------- | ------------------------------------ |
+| Unit       | **Vitest**                   | `lib/` helpers, schemas, hooks, store logic       | `*.test.ts` next to the source file  |
+| Component  | **Vitest + Testing Library** | What a Client Component shows and does when used  | `*.test.tsx` next to the source file |
+| End-to-end | **Playwright**               | The critical flows (below), against a running app | `e2e/*.spec.ts`                      |
 
 Async Server Components can't be unit-tested well. Cover them with E2E tests, and unit-test the `queries.ts` / `actions.ts` functions they call.
 

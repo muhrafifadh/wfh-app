@@ -2,11 +2,11 @@
 
 The backend issues the tokens. The frontend stores them in a cookie and checks them in three layers, from optional to required:
 
-| Layer | Where | Purpose | Is it enough on its own? |
-|---|---|---|---|
-| 1. Proxy | `src/proxy.ts` | Quick redirect when there's no session cookie | **No.** It only checks that the cookie exists |
-| 2. Pages & layouts | `requireUser()` | Redirect to login; get the user to render | Protects the **page** |
-| 3. Actions & route handlers | `requireUser()` + `can()` | Real access control | **Required.** Every action checks |
+| Layer                       | Where                     | Purpose                                       | Is it enough on its own?                      |
+| --------------------------- | ------------------------- | --------------------------------------------- | --------------------------------------------- |
+| 1. Proxy                    | `src/proxy.ts`            | Quick redirect when there's no session cookie | **No.** It only checks that the cookie exists |
+| 2. Pages & layouts          | `requireUser()`           | Redirect to login; get the user to render     | Protects the **page**                         |
+| 3. Actions & route handlers | `requireUser()` + `can()` | Real access control                           | **Required.** Every action checks             |
 
 The backend still checks every request it receives. The frontend checks exist to give users a good experience and to block requests early. They don't replace the backend's own authorization.
 
@@ -18,7 +18,7 @@ The backend still checks every request it receives. The frontend checks exist to
 - **Pages that need a user call `requireUser()`.** It redirects to `/login?next=<path>` if there's no user.
 - **Every Server Action and route handler calls `requireUser()` itself.** Never assume the page's check also protects them.
 - **Permission checks go through `can(user, permission)`.** Don't compare roles inline (`user.role === "admin"`) in components or actions.
-- **Hiding a button isn't access control.** Hide what the user can't use, *and* check again on the server.
+- **Hiding a button isn't access control.** Hide what the user can't use, _and_ check again on the server.
 - **Validate the `next` redirect parameter.** Only accept relative paths that start with `/` and not `//`. Otherwise anyone can craft a login link that sends users to another site after they sign in.
 - **Client components only get a minimal user object** (`id`, `name`, `email`, `avatarUrl`, `permissions`). Never send them tokens or the full user record.
 

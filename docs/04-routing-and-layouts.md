@@ -43,15 +43,15 @@ export default async function InvoicePage({ params }: PageProps) {
 
 ## Special files
 
-| File | Purpose | Notes |
-|---|---|---|
-| `layout.tsx` | Shared UI that persists across navigation | Don't fetch page-specific data here |
-| `page.tsx` | The route's UI | Default export, async Server Component |
-| `loading.tsx` | Suspense fallback for the segment | Use a skeleton shaped like the real content, not a spinner |
-| `error.tsx` | Error boundary for the segment | Must be `"use client"`; see [13](13-error-handling.md) |
-| `not-found.tsx` | UI shown when `notFound()` is called | Define one at the root, and per section if needed |
-| `global-error.tsx` | Catches errors in the root layout | Renders its own `<html>` / `<body>` |
-| `route.ts` | Route handler | See the limits above |
+| File               | Purpose                                   | Notes                                                      |
+| ------------------ | ----------------------------------------- | ---------------------------------------------------------- |
+| `layout.tsx`       | Shared UI that persists across navigation | Don't fetch page-specific data here                        |
+| `page.tsx`         | The route's UI                            | Default export, async Server Component                     |
+| `loading.tsx`      | Suspense fallback for the segment         | Use a skeleton shaped like the real content, not a spinner |
+| `error.tsx`        | Error boundary for the segment            | Must be `"use client"`; see [13](13-error-handling.md)     |
+| `not-found.tsx`    | UI shown when `notFound()` is called      | Define one at the root, and per section if needed          |
+| `global-error.tsx` | Catches errors in the root layout         | Renders its own `<html>` / `<body>`                        |
+| `route.ts`         | Route handler                             | See the limits above                                       |
 
 ## Don't
 

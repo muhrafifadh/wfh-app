@@ -38,7 +38,11 @@ import { env } from "@/lib/env";
 import { getAccessToken } from "@/lib/auth/session";
 
 export class ApiError extends Error {
-  constructor(message: string, readonly status: number, readonly body?: unknown) {
+  constructor(
+    message: string,
+    readonly status: number,
+    readonly body?: unknown,
+  ) {
     super(message);
     this.name = "ApiError";
   }

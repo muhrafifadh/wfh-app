@@ -5,17 +5,17 @@
 - **Style with Tailwind utility classes.** Use inline `style={{}}` only for values computed at runtime (positions, user-chosen colors, progress widths).
 - **Use design tokens, not raw values.** Color classes must use the shadcn theme tokens:
 
-  | Use | Not |
-  |---|---|
-  | `bg-background`, `text-foreground` | `bg-white`, `text-black` |
-  | `text-muted-foreground` | `text-gray-500` |
+  | Use                                  | Not                      |
+  | ------------------------------------ | ------------------------ |
+  | `bg-background`, `text-foreground`   | `bg-white`, `text-black` |
+  | `text-muted-foreground`              | `text-gray-500`          |
   | `bg-primary text-primary-foreground` | `bg-blue-600 text-white` |
-  | `border-border`, `border-input` | `border-gray-200` |
-  | `bg-destructive`, `text-destructive` | `bg-red-500` |
-  | `ring-ring` | `ring-blue-400` |
+  | `border-border`, `border-input`      | `border-gray-200`        |
+  | `bg-destructive`, `text-destructive` | `bg-red-500`             |
+  | `ring-ring`                          | `ring-blue-400`          |
 
 - **Every screen works in light and dark mode.** Token classes switch automatically, so you should rarely need a `dark:` class. If you're writing many `dark:` classes, a token is missing.
-- **Combine classes with `cn()`.** Never join class strings with template literals: `tailwind-merge` resolves conflicting classes, and string joining doesn't.
+- **Combine classes with `cn()`.** Never join class strings with template literals. `cn` (shadcn's [`cn`](https://github.com/shadcn-ui/cn) package, re-exported from `@/lib/utils`) resolves conflicting Tailwind classes, and string joining doesn't.
 - **Use `cva` for variants**, not ternaries inside `className`.
 - **Write mobile-first.** Base classes are for the smallest screen. Add `sm:` / `md:` / `lg:` for larger ones. Check every screen at 360px wide.
 - **Use arbitrary values (`w-[372px]`) only once.** If the same value appears twice, add it to the theme.
@@ -29,8 +29,14 @@ Tokens are CSS variables in `src/app/globals.css`. Each one is defined in `:root
 **To add a token** (e.g. `success`):
 
 ```css
-:root  { --success: oklch(0.62 0.17 150); --success-foreground: oklch(0.98 0 0); }
-.dark  { --success: oklch(0.70 0.15 150); --success-foreground: oklch(0.15 0 0); }
+:root {
+  --success: oklch(0.62 0.17 150);
+  --success-foreground: oklch(0.98 0 0);
+}
+.dark {
+  --success: oklch(0.7 0.15 150);
+  --success-foreground: oklch(0.15 0 0);
+}
 
 @theme inline {
   --color-success: var(--success);
@@ -49,13 +55,13 @@ Now `bg-success text-success-foreground` works in both themes. Always add a toke
 
 Use only this z-index scale, so stacking order stays predictable:
 
-| Layer | Class |
-|---|---|
-| Sticky headers | `z-10` |
+| Layer               | Class  |
+| ------------------- | ------ |
+| Sticky headers      | `z-10` |
 | Dropdowns, popovers | `z-20` |
-| Overlays / sheets | `z-30` |
-| Modals / dialogs | `z-40` |
-| Toasts | `z-50` |
+| Overlays / sheets   | `z-30` |
+| Modals / dialogs    | `z-40` |
+| Toasts              | `z-50` |
 
 shadcn primitives already follow this scale. Don't use `z-[9999]`.
 
