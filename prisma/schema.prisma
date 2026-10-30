@@ -12,16 +12,24 @@ datasource db {
 }
 
 model Organization {
-  id        String    @id @default(uuid(7)) @db.Uuid
-  name      String
-  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
-  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(3)
+  id             String    @id @default(uuid(7)) @db.Uuid
+  name           String
+  /// IANA zone for work dates and schedule times (validated by the service that edits it).
+  timezone       String    @default("Asia/Jakarta") @db.VarChar(64)
+  /// Shown in the UI as who to contact for help.
+  supportContact String?   @map("support_contact") @db.VarChar(255)
+  /// How long attendance, corrections and audit entries are kept (1–10, check constraint).
+  retentionYears Int       @default(5) @map("retention_years") @db.SmallInt
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz(3)
 
   users     User[]
   roles     Role[]
   auditLogs AuditLog[]
   uploads   Upload[]
+  divisions Division[]
+  employees Employee[]
 
   @@map("organizations")
 }
@@ -66,6 +74,8 @@ model User {
   tokens              UserToken[]
   auditLogs           AuditLog[]
   uploads             Upload[]
+  /// The HR profile this account signs in as (at most one).
+  employee            Employee?
 
   @@index([organizationId])
   @@index([roleId])
@@ -195,4 +205,74 @@ model Upload {
   @@index([organizationId, createdAt])
   @@index([uploadedById])
   @@map("uploads")
+}
+
+enum DivisionStatus {
+  active
+  inactive
+}
+
+/// A group of employees (e.g. Engineering). Deactivated, never deleted: history refers to it.
+model Division {
+  id             String         @id @default(uuid(7)) @db.Uuid
+  organizationId String         @map("organization_id") @db.Uuid
+  /// Uppercase business code, e.g. "ENG" (check constraint). Unique in the organization.
+  code           String         @db.VarChar(32)
+  /// Unique in the organization, ignoring case (checked by the service).
+  name           String         @db.VarChar(120)
+  status         DivisionStatus @default(active)
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt      DateTime?      @map("deleted_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  employees    Employee[]
+
+  @@unique([organizationId, code])
+  @@unique([organizationId, name])
+  @@index([organizationId, status, name])
+  @@map("divisions")
+}
+
+enum EmployeeStatus {
+  active
+  inactive
+}
+
+/// HR identity and attendance eligibility. The login identity stays on User.
+model Employee {
+  id                  String         @id @default(uuid(7)) @db.Uuid
+  organizationId      String         @map("organization_id") @db.Uuid
+  /// Null until an account is invited or linked. One user has at most one employee.
+  userId              String?        @unique @map("user_id") @db.Uuid
+  divisionId          String         @map("division_id") @db.Uuid
+  /// Direct manager (an employee of the same organization). Never itself, never a cycle.
+  managerId           String?        @map("manager_id") @db.Uuid
+  /// Uppercase, e.g. "EMP-001" (check constraint). Never changed or reused.
+  employeeNumber      String         @map("employee_number") @db.VarChar(32)
+  fullName            String         @map("full_name") @db.VarChar(160)
+  workEmail           String?        @map("work_email") @db.VarChar(255)
+  jobTitle            String?        @map("job_title") @db.VarChar(120)
+  status              EmployeeStatus @default(active)
+  /// First eligible day.
+  employmentStartDate DateTime       @map("employment_start_date") @db.Date
+  /// Last eligible day, inclusive.
+  employmentEndDate   DateTime?      @map("employment_end_date") @db.Date
+  createdAt           DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt           DateTime?      @map("deleted_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  user         User?        @relation(fields: [userId], references: [id], onDelete: Restrict)
+  division     Division     @relation(fields: [divisionId], references: [id])
+  manager      Employee?    @relation("ReportingLine", fields: [managerId], references: [id], onDelete: Restrict)
+  reports      Employee[]   @relation("ReportingLine")
+
+  @@unique([organizationId, employeeNumber])
+  @@index([organizationId, status, divisionId])
+  @@index([organizationId, managerId])
+  @@index([organizationId, fullName])
+  @@index([divisionId])
+  @@index([managerId])
+  @@map("employees")
 }
