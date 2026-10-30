@@ -44,3 +44,23 @@ export function formatDateTimeIn(isoDateTime: string, timeZone: string): string 
     parts.find((p) => p.type === type)?.value ?? "";
   return `${part("weekday")}, ${part("day")} ${part("month")} ${part("year")}, ${part("hour")}:${part("minute")} ${timeZoneLabel(timeZone)}`;
 }
+
+/** A zone's UTC offset at an instant: "+07:00". */
+function offsetAt(instant: Date, timeZone: string): string {
+  const name = new Intl.DateTimeFormat("en-US", { timeZone, timeZoneName: "longOffset" })
+    .formatToParts(instant)
+    .find((part) => part.type === "timeZoneName")?.value;
+  // "GMT+07:00", or "GMT" for UTC itself
+  return name && name !== "GMT" ? name.slice(3) : "+00:00";
+}
+
+/**
+ * A wall-clock time on a date in a zone, as an ISO instant with its offset:
+ * ("2026-11-02", "08:58", "Asia/Jakarta") → "2026-11-02T08:58:00+07:00". The backend
+ * still checks the instant falls on the work date.
+ */
+export function zonedIso(date: string, time: string, timeZone: string): string {
+  // The offset at noon UTC that day; Indonesian zones have no daylight saving
+  const offset = offsetAt(new Date(`${date}T12:00:00Z`), timeZone);
+  return `${date}T${time}:00${offset}`;
+}
