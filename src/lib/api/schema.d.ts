@@ -1186,6 +1186,7 @@ export interface components {
                 name: string;
                 /** @enum {string} */
                 status: "active" | "inactive";
+                activeEmployeeCount: number;
                 /** Format: date-time */
                 createdAt: string;
                 /** Format: date-time */
@@ -1202,6 +1203,7 @@ export interface components {
             name: string;
             /** @enum {string} */
             status: "active" | "inactive";
+            activeEmployeeCount: number;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
@@ -3435,6 +3437,15 @@ export interface operations {
             };
             /** @description NOT_FOUND */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description DIVISION_HAS_ACTIVE_EMPLOYEES */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
