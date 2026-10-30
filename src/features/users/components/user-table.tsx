@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { roleLabel } from "@/config/roles";
 import { routes } from "@/config/routes";
 import { UserRowActions } from "@/features/users/components/user-row-actions";
 import { UserStatusBadge } from "@/features/users/components/user-status-badge";
@@ -88,7 +89,7 @@ export async function UserTable({ filters, canManage, currentUserId }: UserTable
                   </Link>
                   <span className="block text-xs text-muted-foreground">{user.email}</span>
                 </TableCell>
-                <TableCell className="hidden capitalize sm:table-cell">{user.role.name}</TableCell>
+                <TableCell className="hidden sm:table-cell">{roleLabel(user.role.name)}</TableCell>
                 <TableCell>
                   <UserStatusBadge status={user.status} />
                 </TableCell>

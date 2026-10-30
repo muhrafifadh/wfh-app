@@ -7,6 +7,7 @@ import { ArrowLeftIcon } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { roleLabel } from "@/config/roles";
 import { routes } from "@/config/routes";
 import { EditUserForm } from "@/features/users/components/edit-user-form";
 import { UserRowActions } from "@/features/users/components/user-row-actions";
@@ -65,7 +66,7 @@ export default async function UserPage({ params }: PageProps<"/users/[id]">) {
                 )}
               </dd>
               <dt className="text-muted-foreground">Role</dt>
-              <dd className="capitalize">{user.role.name}</dd>
+              <dd>{roleLabel(user.role.name)}</dd>
               <dt className="text-muted-foreground">Added</dt>
               <dd>{formatDate(user.createdAt.slice(0, 10))}</dd>
             </dl>

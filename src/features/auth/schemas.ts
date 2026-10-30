@@ -61,6 +61,8 @@ export const sessionUserSchema = z.object({
   organizationId: z.string(),
   /** False until the user clicks the link in the verification email. */
   emailVerified: z.boolean(),
+  /** Display only: access is decided by `permissions`. */
+  role: z.object({ id: z.string(), name: z.string() }),
   // Ignore permissions this frontend doesn't know yet instead of failing the whole session
   permissions: z
     .array(z.string())

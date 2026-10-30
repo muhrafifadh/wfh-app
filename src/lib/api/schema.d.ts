@@ -372,6 +372,582 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/divisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DivisionsController_list"];
+        put?: never;
+        post: operations["DivisionsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/divisions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DivisionsController_findOne"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["DivisionsController_update"];
+        trace?: never;
+    };
+    "/v1/divisions/{id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DivisionsController_deactivate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/divisions/{id}/reactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DivisionsController_reactivate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/employees": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["EmployeesController_list"];
+        put?: never;
+        post: operations["EmployeesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/employees/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["EmployeesController_findOne"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["EmployeesController_update"];
+        trace?: never;
+    };
+    "/v1/employees/{id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["EmployeesController_deactivate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/employees/{id}/reactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["EmployeesController_reactivate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/employees/{id}/account": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["EmployeesController_linkAccount"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/employee": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["MeController_findMine"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["MeController_context"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/work-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["WorkSettingsController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["WorkSettingsController_update"];
+        trace?: never;
+    };
+    "/v1/work-schedules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["WorkSchedulesController_list"];
+        put?: never;
+        post: operations["WorkSchedulesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/work-schedules/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["WorkSchedulesController_findOne"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/work-schedules/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["WorkSchedulesController_preview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/holidays": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["HolidaysController_list"];
+        put?: never;
+        post: operations["HolidaysController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/holidays/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["HolidaysController_findOne"];
+        put?: never;
+        post?: never;
+        delete: operations["HolidaysController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["HolidaysController_update"];
+        trace?: never;
+    };
+    "/v1/work-calendar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["WorkCalendarController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/attendance/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AttendanceController_today"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/attendance/check-in": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AttendanceController_checkIn"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/attendance/check-out": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AttendanceController_checkOut"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/attendance/close-day": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AttendanceController_rerunCloseDay"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/attendance/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AttendanceController_listMine"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/attendance/me/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AttendanceController_summaryMine"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/attendance/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AttendanceController_findOne"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/correction-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CorrectionsController_listForReview"];
+        put?: never;
+        post: operations["CorrectionsController_submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/correction-requests/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CorrectionsController_listMine"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/correction-requests/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CorrectionsController_findOne"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/correction-requests/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CorrectionsController_approve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/correction-requests/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CorrectionsController_reject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/team/attendance/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["TeamController_today"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/team/attendance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["TeamController_history"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/dashboard/organization": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DashboardController_organization"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/reports/attendance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ReportsController_attendance"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/reports/attendance/trends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ReportsController_trends"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/reports/attendance.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ReportsController_exportCsv"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -445,7 +1021,7 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 name: string;
-                permissions: ("user:read" | "user:manage" | "audit:read")[];
+                permissions: ("user:read" | "user:manage" | "audit:read" | "attendance:self" | "attendance:read_team" | "attendance:read_all" | "correction:submit" | "correction:decide_team" | "correction:decide_all" | "report:read_team" | "report:read_all" | "employee:manage" | "division:manage" | "policy:manage" | "holiday:manage")[];
             }[];
         };
         RegisterDto: {
@@ -492,7 +1068,12 @@ export interface components {
             /** Format: uuid */
             organizationId: string;
             emailVerified: boolean;
-            permissions: ("user:read" | "user:manage" | "audit:read")[];
+            role: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            };
+            permissions: ("user:read" | "user:manage" | "audit:read" | "attendance:self" | "attendance:read_team" | "attendance:read_all" | "correction:submit" | "correction:decide_team" | "correction:decide_all" | "report:read_team" | "report:read_all" | "employee:manage" | "division:manage" | "policy:manage" | "holiday:manage")[];
         };
         AuditLogListResponse_Output: {
             items: {
@@ -596,6 +1177,973 @@ export interface components {
             downloadUrl: string | null;
             /** Format: date-time */
             createdAt: string;
+        };
+        DivisionListResponse_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                code: string;
+                name: string;
+                /** @enum {string} */
+                status: "active" | "inactive";
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+            }[];
+            page: number;
+            pageSize: number;
+            total: number;
+        };
+        DivisionResponse_Output: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            /** @enum {string} */
+            status: "active" | "inactive";
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        CreateDivisionDto: {
+            code: string;
+            name: string;
+        };
+        UpdateDivisionDto: {
+            code?: string;
+            name?: string;
+        };
+        EmployeeListResponse_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                employeeNumber: string;
+                fullName: string;
+                /** Format: email */
+                workEmail: string | null;
+                jobTitle: string | null;
+                /** @enum {string} */
+                status: "active" | "inactive";
+                /** Format: date */
+                employmentStartDate: string;
+                /** Format: date */
+                employmentEndDate: string | null;
+                division: {
+                    /** Format: uuid */
+                    id: string;
+                    code: string;
+                    name: string;
+                };
+                manager: {
+                    /** Format: uuid */
+                    id: string;
+                    employeeNumber: string;
+                    fullName: string;
+                } | null;
+                account: {
+                    /** Format: uuid */
+                    id: string;
+                    /** Format: email */
+                    email: string;
+                    role: {
+                        /** Format: uuid */
+                        id: string;
+                        name: string;
+                    };
+                    /** @enum {string} */
+                    status: "active" | "invited" | "deactivated";
+                } | null;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+            }[];
+            page: number;
+            pageSize: number;
+            total: number;
+        };
+        EmployeeResponse_Output: {
+            /** Format: uuid */
+            id: string;
+            employeeNumber: string;
+            fullName: string;
+            /** Format: email */
+            workEmail: string | null;
+            jobTitle: string | null;
+            /** @enum {string} */
+            status: "active" | "inactive";
+            /** Format: date */
+            employmentStartDate: string;
+            /** Format: date */
+            employmentEndDate: string | null;
+            division: {
+                /** Format: uuid */
+                id: string;
+                code: string;
+                name: string;
+            };
+            manager: {
+                /** Format: uuid */
+                id: string;
+                employeeNumber: string;
+                fullName: string;
+            } | null;
+            account: {
+                /** Format: uuid */
+                id: string;
+                /** Format: email */
+                email: string;
+                role: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                };
+                /** @enum {string} */
+                status: "active" | "invited" | "deactivated";
+            } | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        CreateEmployeeDto: {
+            fullName: string;
+            workEmail?: string | null;
+            jobTitle?: string | null;
+            /** Format: uuid */
+            divisionId: string;
+            /** Format: uuid */
+            managerId?: string | null;
+            /** Format: date */
+            employmentStartDate: string;
+            /** Format: date */
+            employmentEndDate?: string | null;
+            employeeNumber: string;
+        };
+        UpdateEmployeeDto: {
+            fullName?: string;
+            workEmail?: string | null;
+            jobTitle?: string | null;
+            /** Format: uuid */
+            divisionId?: string;
+            /** Format: uuid */
+            managerId?: string | null;
+            /** Format: date */
+            employmentStartDate?: string;
+            /** Format: date */
+            employmentEndDate?: string | null;
+        };
+        LinkAccountDto: {
+            /** @enum {string} */
+            mode: "invite" | "link";
+            email?: string;
+            /** Format: uuid */
+            userId?: string;
+            /** Format: uuid */
+            roleId?: string;
+        };
+        MeContextResponse_Output: {
+            organization: {
+                name: string;
+                timezone: string;
+                supportContact: string | null;
+            };
+            employee: {
+                /** Format: uuid */
+                id: string;
+                employeeNumber: string;
+                fullName: string;
+                /** @enum {string} */
+                status: "active" | "inactive";
+            } | null;
+        };
+        WorkSettingsResponse_Output: {
+            timezone: string;
+            supportContact: string | null;
+            retentionYears: number;
+            /** Format: date */
+            workDate: string;
+            /** Format: date */
+            earliestEffectiveFrom: string;
+            currentSchedule: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                /** @enum {string} */
+                scope: "organization";
+                timezone: string;
+                workingDays: number[];
+                /** @description Local time, HH:MM:SS */
+                startTime: string;
+                /** @description Local time, HH:MM:SS */
+                endTime: string;
+                toleranceMinutes: number;
+                /** @description Local time, HH:MM:SS */
+                onTimeDeadline: string;
+                /** @description Local time, HH:MM:SS */
+                checkInOpensAt: string;
+                /** @description Local time, HH:MM:SS */
+                checkInClosesAt: string;
+                /** @description Local time, HH:MM:SS.sss */
+                checkOutDeadline: string;
+                /** Format: date */
+                effectiveFrom: string;
+                /** Format: date */
+                effectiveTo: string | null;
+                /** @enum {string} */
+                state: "past" | "current" | "upcoming";
+                createdBy: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                };
+                /** Format: date-time */
+                createdAt: string;
+            } | null;
+        };
+        UpdateWorkSettingsDto: {
+            supportContact?: string | null;
+            retentionYears?: number;
+        };
+        WorkScheduleListResponse_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                /** @enum {string} */
+                scope: "organization";
+                timezone: string;
+                workingDays: number[];
+                /** @description Local time, HH:MM:SS */
+                startTime: string;
+                /** @description Local time, HH:MM:SS */
+                endTime: string;
+                toleranceMinutes: number;
+                /** @description Local time, HH:MM:SS */
+                onTimeDeadline: string;
+                /** @description Local time, HH:MM:SS */
+                checkInOpensAt: string;
+                /** @description Local time, HH:MM:SS */
+                checkInClosesAt: string;
+                /** @description Local time, HH:MM:SS.sss */
+                checkOutDeadline: string;
+                /** Format: date */
+                effectiveFrom: string;
+                /** Format: date */
+                effectiveTo: string | null;
+                /** @enum {string} */
+                state: "past" | "current" | "upcoming";
+                createdBy: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                };
+                /** Format: date-time */
+                createdAt: string;
+            }[];
+            page: number;
+            pageSize: number;
+            total: number;
+        };
+        WorkScheduleResponse_Output: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** @enum {string} */
+            scope: "organization";
+            timezone: string;
+            workingDays: number[];
+            /** @description Local time, HH:MM:SS */
+            startTime: string;
+            /** @description Local time, HH:MM:SS */
+            endTime: string;
+            toleranceMinutes: number;
+            /** @description Local time, HH:MM:SS */
+            onTimeDeadline: string;
+            /** @description Local time, HH:MM:SS */
+            checkInOpensAt: string;
+            /** @description Local time, HH:MM:SS */
+            checkInClosesAt: string;
+            /** @description Local time, HH:MM:SS.sss */
+            checkOutDeadline: string;
+            /** Format: date */
+            effectiveFrom: string;
+            /** Format: date */
+            effectiveTo: string | null;
+            /** @enum {string} */
+            state: "past" | "current" | "upcoming";
+            createdBy: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            };
+            /** Format: date-time */
+            createdAt: string;
+        };
+        CreateWorkScheduleDto: {
+            name: string;
+            timezone: string;
+            workingDays: number[];
+            startTime: string;
+            endTime: string;
+            toleranceMinutes: number;
+            checkInOpensAt: string;
+            checkInClosesAt: string;
+            checkOutDeadline: string;
+            /** Format: date */
+            effectiveFrom: string;
+        };
+        WorkSchedulePreviewResponse_Output: {
+            /** @description Local time, HH:MM:SS */
+            onTimeDeadline: string;
+            days: {
+                /** Format: date */
+                workDate: string;
+                isScheduledWeekday: boolean;
+                /** Format: date-time */
+                checkInOpensAt: string;
+                /** Format: date-time */
+                scheduledStartAt: string;
+                /** Format: date-time */
+                onTimeDeadlineAt: string;
+                /** Format: date-time */
+                scheduledEndAt: string;
+                /** Format: date-time */
+                checkInClosesAt: string;
+                /** Format: date-time */
+                checkOutClosesAt: string;
+            }[];
+        };
+        HolidayListResponse_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** Format: date */
+                date: string;
+                name: string;
+                createdBy: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                };
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+            }[];
+            page: number;
+            pageSize: number;
+            total: number;
+        };
+        HolidayResponse_Output: {
+            /** Format: uuid */
+            id: string;
+            /** Format: date */
+            date: string;
+            name: string;
+            createdBy: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            };
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        CreateHolidayDto: {
+            /** Format: date */
+            date: string;
+            name: string;
+        };
+        UpdateHolidayDto: {
+            /** Format: date */
+            date?: string;
+            name?: string;
+        };
+        WorkCalendarResponse_Output: {
+            items: {
+                /** Format: date */
+                date: string;
+                isWorkingDay: boolean;
+                /** @enum {string|null} */
+                reason: "no_schedule" | "non_working_day" | "holiday" | null;
+                holiday: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                } | null;
+                /** Format: uuid */
+                scheduleId: string | null;
+            }[];
+        };
+        TodayResponse_Output: {
+            /** Format: date-time */
+            serverTime: string;
+            /** Format: date */
+            workDate: string;
+            timezone: string;
+            /** @enum {string} */
+            state: "no_profile" | "inactive" | "non_working_day" | "before_window" | "ready_to_check_in" | "window_closed" | "checked_in" | "check_out_closed" | "checked_out";
+            canCheckIn: boolean;
+            canCheckOut: boolean;
+            /** @enum {string|null} */
+            nonWorkingReason: "no_schedule" | "non_working_day" | "holiday" | null;
+            holiday: {
+                name: string;
+            } | null;
+            schedule: {
+                timezone: string;
+                /** Format: date-time */
+                checkInOpensAt: string;
+                /** Format: date-time */
+                scheduledStartAt: string;
+                /** Format: date-time */
+                onTimeDeadlineAt: string;
+                /** Format: date-time */
+                scheduledEndAt: string;
+                /** Format: date-time */
+                checkInClosesAt: string;
+                /** Format: date-time */
+                checkOutClosesAt: string;
+            } | null;
+            record: {
+                /** Format: uuid */
+                id: string;
+                /** Format: date */
+                workDate: string;
+                /** @enum {string} */
+                status: "present" | "late" | "absent" | "excused";
+                /** @enum {string} */
+                completion: "open" | "complete" | "not_applicable";
+                incomplete: boolean;
+                /** @enum {string} */
+                source: "self_service" | "close_day_job";
+                /** Format: date-time */
+                checkInAt: string | null;
+                /** Format: date-time */
+                checkOutAt: string | null;
+                lateMinutes: number;
+                workedMinutes: number | null;
+                corrected: boolean;
+                /** Format: uuid */
+                pendingCorrectionId: string | null;
+                schedule: {
+                    timezone: string;
+                    /** Format: date-time */
+                    checkInOpensAt: string;
+                    /** Format: date-time */
+                    scheduledStartAt: string;
+                    /** Format: date-time */
+                    onTimeDeadlineAt: string;
+                    /** Format: date-time */
+                    scheduledEndAt: string;
+                    /** Format: date-time */
+                    checkInClosesAt: string;
+                    /** Format: date-time */
+                    checkOutClosesAt: string;
+                };
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+            } | null;
+            employee: {
+                /** Format: uuid */
+                id: string;
+                employeeNumber: string;
+                fullName: string;
+            } | null;
+            supportContact: string | null;
+        };
+        AttendanceActionDto: Record<string, never>;
+        AttendanceResponse_Output: {
+            /** Format: uuid */
+            id: string;
+            /** Format: date */
+            workDate: string;
+            /** @enum {string} */
+            status: "present" | "late" | "absent" | "excused";
+            /** @enum {string} */
+            completion: "open" | "complete" | "not_applicable";
+            incomplete: boolean;
+            /** @enum {string} */
+            source: "self_service" | "close_day_job";
+            /** Format: date-time */
+            checkInAt: string | null;
+            /** Format: date-time */
+            checkOutAt: string | null;
+            lateMinutes: number;
+            workedMinutes: number | null;
+            corrected: boolean;
+            /** Format: uuid */
+            pendingCorrectionId: string | null;
+            schedule: {
+                timezone: string;
+                /** Format: date-time */
+                checkInOpensAt: string;
+                /** Format: date-time */
+                scheduledStartAt: string;
+                /** Format: date-time */
+                onTimeDeadlineAt: string;
+                /** Format: date-time */
+                scheduledEndAt: string;
+                /** Format: date-time */
+                checkInClosesAt: string;
+                /** Format: date-time */
+                checkOutClosesAt: string;
+            };
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        CloseDayDto: {
+            /** Format: date */
+            date: string;
+        };
+        CloseDayResponse_Output: {
+            runId: string;
+            /** Format: date */
+            workDate: string;
+            isWorkingDay: boolean;
+            /** @enum {string|null} */
+            reason: "no_schedule" | "non_working_day" | "holiday" | null;
+            created: number;
+            skipped: number;
+            failed: number;
+        };
+        AttendanceListResponse_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** Format: date */
+                workDate: string;
+                /** @enum {string} */
+                status: "present" | "late" | "absent" | "excused";
+                /** @enum {string} */
+                completion: "open" | "complete" | "not_applicable";
+                incomplete: boolean;
+                /** @enum {string} */
+                source: "self_service" | "close_day_job";
+                /** Format: date-time */
+                checkInAt: string | null;
+                /** Format: date-time */
+                checkOutAt: string | null;
+                lateMinutes: number;
+                workedMinutes: number | null;
+                corrected: boolean;
+                /** Format: uuid */
+                pendingCorrectionId: string | null;
+                schedule: {
+                    timezone: string;
+                    /** Format: date-time */
+                    checkInOpensAt: string;
+                    /** Format: date-time */
+                    scheduledStartAt: string;
+                    /** Format: date-time */
+                    onTimeDeadlineAt: string;
+                    /** Format: date-time */
+                    scheduledEndAt: string;
+                    /** Format: date-time */
+                    checkInClosesAt: string;
+                    /** Format: date-time */
+                    checkOutClosesAt: string;
+                };
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+            }[];
+            page: number;
+            pageSize: number;
+            total: number;
+        };
+        AttendanceSummaryResponse_Output: {
+            /** Format: date */
+            from: string;
+            /** Format: date */
+            to: string;
+            records: number;
+            present: number;
+            late: number;
+            attended: number;
+            absent: number;
+            excused: number;
+            complete: number;
+            open: number;
+            incomplete: number;
+            workedMinutes: number;
+            lateMinutes: number;
+        };
+        SubmitCorrectionDto: {
+            /** Format: uuid */
+            attendanceId: string;
+            /** Format: date-time */
+            requestedCheckInAt?: string;
+            /** Format: date-time */
+            requestedCheckOutAt?: string;
+            reason: string;
+        };
+        CorrectionResponse_Output: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            attendanceId: string;
+            /** Format: date */
+            workDate: string;
+            /** @enum {string} */
+            status: "pending" | "approved" | "rejected";
+            employee: {
+                /** Format: uuid */
+                id: string;
+                employeeNumber: string;
+                fullName: string;
+            };
+            requestedBy: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            };
+            current: {
+                /** Format: date-time */
+                checkInAt: string | null;
+                /** Format: date-time */
+                checkOutAt: string | null;
+            };
+            requested: {
+                /** Format: date-time */
+                checkInAt: string | null;
+                /** Format: date-time */
+                checkOutAt: string | null;
+            };
+            changes: ("check_in" | "check_out")[];
+            reason: string;
+            /** Format: date-time */
+            submittedAt: string;
+            decision: {
+                decidedBy: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                };
+                /** Format: date-time */
+                decidedAt: string;
+                note: string | null;
+            } | null;
+            canDecide: boolean;
+        };
+        CorrectionListResponse_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                attendanceId: string;
+                /** Format: date */
+                workDate: string;
+                /** @enum {string} */
+                status: "pending" | "approved" | "rejected";
+                employee: {
+                    /** Format: uuid */
+                    id: string;
+                    employeeNumber: string;
+                    fullName: string;
+                };
+                requestedBy: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                };
+                current: {
+                    /** Format: date-time */
+                    checkInAt: string | null;
+                    /** Format: date-time */
+                    checkOutAt: string | null;
+                };
+                requested: {
+                    /** Format: date-time */
+                    checkInAt: string | null;
+                    /** Format: date-time */
+                    checkOutAt: string | null;
+                };
+                changes: ("check_in" | "check_out")[];
+                reason: string;
+                /** Format: date-time */
+                submittedAt: string;
+                decision: {
+                    decidedBy: {
+                        /** Format: uuid */
+                        id: string;
+                        name: string;
+                    };
+                    /** Format: date-time */
+                    decidedAt: string;
+                    note: string | null;
+                } | null;
+                canDecide: boolean;
+            }[];
+            page: number;
+            pageSize: number;
+            total: number;
+        };
+        ApproveCorrectionDto: {
+            decisionNote?: string;
+        };
+        RejectCorrectionDto: {
+            decisionNote: string;
+        };
+        TeamDayResponse_Output: {
+            /** Format: date-time */
+            serverTime: string;
+            /** Format: date */
+            workDate: string;
+            timezone: string;
+            isWorkingDay: boolean;
+            /** @enum {string|null} */
+            nonWorkingReason: "no_schedule" | "non_working_day" | "holiday" | null;
+            summary: {
+                employees: number;
+                present: number;
+                late: number;
+                notCheckedIn: number;
+                notCheckedOut: number;
+                absent: number;
+            };
+            items: {
+                employee: {
+                    /** Format: uuid */
+                    id: string;
+                    employeeNumber: string;
+                    fullName: string;
+                    division: {
+                        /** Format: uuid */
+                        id: string;
+                        code: string;
+                        name: string;
+                    };
+                };
+                /** @enum {string} */
+                state: "checked_in" | "not_checked_out" | "checked_out" | "absent" | "excused" | "not_checked_in" | "non_working_day";
+                record: {
+                    /** Format: uuid */
+                    id: string;
+                    /** Format: date */
+                    workDate: string;
+                    /** @enum {string} */
+                    status: "present" | "late" | "absent" | "excused";
+                    /** @enum {string} */
+                    completion: "open" | "complete" | "not_applicable";
+                    incomplete: boolean;
+                    /** @enum {string} */
+                    source: "self_service" | "close_day_job";
+                    /** Format: date-time */
+                    checkInAt: string | null;
+                    /** Format: date-time */
+                    checkOutAt: string | null;
+                    lateMinutes: number;
+                    workedMinutes: number | null;
+                    corrected: boolean;
+                    /** Format: uuid */
+                    pendingCorrectionId: string | null;
+                    schedule: {
+                        timezone: string;
+                        /** Format: date-time */
+                        checkInOpensAt: string;
+                        /** Format: date-time */
+                        scheduledStartAt: string;
+                        /** Format: date-time */
+                        onTimeDeadlineAt: string;
+                        /** Format: date-time */
+                        scheduledEndAt: string;
+                        /** Format: date-time */
+                        checkInClosesAt: string;
+                        /** Format: date-time */
+                        checkOutClosesAt: string;
+                    };
+                    /** Format: date-time */
+                    createdAt: string;
+                    /** Format: date-time */
+                    updatedAt: string;
+                } | null;
+            }[];
+        };
+        TeamHistoryResponse_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** Format: date */
+                workDate: string;
+                /** @enum {string} */
+                status: "present" | "late" | "absent" | "excused";
+                /** @enum {string} */
+                completion: "open" | "complete" | "not_applicable";
+                incomplete: boolean;
+                /** @enum {string} */
+                source: "self_service" | "close_day_job";
+                /** Format: date-time */
+                checkInAt: string | null;
+                /** Format: date-time */
+                checkOutAt: string | null;
+                lateMinutes: number;
+                workedMinutes: number | null;
+                corrected: boolean;
+                /** Format: uuid */
+                pendingCorrectionId: string | null;
+                schedule: {
+                    timezone: string;
+                    /** Format: date-time */
+                    checkInOpensAt: string;
+                    /** Format: date-time */
+                    scheduledStartAt: string;
+                    /** Format: date-time */
+                    onTimeDeadlineAt: string;
+                    /** Format: date-time */
+                    scheduledEndAt: string;
+                    /** Format: date-time */
+                    checkInClosesAt: string;
+                    /** Format: date-time */
+                    checkOutClosesAt: string;
+                };
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+                employee: {
+                    /** Format: uuid */
+                    id: string;
+                    employeeNumber: string;
+                    fullName: string;
+                    division: {
+                        /** Format: uuid */
+                        id: string;
+                        code: string;
+                        name: string;
+                    };
+                };
+            }[];
+            page: number;
+            pageSize: number;
+            total: number;
+        };
+        OrganizationDashboardResponse_Output: {
+            /** Format: date-time */
+            serverTime: string;
+            /** Format: date */
+            workDate: string;
+            timezone: string;
+            isWorkingDay: boolean;
+            /** @enum {string|null} */
+            nonWorkingReason: "no_schedule" | "non_working_day" | "holiday" | null;
+            checkInWindowClosed: boolean;
+            activeEmployees: number;
+            present: number;
+            late: number;
+            absent: number;
+            notCheckedIn: number;
+            notCheckedOut: number;
+            pendingCorrections: number;
+            trend: {
+                /** Format: date */
+                date: string;
+                isWorkingDay: boolean;
+                present: number;
+                late: number;
+                absent: number;
+                incomplete: number;
+            }[];
+        };
+        ReportResponse_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** Format: date */
+                workDate: string;
+                /** @enum {string} */
+                status: "present" | "late" | "absent" | "excused";
+                /** @enum {string} */
+                completion: "open" | "complete" | "not_applicable";
+                incomplete: boolean;
+                /** @enum {string} */
+                source: "self_service" | "close_day_job";
+                /** Format: date-time */
+                checkInAt: string | null;
+                /** Format: date-time */
+                checkOutAt: string | null;
+                lateMinutes: number;
+                workedMinutes: number | null;
+                corrected: boolean;
+                /** Format: uuid */
+                pendingCorrectionId: string | null;
+                schedule: {
+                    timezone: string;
+                    /** Format: date-time */
+                    checkInOpensAt: string;
+                    /** Format: date-time */
+                    scheduledStartAt: string;
+                    /** Format: date-time */
+                    onTimeDeadlineAt: string;
+                    /** Format: date-time */
+                    scheduledEndAt: string;
+                    /** Format: date-time */
+                    checkInClosesAt: string;
+                    /** Format: date-time */
+                    checkOutClosesAt: string;
+                };
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+                employee: {
+                    /** Format: uuid */
+                    id: string;
+                    employeeNumber: string;
+                    fullName: string;
+                    division: {
+                        /** Format: uuid */
+                        id: string;
+                        code: string;
+                        name: string;
+                    };
+                };
+            }[];
+            page: number;
+            pageSize: number;
+            total: number;
+            summary: {
+                /** Format: date */
+                from: string;
+                /** Format: date */
+                to: string;
+                records: number;
+                present: number;
+                late: number;
+                attended: number;
+                absent: number;
+                excused: number;
+                complete: number;
+                open: number;
+                incomplete: number;
+                workedMinutes: number;
+                lateMinutes: number;
+                corrected: number;
+            };
+        };
+        TrendsResponse_Output: {
+            /** Format: date */
+            from: string;
+            /** Format: date */
+            to: string;
+            items: {
+                /** Format: date */
+                date: string;
+                isWorkingDay: boolean;
+                present: number;
+                late: number;
+                absent: number;
+                incomplete: number;
+            }[];
         };
     };
     responses: never;
@@ -1682,6 +3230,1885 @@ export interface operations {
             };
             /** @description NOT_FOUND */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    DivisionsController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                q?: string;
+                status?: "active" | "inactive";
+                sort?: "name" | "code" | "createdAt" | "-name" | "-code" | "-createdAt";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DivisionListResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    DivisionsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDivisionDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DivisionResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description DIVISION_CODE_TAKEN, DIVISION_NAME_TAKEN */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    DivisionsController_findOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DivisionResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    DivisionsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateDivisionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DivisionResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description DIVISION_CODE_TAKEN, DIVISION_NAME_TAKEN */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    DivisionsController_deactivate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DivisionResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    DivisionsController_reactivate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DivisionResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    EmployeesController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                q?: string;
+                status?: "active" | "inactive";
+                divisionId?: string;
+                managerId?: string;
+                sort?: "employeeNumber" | "fullName" | "createdAt" | "-employeeNumber" | "-fullName" | "-createdAt";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmployeeListResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    EmployeesController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateEmployeeDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmployeeResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND (division or manager) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description EMPLOYEE_NUMBER_TAKEN */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description DIVISION_INACTIVE, MANAGER_INACTIVE, EMPLOYMENT_PERIOD_INVALID */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    EmployeesController_findOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmployeeResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    EmployeesController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateEmployeeDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmployeeResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND (employee, division or manager) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description REPORTING_LINE_CYCLE, DIVISION_INACTIVE, MANAGER_INACTIVE, EMPLOYMENT_PERIOD_INVALID */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    EmployeesController_deactivate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmployeeResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    EmployeesController_reactivate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmployeeResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    EmployeesController_linkAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinkAccountDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmployeeResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND (employee, user or role) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description EMPLOYEE_HAS_ACCOUNT, USER_HAS_EMPLOYEE, EMAIL_TAKEN */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CANNOT_CHANGE_OWN_ACCOUNT */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    MeController_findMine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmployeeResponse_Output"];
+                };
+            };
+            /** @description EMPLOYEE_PROFILE_REQUIRED */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    MeController_context: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeContextResponse_Output"];
+                };
+            };
+        };
+    };
+    WorkSettingsController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkSettingsResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    WorkSettingsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateWorkSettingsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkSettingsResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    WorkSchedulesController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkScheduleListResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    WorkSchedulesController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateWorkScheduleDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkScheduleResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description SCHEDULE_PERIOD_OVERLAP */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description SCHEDULE_EFFECTIVE_DATE_TOO_EARLY */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    WorkSchedulesController_findOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkScheduleResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    WorkSchedulesController_preview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateWorkScheduleDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkSchedulePreviewResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description SCHEDULE_EFFECTIVE_DATE_TOO_EARLY */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    HolidaysController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HolidayListResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    HolidaysController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateHolidayDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HolidayResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description HOLIDAY_DATE_CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    HolidaysController_findOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HolidayResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    HolidaysController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    HolidaysController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateHolidayDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HolidayResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description HOLIDAY_DATE_CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    WorkCalendarController_list: {
+        parameters: {
+            query: {
+                from: string;
+                to: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkCalendarResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AttendanceController_today: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TodayResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AttendanceController_checkIn: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unique per attempt (e.g. a UUID). Reuse it to retry the same attempt safely. */
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttendanceActionDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceResponse_Output"];
+                };
+            };
+            /** @description IDEMPOTENCY_KEY_REQUIRED, VALIDATION_FAILED */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description ATTENDANCE_ALREADY_CHECKED_IN, IDEMPOTENCY_KEY_REUSED */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description EMPLOYEE_PROFILE_REQUIRED, EMPLOYEE_INACTIVE, ATTENDANCE_NOT_WORKDAY, CHECK_IN_TOO_EARLY, CHECK_IN_WINDOW_CLOSED */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AttendanceController_checkOut: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unique per attempt (e.g. a UUID). Reuse it to retry the same attempt safely. */
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttendanceActionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceResponse_Output"];
+                };
+            };
+            /** @description IDEMPOTENCY_KEY_REQUIRED, VALIDATION_FAILED */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description ATTENDANCE_NOT_CHECKED_IN, ATTENDANCE_ALREADY_CHECKED_OUT, IDEMPOTENCY_KEY_REUSED */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description EMPLOYEE_PROFILE_REQUIRED, EMPLOYEE_INACTIVE, CHECK_OUT_WINDOW_CLOSED */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AttendanceController_rerunCloseDay: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CloseDayDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CloseDayResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CLOSE_DAY_DATE_NOT_ENDED */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AttendanceController_listMine: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                from?: string;
+                to?: string;
+                status?: "present" | "late" | "absent" | "excused";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceListResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description EMPLOYEE_PROFILE_REQUIRED */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AttendanceController_summaryMine: {
+        parameters: {
+            query?: {
+                month?: string;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceSummaryResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description EMPLOYEE_PROFILE_REQUIRED */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AttendanceController_findOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    CorrectionsController_listForReview: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                status?: "pending" | "approved" | "rejected";
+                employeeId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Needs correction:decide_team (active direct reports) or correction:decide_all (organization). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CorrectionListResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    CorrectionsController_submit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmitCorrectionDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CorrectionResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CORRECTION_ALREADY_PENDING */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description EMPLOYEE_PROFILE_REQUIRED, CORRECTION_WINDOW_CLOSED, CORRECTION_TIMES_INVALID */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    CorrectionsController_listMine: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                status?: "pending" | "approved" | "rejected";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CorrectionListResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    CorrectionsController_findOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CorrectionResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    CorrectionsController_approve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApproveCorrectionDto"];
+            };
+        };
+        responses: {
+            /** @description Needs correction:decide_team (active direct reports) or correction:decide_all (organization). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CorrectionResponse_Output"];
+                };
+            };
+            /** @description CORRECTION_SELF_APPROVAL_FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CORRECTION_ALREADY_DECIDED, CORRECTION_VERSION_CONFLICT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    CorrectionsController_reject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RejectCorrectionDto"];
+            };
+        };
+        responses: {
+            /** @description Needs correction:decide_team (active direct reports) or correction:decide_all (organization). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CorrectionResponse_Output"];
+                };
+            };
+            /** @description CORRECTION_SELF_APPROVAL_FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CORRECTION_ALREADY_DECIDED */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    TeamController_today: {
+        parameters: {
+            query?: {
+                date?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamDayResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description EMPLOYEE_PROFILE_REQUIRED */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    TeamController_history: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                from?: string;
+                to?: string;
+                employeeId?: string;
+                status?: "present" | "late" | "absent" | "excused";
+                completion?: "open" | "incomplete" | "complete" | "not_applicable";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamHistoryResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description EMPLOYEE_PROFILE_REQUIRED */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    DashboardController_organization: {
+        parameters: {
+            query?: {
+                employeeId?: string;
+                divisionId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizationDashboardResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    ReportsController_attendance: {
+        parameters: {
+            query: {
+                page?: number;
+                pageSize?: number;
+                from: string;
+                to: string;
+                employeeId?: string;
+                divisionId?: string;
+                status?: "present" | "late" | "absent" | "excused";
+                completion?: "open" | "incomplete" | "complete" | "not_applicable";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Needs report:read_team (active direct reports) or report:read_all (organization). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    ReportsController_trends: {
+        parameters: {
+            query: {
+                from: string;
+                to: string;
+                employeeId?: string;
+                divisionId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Needs report:read_team (active direct reports) or report:read_all (organization). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrendsResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    ReportsController_exportCsv: {
+        parameters: {
+            query: {
+                from: string;
+                to: string;
+                employeeId?: string;
+                divisionId?: string;
+                status?: "present" | "late" | "absent" | "excused";
+                completion?: "open" | "incomplete" | "complete" | "not_applicable";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description CSV file */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { roleLabel } from "@/config/roles";
 import type { Role } from "@/features/users/schemas";
 
 type RoleFieldProps<T extends FieldValues> = {
@@ -60,7 +61,7 @@ export function RoleField<T extends FieldValues>({
               <SelectContent>
                 {roles.map((role) => (
                   <SelectItem key={role.id} value={role.id}>
-                    <span className="capitalize">{role.name}</span>
+                    <span>{roleLabel(role.name)}</span>
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -33,6 +33,7 @@ const signedInWith = (permissions: Permission[]) =>
     name: "Admin",
     email: "admin@example.test",
     organizationId: "org",
+    role: { id: "role-admin", name: "admin_hr" },
     emailVerified: true,
     permissions,
   });
