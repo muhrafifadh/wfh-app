@@ -130,7 +130,8 @@ const dayPlan = (employeeIndex: number, day: number): DayPlan => {
   const special: Record<string, DayPlan> = {
     "4:2": { absent: true },
     "8:4": { absent: true },
-    "3:3": { checkIn: "08:52:00", checkOut: null }, // forgot to check out
+    "3:3": { checkIn: "08:52:00", checkOut: null }, // forgot to check out (a correction is pending)
+    "4:3": { checkIn: "08:47:00", checkOut: null }, // forgot to check out, for the pilot to correct
     "2:1": { checkIn: "09:27:00", checkOut: "17:31:00" },
     "6:3": { checkIn: "09:41:30", checkOut: "18:02:00" },
     "9:0": { checkIn: "09:16:10", checkOut: "17:20:00" },
