@@ -118,6 +118,9 @@ describe("CorrectionRequestForm (UX_FLOWS.md §9.1)", () => {
     const user = userEvent.setup();
     render(<CorrectionRequestForm {...props} />);
     expect(screen.getByText("Leave blank to keep 09:42 WIB.")).toBeInTheDocument();
+    expect(
+      screen.getByText("No check-out is recorded. Leave blank to keep it that way."),
+    ).toBeInTheDocument();
     expect(screen.getByText(/until Monday, 9 November 2026/)).toBeInTheDocument();
 
     await user.type(screen.getByLabelText("Proposed check-in (WIB)"), "08:58");

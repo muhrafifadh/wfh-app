@@ -56,8 +56,11 @@ export function CorrectionRequestForm({
   const [preview, setPreview] = useState<{ times: string; result: CorrectionPreview } | null>(null);
   const [isPreviewing, startPreview] = useTransition();
   const zone = timeZoneLabel(timezone);
-  const shown = (value: string | null) =>
-    value ? `${formatTimeIn(value, timezone).slice(0, 5)} ${zone}` : "none";
+  // What leaving a time blank means, in words ("none" read as a time confused the pilot)
+  const keepHint = (value: string | null, what: string) =>
+    value
+      ? `Leave blank to keep ${formatTimeIn(value, timezone).slice(0, 5)} ${zone}.`
+      : `No ${what} is recorded. Leave blank to keep it that way.`;
 
   const [checkIn, checkOut] = useWatch({ control: form.control, name: ["checkIn", "checkOut"] });
   const times = `${checkIn}|${checkOut}`;
@@ -108,7 +111,7 @@ export function CorrectionRequestForm({
             name="checkIn"
             label={`Proposed check-in (${zone})`}
             type="time"
-            description={`Leave blank to keep ${shown(current.checkInAt)}.`}
+            description={keepHint(current.checkInAt, "check-in")}
             inputProps={{ onBlur: runPreview }}
           />
           <TextField
@@ -116,7 +119,7 @@ export function CorrectionRequestForm({
             name="checkOut"
             label={`Proposed check-out (${zone})`}
             type="time"
-            description={`Leave blank to keep ${shown(current.checkOutAt)}.`}
+            description={keepHint(current.checkOutAt, "check-out")}
             inputProps={{ onBlur: runPreview }}
           />
         </div>

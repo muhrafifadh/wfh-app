@@ -24,6 +24,7 @@ import {
 import { getMeContext } from "@/features/profile/queries";
 import { can, requireUser } from "@/lib/auth/session";
 import { formatDateTime } from "@/lib/format";
+import { formatDateTimeIn } from "@/lib/time-zone";
 
 export const metadata: Metadata = { title: "Employee" };
 
@@ -76,8 +77,14 @@ export default async function EmployeePage({ params }: PageProps<"/employees/[id
           <CardHeader>
             <CardTitle>Employment</CardTitle>
             <CardDescription>
-              Added {formatDateTime(employee.createdAt)} · last changed{" "}
-              {formatDateTime(employee.updatedAt)}
+              Added{" "}
+              <time dateTime={employee.createdAt} title={formatDateTime(employee.createdAt)}>
+                {formatDateTimeIn(employee.createdAt, context.organization.timezone)}
+              </time>{" "}
+              · last changed{" "}
+              <time dateTime={employee.updatedAt} title={formatDateTime(employee.updatedAt)}>
+                {formatDateTimeIn(employee.updatedAt, context.organization.timezone)}
+              </time>
             </CardDescription>
           </CardHeader>
           <CardContent>
