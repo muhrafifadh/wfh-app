@@ -71,6 +71,7 @@ shadcn primitives already follow this scale. Don't use `z-[9999]`.
 - **Don't build class names dynamically** (`` `text-${color}-500` ``). Tailwind can't detect them, so they don't get generated. Map values to full class names instead.
 - **Don't use `!important` (`!` prefix)** to win a specificity fight. Use `cn()` so the later class wins.
 - **Don't write new CSS files or CSS-in-JS.** Everything goes through Tailwind and `globals.css`.
+- **Don't trust a new token until the build shows it.** A comment placed right before new custom properties in `globals.css` once made the CSS pipeline drop them silently (the chart's `--trend-*` colours rendered black). After adding tokens, check they reach the compiled CSS (`grep` the `.next/static/chunks/*.css` from `pnpm build`), and document them next to the component that uses them rather than in a comment in front of them.
 
 ## Related
 
