@@ -1,11 +1,17 @@
 // Development data. Safe to run repeatedly (upserts). Never runs in production.
-// Hadir.in pilot data: DATA_MODEL.md §16 (attendance history comes in a later phase).
+// Hadir.in pilot data: DATA_MODEL.md §16 (corrections come in a later phase).
 import { hash } from "@node-rs/argon2";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { config } from "dotenv";
 
+import { addDays, isoWeekday, localDateOf, parseTimeOfDay } from "../src/common/time/zoned-time.js";
 import { DEFAULT_ROLES, type DefaultRoleName } from "../src/common/types/auth.js";
 import { PrismaClient } from "../src/generated/prisma/client.js";
+import {
+  statusAtCheckIn,
+  workedMinutesBetween,
+} from "../src/modules/attendance/domain/attendance-calculator.js";
+import { boundariesFor } from "../src/modules/work-settings/domain/schedule-policy.js";
 
 config({ quiet: true });
 
@@ -113,6 +119,46 @@ const EMPLOYEES: SeedEmployee[] = [
   },
 ];
 
+type DayPlan = { absent: true } | { checkIn: string; checkOut: string | null };
+
+/**
+ * Pilot history over the last five working days (index 0 = oldest). Mostly on time
+ * and complete, plus late, absent and open/incomplete cases. Times are WIB.
+ */
+const dayPlan = (employeeIndex: number, day: number): DayPlan => {
+  const special: Record<string, DayPlan> = {
+    "4:2": { absent: true },
+    "8:4": { absent: true },
+    "3:3": { checkIn: "08:52:00", checkOut: null }, // forgot to check out
+    "2:1": { checkIn: "09:27:00", checkOut: "17:31:00" },
+    "6:3": { checkIn: "09:41:30", checkOut: "18:02:00" },
+    "9:0": { checkIn: "09:16:10", checkOut: "17:20:00" },
+  };
+  const plan = special[`${employeeIndex}:${day}`];
+  if (plan) return plan;
+  const minutes = (n: number) => String(n).padStart(2, "0");
+  const inOffset = (employeeIndex * 7 + day * 11) % 30; // 08:40–09:09
+  const outOffset = (employeeIndex * 5 + day * 3) % 40; // 17:00–17:39
+  return {
+    checkIn: `${inOffset < 20 ? "08" : "09"}:${minutes((40 + inOffset) % 60)}:00`,
+    checkOut: `17:${minutes(outOffset)}:00`,
+  };
+};
+
+/** The five working days before today in Jakarta (weekdays that aren't seeded holidays). */
+const historyDates = (): string[] => {
+  const holidays = new Set(HOLIDAYS.map((h) => h.date));
+  const dates: string[] = [];
+  for (
+    let date = addDays(localDateOf(new Date(), "Asia/Jakarta"), -1);
+    dates.length < 5;
+    date = addDays(date, -1)
+  ) {
+    if (isoWeekday(date) <= 5 && !holidays.has(date)) dates.unshift(date);
+  }
+  return dates;
+};
+
 async function main(): Promise<void> {
   const organization =
     (await prisma.organization.findFirst({ where: { name: "Acme" } })) ??
@@ -199,7 +245,7 @@ async function main(): Promise<void> {
     employeeIds.set(seed.number, employee.id);
   }
 
-  await prisma.workSchedule.upsert({
+  const schedule = await prisma.workSchedule.upsert({
     where: {
       organizationId_scope_effectiveFrom: {
         organizationId: organization.id,
@@ -230,9 +276,81 @@ async function main(): Promise<void> {
     }
   }
 
+  // Attendance history, relative to today so it stays inside the correction window.
+  // Records are keyed by work date: a re-run on another day adds that day's history.
+  const policy = {
+    timezone: BASELINE_SCHEDULE.timezone,
+    workingDays: BASELINE_SCHEDULE.workingDays,
+    startTime: parseTimeOfDay("09:00") as number,
+    endTime: parseTimeOfDay("17:00") as number,
+    toleranceMinutes: BASELINE_SCHEDULE.toleranceMinutes,
+    checkInOpensAt: parseTimeOfDay("08:00") as number,
+    checkInClosesAt: parseTimeOfDay("17:00") as number,
+    checkOutDeadline: parseTimeOfDay("23:59:59.999") as number,
+  };
+  const dates = historyDates();
+  const pilot = EMPLOYEES.filter((e) => e.division === "ENG" && !e.inactive);
+  let records = 0;
+  for (const [day, workDate] of dates.entries()) {
+    const b = boundariesFor(policy, workDate);
+    for (const [index, seed] of pilot.entries()) {
+      const employeeId = employeeIds.get(seed.number) as string;
+      const plan = dayPlan(index, day);
+      const at = (value: string) => new Date(`${workDate}T${value}+07:00`);
+      const timing =
+        "absent" in plan
+          ? {
+              status: "absent" as const,
+              completion: "not_applicable" as const,
+              source: "close_day_job" as const,
+              checkInAt: null,
+              checkOutAt: null,
+              lateMinutes: 0,
+              workedMinutes: null,
+              closeDayRunId: "cd-seed",
+            }
+          : {
+              ...statusAtCheckIn(at(plan.checkIn), b.onTimeDeadlineAt),
+              completion: plan.checkOut ? ("complete" as const) : ("open" as const),
+              source: "self_service" as const,
+              checkInAt: at(plan.checkIn),
+              checkOutAt: plan.checkOut ? at(plan.checkOut) : null,
+              workedMinutes: plan.checkOut
+                ? workedMinutesBetween(at(plan.checkIn), at(plan.checkOut))
+                : null,
+              closeDayRunId: null,
+            };
+      const data = {
+        ...timing,
+        workScheduleId: schedule.id,
+        scheduleTimezone: policy.timezone,
+        scheduledStartAt: b.scheduledStartAt,
+        scheduledEndAt: b.scheduledEndAt,
+        onTimeDeadlineAt: b.onTimeDeadlineAt,
+        checkInOpensAt: b.checkInOpensAt,
+        checkInClosesAt: b.checkInClosesAt,
+        checkOutClosesAt: b.checkOutClosesAt,
+      };
+      const workDateColumn = new Date(`${workDate}T00:00:00.000Z`);
+      await prisma.attendance.upsert({
+        where: {
+          organizationId_employeeId_workDate: {
+            organizationId: organization.id,
+            employeeId,
+            workDate: workDateColumn,
+          },
+        },
+        update: data,
+        create: { ...data, organizationId: organization.id, employeeId, workDate: workDateColumn },
+      });
+      records += 1;
+    }
+  }
+
   console.warn(
     `Seeded organization "Acme": owner ${email}, ${DIVISIONS.length} divisions, ` +
-      `${EMPLOYEES.length} employees, the baseline schedule and ${HOLIDAYS.length} holidays ` +
+      `${EMPLOYEES.length} employees, the baseline schedule, ${HOLIDAYS.length} holidays and ` +
+      `${records} attendance records for ${dates[0]}…${dates.at(-1)} ` +
       "(demo accounts use SEED_DEMO_PASSWORD).",
   );
 }
