@@ -1,5 +1,5 @@
 // Development data. Safe to run repeatedly (upserts). Never runs in production.
-// Hadir.in pilot data: DATA_MODEL.md §16 (corrections come in a later phase).
+// Hadir.in pilot data: DATA_MODEL.md §16.
 import { hash } from "@node-rs/argon2";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { config } from "dotenv";
@@ -9,6 +9,7 @@ import { DEFAULT_ROLES, type DefaultRoleName } from "../src/common/types/auth.js
 import { PrismaClient } from "../src/generated/prisma/client.js";
 import {
   statusAtCheckIn,
+  valuesFor,
   workedMinutesBetween,
 } from "../src/modules/attendance/domain/attendance-calculator.js";
 import { boundariesFor } from "../src/modules/work-settings/domain/schedule-policy.js";
@@ -145,6 +146,25 @@ const dayPlan = (employeeIndex: number, day: number): DayPlan => {
   };
 };
 
+/**
+ * Corrections on the history above (same `employee:day` keys): one approved by the
+ * manager (late → present) and one waiting for a decision (missing check-out).
+ */
+const CORRECTIONS: Record<
+  string,
+  { checkIn?: string; checkOut?: string; reason: string; approvedBy?: string }
+> = {
+  "2:1": {
+    checkIn: "09:05:00",
+    reason: "VPN was down at 09:05; I was online and in stand-up from then.",
+    approvedBy: "EMP-001",
+  },
+  "3:3": {
+    checkOut: "17:10:00",
+    reason: "Forgot to check out; last commit and Slack message were at 17:10.",
+  },
+};
+
 /** The five working days before today in Jakarta (weekdays that aren't seeded holidays). */
 const historyDates = (): string[] => {
   const holidays = new Set(HOLIDAYS.map((h) => h.date));
@@ -204,6 +224,7 @@ async function main(): Promise<void> {
 
   const demoHash = await hash(demoPassword);
   const employeeIds = new Map<string, string>();
+  const userIds = new Map<string, string>();
   // Managers come first in the list, so their ids exist when their reports are seeded
   for (const seed of EMPLOYEES) {
     const userId = seed.account
@@ -243,6 +264,7 @@ async function main(): Promise<void> {
       create: { organizationId: organization.id, employeeNumber: seed.number, ...data },
     });
     employeeIds.set(seed.number, employee.id);
+    if (userId) userIds.set(seed.number, userId);
   }
 
   const schedule = await prisma.workSchedule.upsert({
@@ -291,6 +313,7 @@ async function main(): Promise<void> {
   const dates = historyDates();
   const pilot = EMPLOYEES.filter((e) => e.division === "ENG" && !e.inactive);
   let records = 0;
+  let corrections = 0;
   for (const [day, workDate] of dates.entries()) {
     const b = boundariesFor(policy, workDate);
     for (const [index, seed] of pilot.entries()) {
@@ -332,25 +355,99 @@ async function main(): Promise<void> {
         checkOutClosesAt: b.checkOutClosesAt,
       };
       const workDateColumn = new Date(`${workDate}T00:00:00.000Z`);
-      await prisma.attendance.upsert({
-        where: {
-          organizationId_employeeId_workDate: {
-            organizationId: organization.id,
-            employeeId,
-            workDate: workDateColumn,
-          },
+      const key = {
+        organizationId_employeeId_workDate: {
+          organizationId: organization.id,
+          employeeId,
+          workDate: workDateColumn,
         },
+      };
+      // A record with corrections (seeded or made in the demo) is left as it is
+      const existing = await prisma.attendance.findUnique({
+        where: key,
+        select: { _count: { select: { corrections: true } } },
+      });
+      records += 1;
+      if (existing && existing._count.corrections > 0) continue;
+      const row = await prisma.attendance.upsert({
+        where: key,
         update: data,
         create: { ...data, organizationId: organization.id, employeeId, workDate: workDateColumn },
       });
-      records += 1;
+
+      const correction = CORRECTIONS[`${index}:${day}`];
+      if (!correction || !row.checkInAt) continue;
+      const requested = {
+        checkInAt: correction.checkIn ? at(correction.checkIn) : row.checkInAt,
+        checkOutAt: correction.checkOut ? at(correction.checkOut) : row.checkOutAt,
+      };
+      // The next morning, or now if that's still ahead
+      const earlier = (a: Date, b: Date) => (a < b ? a : b);
+      const submittedAt = earlier(
+        new Date(row.checkOutClosesAt.getTime() + 9 * 3600_000),
+        new Date(),
+      );
+      const request = {
+        organizationId: organization.id,
+        attendanceId: row.id,
+        employeeId,
+        workDate: workDateColumn,
+        currentCheckInAt: row.checkInAt,
+        currentCheckOutAt: row.checkOutAt,
+        requestedCheckInAt: requested.checkInAt,
+        requestedCheckOutAt: requested.checkOutAt,
+        reason: correction.reason,
+        requestedById: userIds.get(seed.number) as string,
+        expectedAttendanceVersion: row.version,
+        submittedAt,
+      };
+      if (!correction.approvedBy) {
+        await prisma.correctionRequest.create({
+          data: { ...request, status: "pending", pendingAttendanceId: row.id },
+        });
+      } else {
+        // Same steps as an approval (§11.5): recalculate, bump the version, keep both snapshots
+        const decidedAt = earlier(new Date(submittedAt.getTime() + 2 * 3600_000), new Date());
+        const snapshot = (r: typeof row) => ({
+          status: r.status,
+          completion: r.completion,
+          checkInAt: r.checkInAt?.toISOString() ?? null,
+          checkOutAt: r.checkOutAt?.toISOString() ?? null,
+          lateMinutes: r.lateMinutes,
+          workedMinutes: r.workedMinutes,
+          version: r.version,
+          correctedAt: r.correctedAt?.toISOString() ?? null,
+        });
+        const after = await prisma.attendance.update({
+          where: { id: row.id },
+          data: {
+            ...valuesFor(requested.checkInAt, requested.checkOutAt, row.onTimeDeadlineAt),
+            ...requested,
+            version: { increment: 1 },
+            correctedAt: decidedAt,
+          },
+        });
+        await prisma.correctionRequest.create({
+          data: {
+            ...request,
+            status: "approved",
+            decidedById: userIds.get(correction.approvedBy) as string,
+            decidedAt,
+            snapshot: {
+              create: { before: snapshot(row), after: snapshot(after), schemaVersion: 1 },
+            },
+          },
+        });
+      }
+      corrections += 1;
     }
   }
 
   console.warn(
     `Seeded organization "Acme": owner ${email}, ${DIVISIONS.length} divisions, ` +
       `${EMPLOYEES.length} employees, the baseline schedule, ${HOLIDAYS.length} holidays and ` +
-      `${records} attendance records for ${dates[0]}…${dates.at(-1)} ` +
+      `${records} attendance records for ${dates[0]}…${dates.at(-1)}, ` +
+      `${corrections} new corrections ` +
       "(demo accounts use SEED_DEMO_PASSWORD).",
   );
 }
