@@ -34,6 +34,11 @@ import {
   type AttendanceEventName,
 } from "@/modules/attendance/attendance.events.js";
 import {
+  snapshotOf,
+  toAttendance,
+  toScheduleBody,
+} from "@/modules/attendance/attendance.mapper.js";
+import {
   AttendanceRepository,
   DUPLICATE,
   type AttendanceRow,
@@ -59,10 +64,7 @@ import { IdempotencyRepository } from "@/modules/attendance/idempotency.reposito
 import { EmployeeProfileRequiredError } from "@/modules/employees/employees.errors.js";
 import { EmployeesService, type EmployeeProfile } from "@/modules/employees/employees.service.js";
 import { HolidaysService } from "@/modules/holidays/holidays.service.js";
-import {
-  boundariesFor,
-  type ScheduleBoundaries,
-} from "@/modules/work-settings/domain/schedule-policy.js";
+import { boundariesFor } from "@/modules/work-settings/domain/schedule-policy.js";
 import { WorkSettingsService } from "@/modules/work-settings/work-settings.service.js";
 
 /** What corrections need from a record (its owner, timestamps, snapshot, version). */
@@ -107,46 +109,6 @@ const snapshotFields = (row: AttendanceRow): AttendanceSnapshot => ({
 
 /** A check-in/out result, and whether it was replayed from an earlier request. */
 export type ActionResult = { body: AttendanceResponseBody; replayed: boolean };
-
-const snapshotOf = (row: AttendanceRow): ScheduleBoundaries & { timezone: string } => ({
-  timezone: row.scheduleTimezone,
-  workDate: fromDateColumn(row.workDate),
-  checkInOpensAt: row.checkInOpensAt,
-  scheduledStartAt: row.scheduledStartAt,
-  onTimeDeadlineAt: row.onTimeDeadlineAt,
-  scheduledEndAt: row.scheduledEndAt,
-  checkInClosesAt: row.checkInClosesAt,
-  checkOutClosesAt: row.checkOutClosesAt,
-});
-
-const toScheduleBody = (b: ScheduleBoundaries & { timezone: string }) => ({
-  timezone: b.timezone,
-  checkInOpensAt: b.checkInOpensAt.toISOString(),
-  scheduledStartAt: b.scheduledStartAt.toISOString(),
-  onTimeDeadlineAt: b.onTimeDeadlineAt.toISOString(),
-  scheduledEndAt: b.scheduledEndAt.toISOString(),
-  checkInClosesAt: b.checkInClosesAt.toISOString(),
-  checkOutClosesAt: b.checkOutClosesAt.toISOString(),
-});
-
-/** Prisma row → response body. `incomplete` depends on `now`. */
-const toAttendance = (row: AttendanceRow, now: Date): AttendanceResponseBody => ({
-  id: row.id,
-  workDate: fromDateColumn(row.workDate),
-  status: row.status,
-  completion: row.completion,
-  incomplete: isIncomplete(row, now),
-  source: row.source,
-  checkInAt: row.checkInAt?.toISOString() ?? null,
-  checkOutAt: row.checkOutAt?.toISOString() ?? null,
-  lateMinutes: row.lateMinutes,
-  workedMinutes: row.workedMinutes,
-  corrected: row.correctedAt !== null,
-  pendingCorrectionId: row.pendingCorrection?.id ?? null,
-  schedule: toScheduleBody(snapshotOf(row)),
-  createdAt: row.createdAt.toISOString(),
-  updatedAt: row.updatedAt.toISOString(),
-});
 
 /** §4.3 — active, and the date is inside the employment period. */
 const isEligibleOn = (employee: EmployeeProfile, date: LocalDate): boolean =>

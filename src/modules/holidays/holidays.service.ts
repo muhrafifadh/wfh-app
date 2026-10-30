@@ -166,18 +166,29 @@ export class HolidaysService {
     user: AuthUser,
     query: WorkCalendarQueryInput,
   ): Promise<{ items: CalendarDayBody[] }> {
+    const days = await this.workingDaysBetween(user.organizationId, query.from, query.to);
+    return {
+      items: days.map(({ schedule, ...day }) => ({ ...day, scheduleId: schedule?.id ?? null })),
+    };
+  }
+
+  /** Every date in the range (inclusive) and whether it's a working day (for reports). */
+  async workingDaysBetween(
+    organizationId: string,
+    from: LocalDate,
+    to: LocalDate,
+  ): Promise<WorkingDay[]> {
     const [rows, schedules] = await Promise.all([
-      this.repo.findBetween(user.organizationId, query.from, query.to),
-      this.workSettings.schedulesBetween(user.organizationId, query.from, query.to),
+      this.repo.findBetween(organizationId, from, to),
+      this.workSettings.schedulesBetween(organizationId, from, to),
     ]);
     const holidays = new Map(rows.map((h) => [fromDateColumn(h.date), { id: h.id, name: h.name }]));
-    const items: CalendarDayBody[] = [];
-    for (let date = query.from; date <= query.to; date = addDays(date, 1)) {
+    const days: WorkingDay[] = [];
+    for (let date = from; date <= to; date = addDays(date, 1)) {
       const schedule = schedules.find((version) => covers(version, date)) ?? null;
-      const { schedule: version, ...day } = workingDay(date, schedule, holidays.get(date) ?? null);
-      items.push({ ...day, scheduleId: version?.id ?? null });
+      days.push(workingDay(date, schedule, holidays.get(date) ?? null));
     }
-    return { items };
+    return days;
   }
 
   // Helpers

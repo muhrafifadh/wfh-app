@@ -5,35 +5,9 @@ import { toDateColumn, type LocalDate } from "@/common/time/zoned-time.js";
 import { Prisma, type AttendanceStatus } from "@/generated/prisma/client.js";
 import { PrismaService } from "@/infra/prisma/prisma.service.js";
 import type { Tx } from "@/infra/prisma/prisma.types.js";
+import { attendanceRow, type AttendanceRow } from "@/modules/attendance/attendance.mapper.js";
 
-const attendanceRow = {
-  id: true,
-  organizationId: true,
-  employeeId: true,
-  workScheduleId: true,
-  workDate: true,
-  status: true,
-  completion: true,
-  source: true,
-  checkInAt: true,
-  checkOutAt: true,
-  lateMinutes: true,
-  workedMinutes: true,
-  scheduleTimezone: true,
-  scheduledStartAt: true,
-  scheduledEndAt: true,
-  onTimeDeadlineAt: true,
-  checkInOpensAt: true,
-  checkInClosesAt: true,
-  checkOutClosesAt: true,
-  version: true,
-  correctedAt: true,
-  createdAt: true,
-  updatedAt: true,
-  pendingCorrection: { select: { id: true } },
-} satisfies Prisma.AttendanceSelect;
-
-export type AttendanceRow = Prisma.AttendanceGetPayload<{ select: typeof attendanceRow }>;
+export type { AttendanceRow };
 
 export type CheckInInsert = Pick<
   AttendanceRow,

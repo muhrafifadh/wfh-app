@@ -136,9 +136,20 @@ export class EmployeesService {
     return this.repo.eligibleIdsOn(organizationId, toDateColumn(date), afterId, take);
   }
 
-  /** A manager's team: their active direct reports (for corrections and team views). */
-  activeReportIds(organizationId: string, managerId: string): Promise<string[]> {
-    return this.repo.activeReportIds(organizationId, managerId);
+  /**
+   * The caller's team (§12): active direct reports of their own active profile.
+   * Null when they have no active profile, so they lead no team.
+   */
+  async teamOf(
+    organizationId: string,
+    userId: string,
+  ): Promise<{ managerId: string; employeeIds: string[] } | null> {
+    const manager = await this.repo.findByUser(organizationId, userId);
+    if (!manager || manager.status !== "active") return null;
+    return {
+      managerId: manager.id,
+      employeeIds: await this.repo.activeReportIds(organizationId, manager.id),
+    };
   }
 
   /** Id → number, name, status and manager, for the given employees of the organization. */

@@ -263,13 +263,9 @@ export class CorrectionsService {
   private async reviewScope(user: AuthUser): Promise<ReviewScope> {
     if (user.permissions.includes("correction:decide_all")) return { kind: "all" };
     if (!user.permissions.includes("correction:decide_team")) return { kind: "none" };
-    const manager = await this.employees.findProfileForUser(user.organizationId, user.id);
-    // An inactive manager no longer leads a team
-    if (!manager || manager.status !== "active") return { kind: "team", employeeIds: new Set() };
-    return {
-      kind: "team",
-      employeeIds: new Set(await this.employees.activeReportIds(user.organizationId, manager.id)),
-    };
+    // An inactive manager (or one without a profile) leads no team
+    const team = await this.employees.teamOf(user.organizationId, user.id);
+    return { kind: "team", employeeIds: new Set(team?.employeeIds) };
   }
 
   private async loadVisible(
