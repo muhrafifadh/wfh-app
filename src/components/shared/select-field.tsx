@@ -16,8 +16,8 @@ const NONE = "__none__";
 
 export type SelectOption = { value: string; label: string; disabled?: boolean };
 
-type SelectFieldProps<T extends FieldValues> = {
-  control: Control<T>;
+type SelectFieldProps<T extends FieldValues, O extends FieldValues = T> = {
+  control: Control<T, unknown, O>;
   name: FieldPath<T>;
   label: string;
   options: SelectOption[];
@@ -29,7 +29,7 @@ type SelectFieldProps<T extends FieldValues> = {
 };
 
 /** A labelled select wired to React Hook Form, with its description and error linked. */
-export function SelectField<T extends FieldValues>({
+export function SelectField<T extends FieldValues, O extends FieldValues = T>({
   control,
   name,
   label,
@@ -38,7 +38,7 @@ export function SelectField<T extends FieldValues>({
   noneLabel,
   description,
   disabled,
-}: SelectFieldProps<T>) {
+}: SelectFieldProps<T, O>) {
   return (
     <Controller
       control={control}

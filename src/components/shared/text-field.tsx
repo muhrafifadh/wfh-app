@@ -5,8 +5,8 @@ import { Controller, type Control, type FieldPath, type FieldValues } from "reac
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 
-type TextFieldProps<T extends FieldValues> = {
-  control: Control<T>;
+type TextFieldProps<T extends FieldValues, O extends FieldValues = T> = {
+  control: Control<T, unknown, O>;
   name: FieldPath<T>;
   label: string;
   type?: "text" | "email" | "password" | "date" | "time" | "number";
@@ -20,7 +20,7 @@ type TextFieldProps<T extends FieldValues> = {
 };
 
 /** One labelled input wired to React Hook Form, with its error under it. */
-export function TextField<T extends FieldValues>({
+export function TextField<T extends FieldValues, O extends FieldValues = T>({
   control,
   name,
   label,
@@ -30,7 +30,7 @@ export function TextField<T extends FieldValues>({
   labelAction,
   inputProps,
   disabled,
-}: TextFieldProps<T>) {
+}: TextFieldProps<T, O>) {
   return (
     <Controller
       control={control}

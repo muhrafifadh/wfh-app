@@ -3,8 +3,8 @@ import type { FieldErrors } from "@/lib/actions";
 import type { FieldPath, FieldValues, UseFormReturn } from "react-hook-form";
 
 /** Puts server field errors on the matching inputs and the message at the top. */
-export function applyServerErrors<T extends FieldValues>(
-  form: UseFormReturn<T>,
+export function applyServerErrors<T extends FieldValues, O extends FieldValues = T>(
+  form: UseFormReturn<T, unknown, O>,
   fields: readonly FieldPath<T>[],
   error: string,
   fieldErrors: FieldErrors | undefined,

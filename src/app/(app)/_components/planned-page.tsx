@@ -1,3 +1,4 @@
+import { NoAccess } from "@/app/(app)/_components/no-access";
 import { EmptyState } from "@/components/shared/empty-state";
 import { getMeContext } from "@/features/profile/queries";
 import { canAny, requireUser } from "@/lib/auth/session";
@@ -23,17 +24,7 @@ export async function PlannedPage({
   const user = await requireUser();
   const heading = <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>;
 
-  if (!canAny(user, anyOf)) {
-    return (
-      <>
-        {heading}
-        <EmptyState
-          title="You don't have access to this page"
-          description="Ask your Admin/HR if you think you should."
-        />
-      </>
-    );
-  }
+  if (!canAny(user, anyOf)) return <NoAccess title={title} />;
   if (needsEmployeeProfile && !(await getMeContext()).employee) {
     return (
       <>
