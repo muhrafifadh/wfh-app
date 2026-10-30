@@ -4,3 +4,8 @@ allowBuilds:
   "@sentry/cli": false
   sharp: false
   unrs-resolver: false
+
+# Security fixes for transitive deps (keep until upstream updates)
+overrides:
+  # Pulled in by ajv (@hookform/resolvers, Sentry's webpack plugin)
+  fast-uri: "^3.1.9"
