@@ -24,6 +24,17 @@ export const formatCentsCompact = (cents: number) => compactCurrency.format(cent
 /** "2026-03-04" → "Mar 4, 2026" */
 export const formatDate = (isoDate: string) => date.format(new Date(`${isoDate}T00:00:00Z`));
 
+const dayDate = new Intl.DateTimeFormat("en-GB", {
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: "UTC",
+});
+
+/** "2026-10-30" → "Fri, 30 Oct 2026" (UX_FLOWS.md §3.4 table format, with the weekday). */
+export const formatDayDate = (isoDate: string) => dayDate.format(new Date(`${isoDate}T00:00:00Z`));
+
 /** "2026-03" → "Mar" */
 export const formatMonth = (isoMonth: string) => month.format(new Date(`${isoMonth}-01T00:00:00Z`));
 
