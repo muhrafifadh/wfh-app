@@ -1,4 +1,5 @@
 import { NoAccess } from "@/app/(app)/_components/no-access";
+import { NoEmployeeProfile } from "@/app/(app)/_components/no-employee-profile";
 import { EmptyState } from "@/components/shared/empty-state";
 import { getMeContext } from "@/features/profile/queries";
 import { canAny, requireUser } from "@/lib/auth/session";
@@ -29,10 +30,7 @@ export async function PlannedPage({
     return (
       <>
         {heading}
-        <EmptyState
-          title="No employee profile"
-          description="Attendance is recorded per employee, and your account isn't linked to one. Contact your Admin/HR."
-        />
+        <NoEmployeeProfile />
       </>
     );
   }
