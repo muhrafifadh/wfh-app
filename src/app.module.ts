@@ -13,6 +13,7 @@ import { REQUEST_ID_HEADER, resolveRequestId } from "@/common/http/request-id.js
 import { AppThrottlerGuard } from "@/common/throttling/app-throttler.guard.js";
 import { THROTTLE_KEY_FIELD, THROTTLERS } from "@/common/throttling/throttle-key.decorator.js";
 import { AppConfig, ConfigModule } from "@/config/config.module.js";
+import { ClockModule } from "@/infra/clock/clock.module.js";
 import { HealthModule } from "@/infra/health/health.module.js";
 import { MailModule } from "@/infra/mail/mail.module.js";
 import { PrismaModule } from "@/infra/prisma/prisma.module.js";
@@ -24,8 +25,10 @@ import { JwtAuthGuard } from "@/modules/auth/guards/jwt-auth.guard.js";
 import { PermissionsGuard } from "@/modules/auth/guards/permissions.guard.js";
 import { DivisionsModule } from "@/modules/divisions/divisions.module.js";
 import { EmployeesModule } from "@/modules/employees/employees.module.js";
+import { HolidaysModule } from "@/modules/holidays/holidays.module.js";
 import { UploadsModule } from "@/modules/uploads/uploads.module.js";
 import { UsersModule } from "@/modules/users/users.module.js";
+import { WorkSettingsModule } from "@/modules/work-settings/work-settings.module.js";
 
 @Module({
   imports: [
@@ -83,6 +86,7 @@ import { UsersModule } from "@/modules/users/users.module.js";
     // Wildcards let the audit log subscribe to "user.*" instead of listing each event.
     EventEmitterModule.forRoot({ wildcard: true, delimiter: "." }),
     PrismaModule,
+    ClockModule,
     MailModule,
     QueueModule,
     StorageModule,
@@ -93,6 +97,8 @@ import { UsersModule } from "@/modules/users/users.module.js";
     UploadsModule,
     DivisionsModule,
     EmployeesModule,
+    WorkSettingsModule,
+    HolidaysModule,
   ],
   providers: [
     // Global guards run in this order (docs/09-authorization.md)

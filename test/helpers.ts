@@ -15,6 +15,7 @@ import type { Permission } from "@/common/types/auth.js";
 import { AppConfig } from "@/config/config.module.js";
 import type { Env } from "@/config/env.js";
 import { configureApp } from "@/configure-app.js";
+import { Clock, FixedClock } from "@/infra/clock/clock.js";
 import { PrismaService } from "@/infra/prisma/prisma.service.js";
 import { PASSWORD_RESET_QUEUE } from "@/modules/auth/jobs/password-reset.queue.js";
 import { UPLOADS_CLEANUP_QUEUE } from "@/modules/uploads/jobs/uploads-cleanup.queue.js";
@@ -36,10 +37,14 @@ class OverriddenConfig extends AppConfig {
   }
 }
 
-/** The real app with the production setup, plus optional test-only controllers. */
+/**
+ * The real app with the production setup, plus optional test-only controllers.
+ * Time is frozen (FixedClock) so no test depends on the host clock; move it with
+ * `clockOf(app).set(...)`.
+ */
 export async function createTestApp(
   controllers: Type[] = [],
-  options: { config?: Partial<Env> } = {},
+  options: { config?: Partial<Env>; now?: string } = {},
 ): Promise<NestExpressApplication> {
   const builder = Test.createTestingModule({ imports: [AppModule], controllers });
   // Each app gets its own queues: a job left over from one test can never be picked
@@ -49,6 +54,7 @@ export async function createTestApp(
     factory: (nestConfig: ConfigService<Env, true>) => new OverriddenConfig(nestConfig, config),
     inject: [ConfigService],
   });
+  builder.overrideProvider(Clock).useValue(new FixedClock(options.now ?? DEFAULT_NOW));
   const moduleRef = await builder.compile();
   const app = configureApp(
     moduleRef.createNestApplication<NestExpressApplication>({
@@ -60,9 +66,14 @@ export async function createTestApp(
   return app;
 }
 
+/** Monday 2 November 2026, 10:00 in Jakarta (UTC+7). */
+export const DEFAULT_NOW = "2026-11-02T03:00:00.000Z";
+
+export const clockOf = (app: NestExpressApplication): FixedClock => app.get(Clock) as FixedClock;
+
 export async function resetDatabase(app: NestExpressApplication): Promise<void> {
   await app.get(PrismaService)
-    .$executeRaw`TRUNCATE audit_logs, employees, divisions, uploads, user_tokens, password_reset_tokens, refresh_tokens, sessions, users, roles, organizations RESTART IDENTITY CASCADE`;
+    .$executeRaw`TRUNCATE audit_logs, holidays, work_schedules, employees, divisions, uploads, user_tokens, password_reset_tokens, refresh_tokens, sessions, users, roles, organizations RESTART IDENTITY CASCADE`;
 }
 
 const queue = (app: NestExpressApplication, name: string): Queue =>
@@ -195,5 +206,32 @@ export async function createEmployee(
       employmentStartDate: new Date("2026-01-05T00:00:00.000Z"),
     },
     select: { id: true, employeeNumber: true, divisionId: true },
+  });
+}
+
+/** A schedule version straight in the database: the baseline unless overridden. */
+export async function createSchedule(
+  app: NestExpressApplication,
+  owner: Pick<TestUser, "id" | "organizationId">,
+  options: { effectiveFrom?: string; effectiveTo?: string; timezone?: string } = {},
+): Promise<{ id: string }> {
+  const time = (value: string) => new Date(`1970-01-01T${value}Z`);
+  return app.get(PrismaService).workSchedule.create({
+    data: {
+      organizationId: owner.organizationId,
+      createdById: owner.id,
+      name: "Default schedule",
+      timezone: options.timezone ?? "Asia/Jakarta",
+      workingDays: [1, 2, 3, 4, 5],
+      startTime: time("09:00:00"),
+      endTime: time("17:00:00"),
+      toleranceMinutes: 15,
+      checkInOpensAt: time("08:00:00"),
+      checkInClosesAt: time("17:00:00"),
+      checkOutDeadline: time("23:59:59.999"),
+      effectiveFrom: new Date(`${options.effectiveFrom ?? "2026-01-05"}T00:00:00.000Z`),
+      effectiveTo: options.effectiveTo ? new Date(`${options.effectiveTo}T00:00:00.000Z`) : null,
+    },
+    select: { id: true },
   });
 }

@@ -30,4 +30,21 @@ export class AuditListener {
   async onEmployeeEvent(event: AuditableEvent): Promise<void> {
     await this.audit.record(event);
   }
+
+  /** WORK_SETTINGS_EVENTS (src/modules/work-settings/work-settings.events.ts). */
+  @OnEvent("work_schedule.*")
+  async onWorkScheduleEvent(event: AuditableEvent): Promise<void> {
+    await this.audit.record(event);
+  }
+
+  @OnEvent("organization.*")
+  async onOrganizationEvent(event: AuditableEvent): Promise<void> {
+    await this.audit.record(event);
+  }
+
+  /** HOLIDAY_EVENTS (src/modules/holidays/holidays.events.ts). */
+  @OnEvent("holiday.*")
+  async onHolidayEvent(event: AuditableEvent): Promise<void> {
+    await this.audit.record(event);
+  }
 }
