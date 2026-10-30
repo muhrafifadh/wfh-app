@@ -14,7 +14,7 @@ cp .env.example .env.local   # set SESSION_SECRET; keep REGISTRATION_ENABLED=fal
 pnpm dev
 ```
 
-Open http://localhost:3000 (`pnpm dev --port 3001` if 3000 is taken; then set `NEXT_PUBLIC_APP_URL` to match, and add the origin to the backend's `CORS_ORIGINS`). Every variable is described in [`.env.example`](.env.example) and [`docs/17-environment-and-config.md`](docs/17-environment-and-config.md).
+Open http://localhost:3000 (`pnpm dev --port 3001` if 3000 is taken; then set `NEXT_PUBLIC_APP_URL` to match, and the backend's `FRONTEND_URL` so links in emails point here). Every variable is described in [`.env.example`](.env.example) and [`docs/17-environment-and-config.md`](docs/17-environment-and-config.md).
 
 ## Demo accounts
 
