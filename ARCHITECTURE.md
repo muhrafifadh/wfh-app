@@ -291,6 +291,8 @@ Check-in/out require an `Idempotency-Key` header (`IDEMPOTENCY_KEY_REQUIRED` oth
 | `GET`  | `/v1/reports/attendance/trends`   | `report:read_team` / `report:read_all`      | Daily counts over a range.                      |
 | `GET`  | `/v1/reports/attendance.csv`      | `report:read_all`                           | CSV export (Should).                            |
 
+Team views use the caller's own active employee profile (`EMPLOYEE_PROFILE_REQUIRED` otherwise) and accept dates in the last 90 days; `today` takes an optional `date`. Report and trend scope (`read_team` / `read_all`) is checked in the service. The CSV streams the full filtered result synchronously and is audited as `report_export.created`.
+
 ### 8.4 Administration
 
 | Method        | Path                         | Permission          | Purpose                                                   |

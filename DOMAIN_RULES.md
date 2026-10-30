@@ -333,7 +333,9 @@ Rejection does not change attendance. The first valid decision is final; any lat
 - Approved corrections show the latest values with `corrected=true`.
 - Summary figures must reconcile with record-level data for the same filter.
 - Trends aggregate daily counts of present, late, absent, and incomplete over the selected range.
-- Managers see reports scoped to their direct reports; Admin/HR sees the organization.
+- Managers see reports scoped to their active direct reports; Admin/HR sees the organization.
+- Division filters use the employee's current division.
+- Completion filters use the summary buckets: open (before the check-out deadline), incomplete, complete, not applicable.
 
 ### 13.1 CSV export (Should)
 

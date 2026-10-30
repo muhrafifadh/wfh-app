@@ -116,7 +116,7 @@ Both app repositories started on `main` and clean. Phase 0.5 work is on local br
 |    2B | Backend attendance core (check-in/out, history, summaries)      | In review   | 2A             |
 |    2C | Backend close-day job and absence                               | In review   | 2B             |
 |     3 | Backend corrections and approvals                               | In review   | 2B             |
-|    3B | Backend dashboards and reports                                  | Not started | 2C, 3          |
+|    3B | Backend dashboards and reports                                  | In review   | 2C, 3          |
 |    4A | Frontend shell, branding, auth adjustments, profile             | Not started | 1              |
 |    4B | Frontend employees, divisions, settings, holidays               | Not started | 4A, 2A         |
 |    4C | Frontend attendance, history, employee dashboard                | Not started | 4A, 2B         |
@@ -438,7 +438,7 @@ pnpm openapi
 
 ### Phase 3B — Backend dashboards and reports
 
-**Status:** Not started
+**Status:** In review — branch `feat/phase-3b-reports` in `backend-boilerplate` (stacked on `feat/phase-3-corrections`); evidence below.
 
 **Objective:** read-only aggregates for team, organization, and reports.
 
@@ -447,6 +447,27 @@ pnpm openapi
 **Acceptance criteria:** summaries reconcile with detail rows for the same filter; managers are scoped to direct reports; holidays and non-working days never count as absent; corrected values show with `corrected=true`; open rows have no final duration.
 
 **Verification:** reconciliation tests on seeded data, scope negative tests, CSV injection test, `EXPLAIN ANALYZE` on main queries with representative volume.
+
+**Evidence (2026-10-30):**
+
+| Commit    | Change                                                                                      |
+| --------- | ------------------------------------------------------------------------------------------- |
+| `6c3d1db` | Refactor (no behavior change): shared attendance mapper, `EmployeesService.teamOf` (also used by corrections), `HolidaysService.workingDaysBetween`. |
+| `b6adf15` | `reports` module: team today/history, organization dashboard, report + summary, trends, CSV export; tests; OpenAPI. |
+
+- Verification: format, lint, typecheck pass; 114 unit tests and 189 e2e tests pass; no schema change; `openapi.json` regenerated (`/v1/team/attendance`, `/v1/team/attendance/today`, `/v1/dashboard/organization`, `/v1/reports/attendance`, `/v1/reports/attendance/trends`, `/v1/reports/attendance.csv`).
+- Acceptance (`test/reports.e2e-spec.ts`): over a three-day fixture (present, late, absent, open, incomplete, corrected), the summary equals the counts recomputed from the rows for eight filters (none, division, employee, status, each completion bucket) and is unchanged across pages; trend totals equal the report summary; a holiday and the weekend show `isWorkingDay: false` with no absences; a manager sees only active direct reports (a non-report filter returns 0, a deactivated report drops out); other organizations see 0; HR without `attendance:read_team` gets 403 on team views, a manager gets 403 on the organization dashboard and the CSV; the corrected record shows `corrected: true`; open records have `workedMinutes: null`.
+- CSV: BOM, the 15 columns of DOMAIN_RULES.md §13.1, one line per record of the full filtered result, `=HYPERLINK(...)` exported as `'=HYPERLINK(...)`, times in the record's zone with offset; one `report_export.created` audit entry with the filters and row count.
+- `EXPLAIN ANALYZE` on a scratch database with 500 employees × 259 working days (129,500 records): report page (month) 4.6 ms, deep page of a full year 4.7 ms, full-year summary 18 ms (parallel seq scan, acceptable), division summary (quarter) 2.0 ms, team history page 0.8 ms, 6-week trend 1.1 ms (index-only), dashboard "not checked in" 0.6 ms. No new index needed.
+- Decisions made during implementation:
+  - `ReportsRepository` reads attendance, employees and corrections directly, read-only, as ARCHITECTURE.md §6.7 allows; writes stay in the owning modules.
+  - Report and trend endpoints are `@Authenticated()` with the scope checked in the service (`report:read_all` → organization, `report:read_team` → active direct reports, otherwise 403), like the correction review queue. The CSV needs `report:read_all`.
+  - Team scope = active direct reports of the caller's active employee profile; a team view without such a profile returns `EMPLOYEE_PROFILE_REQUIRED`. Team dates outside the last 90 days (or after today) return `VALIDATION_FAILED` with field errors.
+  - Completion filter buckets match the summary: `open` (before the check-out deadline), `incomplete` (past it), `complete`, `not_applicable`.
+  - The division filter uses the employee's current division (records don't keep a division snapshot).
+  - Dashboard `absent` counts only ABSENT records; today's missing check-ins are `notCheckedIn` with `checkInWindowClosed` telling whether they're final until close-day. "Not checked out" = open past the scheduled end. The trend covers the last 30 working days ending today.
+  - The CSV is streamed synchronously in batches of 1,000 (no `ReportExport` table, DATA_MODEL.md §9.1); filename `attendance-<from>-to-<to>.csv`.
+- Limitations: the review screen's preview of the recalculated status and duration (UX_FLOWS.md §9.4) isn't in the correction API yet; the CSV audit entry is written after the last row, so an export aborted mid-stream isn't audited.
 
 ---
 
