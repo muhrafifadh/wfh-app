@@ -24,7 +24,7 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: app_test
+          POSTGRES_DB: hadirin_test
         # Same port as .env.test, so tests and prisma use the committed test config
         ports: ["5433:5432"]
         options: >-

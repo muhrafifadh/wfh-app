@@ -94,7 +94,7 @@ PORT=8000
 LOG_LEVEL=debug
 
 # docker compose up -d
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/app?schema=public
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/hadirin?schema=public
 REDIS_URL=redis://localhost:6379
 
 # openssl rand -base64 48
