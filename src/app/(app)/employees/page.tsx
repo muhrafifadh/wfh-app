@@ -14,7 +14,6 @@ import { listDivisionOptions, listManagerOptions } from "@/features/employees/qu
 import { loadEmployeeSearchParams } from "@/features/employees/search-params";
 import { getMeContext } from "@/features/profile/queries";
 import { can, requireUser } from "@/lib/auth/session";
-import { todayIn } from "@/lib/time-zone";
 
 export const metadata: Metadata = { title: "Employees" };
 
@@ -44,10 +43,7 @@ export default async function EmployeesPage({ searchParams }: PageProps<"/employ
         <EmployeeFilters divisions={divisions} managers={managers} />
       </Suspense>
       <Suspense fallback={<TableSkeleton label="Loading employees" />}>
-        <EmployeeResults
-          searchParams={searchParams}
-          today={todayIn(context.organization.timezone)}
-        />
+        <EmployeeResults searchParams={searchParams} today={context.organization.workDate} />
       </Suspense>
     </>
   );

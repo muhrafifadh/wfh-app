@@ -12,7 +12,6 @@ import { HolidayTable } from "@/features/holidays/components/holiday-table";
 import { holidayListHref, loadHolidaySearchParams } from "@/features/holidays/search-params";
 import { getMeContext } from "@/features/profile/queries";
 import { can, requireUser } from "@/lib/auth/session";
-import { todayIn } from "@/lib/time-zone";
 
 export const metadata: Metadata = { title: "Holidays" };
 
@@ -27,7 +26,7 @@ export default async function HolidaysPage({ searchParams }: PageProps<"/holiday
     loadHolidaySearchParams(searchParams),
     getMeContext(),
   ]);
-  const today = todayIn(context.organization.timezone);
+  const today = context.organization.workDate;
   const current = Number(today.slice(0, 4));
   const year =
     requested !== null && requested >= MIN_YEAR && requested <= MAX_YEAR ? requested : current;

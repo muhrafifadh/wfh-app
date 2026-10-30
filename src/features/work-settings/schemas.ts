@@ -62,10 +62,12 @@ export type SchedulePreview = z.infer<typeof schedulePreviewSchema>;
 // What we send
 
 export const organizationSettingsSchema = z.object({
+  // null when re-validating parsed values in the Server Action
   supportContact: z
     .string()
-    .trim()
-    .max(255, "Use at most 255 characters")
+    .nullable()
+    .transform((value) => value ?? "")
+    .pipe(z.string().trim().max(255, "Use at most 255 characters"))
     .transform((value) => value || null),
   retentionYears: z.coerce
     .number<string | number>("Enter a number of years")
@@ -77,6 +79,11 @@ export type OrganizationSettingsInput = z.input<typeof organizationSettingsSchem
 export type OrganizationSettings = z.output<typeof organizationSettingsSchema>;
 
 const timeOfDay = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Enter a time");
+/** The form's "23:59", or the "23:59:59.999" it becomes (re-validated by the Server Action). */
+const deadline = z
+  .string()
+  .regex(/^([01]\d|2[0-3]):[0-5]\d(:59\.999)?$/, "Enter a time")
+  .transform((time) => (time.length === 5 ? `${time}:59.999` : time));
 
 /**
  * A new schedule version. Times are minutes ("09:00"); the check-out deadline covers
@@ -99,7 +106,7 @@ export const scheduleFormSchema = z
       .max(120, "Use 0 to 120 minutes"),
     checkInOpensAt: timeOfDay,
     checkInClosesAt: timeOfDay,
-    checkOutDeadline: timeOfDay.transform((time) => `${time}:59.999`),
+    checkOutDeadline: deadline,
     effectiveFrom: z.iso.date("Choose a date"),
   })
   // DOMAIN_RULES.md §6.1, checked here for quick feedback; the backend decides

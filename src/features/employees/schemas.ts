@@ -77,9 +77,12 @@ export type UserOption = z.infer<typeof userOptionsSchema>["items"][number];
 
 export const employeeIdSchema = z.uuid();
 
-/** "" from an empty input means "not set". */
+/**
+ * "" from an empty input means "not set". null is accepted too: the Server Action
+ * re-validates the form's already-parsed values (docs/10-validation-and-forms.md).
+ */
 const optional = <T extends z.ZodType>(schema: T) =>
-  z.union([z.literal("").transform(() => null), schema]);
+  z.union([z.literal("").transform(() => null), z.null(), schema]);
 const optionalText = (max: number) =>
   optional(z.string().trim().max(max, `Use at most ${max} characters`)).transform(
     (value) => value || null,

@@ -42,6 +42,11 @@ const signedInWith = (permissions: Permission[]) =>
 afterEach(() => vi.resetAllMocks());
 
 describe("divisionFormSchema", () => {
+  it("accepts its own output", () => {
+    const parsed = divisionFormSchema.parse({ code: " eng ", name: " Engineering " });
+    expect(divisionFormSchema.parse(parsed)).toEqual(parsed);
+  });
+
   it("trims and uppercases the code", () => {
     expect(divisionFormSchema.parse({ code: " ops-2 ", name: " Operations " })).toEqual({
       code: "OPS-2",

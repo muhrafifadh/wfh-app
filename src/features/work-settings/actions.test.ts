@@ -43,6 +43,12 @@ const signedInWith = (permissions: Permission[]) =>
 afterEach(() => vi.resetAllMocks());
 
 describe("scheduleFormSchema", () => {
+  // The Server Action re-validates what the form already parsed
+  it("accepts its own output", () => {
+    const parsed = scheduleFormSchema.parse(baseline);
+    expect(scheduleFormSchema.parse(parsed)).toEqual(parsed);
+  });
+
   it("sends the baseline the way the backend stores it", () => {
     expect(scheduleFormSchema.parse(baseline)).toEqual({
       ...baseline,
@@ -66,6 +72,13 @@ describe("scheduleFormSchema", () => {
 });
 
 describe("organizationSettingsSchema", () => {
+  it("accepts its own output", () => {
+    for (const supportContact of ["", "hr@example.test"]) {
+      const parsed = organizationSettingsSchema.parse({ supportContact, retentionYears: "5" });
+      expect(organizationSettingsSchema.parse(parsed)).toEqual(parsed);
+    }
+  });
+
   it("clears a blank support contact and reads the years as a number", () => {
     expect(organizationSettingsSchema.parse({ supportContact: "  ", retentionYears: "5" })).toEqual(
       {

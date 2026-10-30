@@ -76,6 +76,14 @@ const bodyOf = (path: string) =>
 afterEach(() => vi.resetAllMocks());
 
 describe("newEmployeeFormSchema", () => {
+  // The Server Action re-validates what the form already parsed
+  it("accepts its own output", () => {
+    const parsed = newEmployeeFormSchema.parse(form);
+    expect(newEmployeeFormSchema.parse(parsed)).toEqual(parsed);
+    const noAccount = newEmployeeFormSchema.parse({ ...form, roleId: "", workEmail: "" });
+    expect(newEmployeeFormSchema.parse(noAccount)).toEqual(noAccount);
+  });
+
   it("uppercases the number and turns blanks into nulls", () => {
     expect(newEmployeeFormSchema.parse(form)).toMatchObject({
       employeeNumber: "EMP-011",
@@ -213,5 +221,13 @@ describe("inviteAccountAction", () => {
       inviteAccountAction(EMPLOYEE, { email: form.workEmail, roleId: ROLE }),
     ).resolves.toMatchObject({ ok: false });
     expect(apiFetch).not.toHaveBeenCalled();
+  });
+});
+
+describe("linkAccountSchema", () => {
+  it("accepts its own output", async () => {
+    const { linkAccountSchema } = await import("@/features/employees/schemas");
+    const parsed = linkAccountSchema.parse({ userId: USER, roleId: "" });
+    expect(linkAccountSchema.parse(parsed)).toEqual(parsed);
   });
 });

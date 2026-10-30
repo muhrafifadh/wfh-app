@@ -24,7 +24,6 @@ import {
 import { getMeContext } from "@/features/profile/queries";
 import { can, requireUser } from "@/lib/auth/session";
 import { formatDateTime } from "@/lib/format";
-import { todayIn } from "@/lib/time-zone";
 
 export const metadata: Metadata = { title: "Employee" };
 
@@ -41,7 +40,7 @@ export default async function EmployeePage({ params }: PageProps<"/employees/[id
     getMeContext(),
   ]);
   if (!employee) notFound();
-  const today = todayIn(context.organization.timezone);
+  const today = context.organization.workDate;
   const notices = employeeNotices(employee, today);
 
   return (

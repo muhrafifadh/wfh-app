@@ -1350,6 +1350,8 @@ export interface components {
             organization: {
                 name: string;
                 timezone: string;
+                /** Format: date */
+                workDate: string;
                 supportContact: string | null;
             };
             employee: {

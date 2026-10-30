@@ -319,6 +319,9 @@ function SchedulePreviewTable({
       <h3 id="schedule-preview" className="font-medium">
         First 7 days ({timeZoneLabel(timezone)})
       </h3>
+      <p className="text-sm text-muted-foreground">
+        From the schedule alone: holidays are non-working days whatever it says.
+      </p>
       {stale && (
         <p role="status" className="text-sm text-muted-foreground">
           You changed the form since this preview. Preview again to see the new boundaries.

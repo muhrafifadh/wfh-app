@@ -9,6 +9,8 @@ export const meContextSchema = z.object({
   organization: z.object({
     name: z.string(),
     timezone: z.string(),
+    /** Today in the organization: use this, never the browser's or server's clock. */
+    workDate: z.iso.date(),
     supportContact: z.string().nullable(),
   }),
   employee: z

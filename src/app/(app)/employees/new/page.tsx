@@ -14,7 +14,6 @@ import {
 } from "@/features/employees/queries";
 import { getMeContext } from "@/features/profile/queries";
 import { can, requireUser } from "@/lib/auth/session";
-import { todayIn } from "@/lib/time-zone";
 
 export const metadata: Metadata = { title: "Add employee" };
 
@@ -41,7 +40,7 @@ export default async function NewEmployeePage() {
       <NewEmployeeForm
         options={{ divisions, managers }}
         roles={roles}
-        today={todayIn(context.organization.timezone)}
+        today={context.organization.workDate}
       />
     </>
   );
