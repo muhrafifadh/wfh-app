@@ -3,6 +3,7 @@ import { EventEmitter2 } from "@nestjs/event-emitter";
 
 import type { Paginated } from "@/common/dto/pagination.js";
 import { NotFoundError } from "@/common/errors/app-error.js";
+import { fromDateColumn, toDateColumn } from "@/common/time/zoned-time.js";
 import type { AuthUser } from "@/common/types/auth.js";
 import { PrismaService } from "@/infra/prisma/prisma.service.js";
 import { DivisionsService } from "@/modules/divisions/divisions.service.js";
@@ -11,11 +12,7 @@ import type { EmployeeResponseBody } from "@/modules/employees/dto/employee.resp
 import type { LinkAccountInput } from "@/modules/employees/dto/link-account.dto.js";
 import type { ListEmployeesQueryInput } from "@/modules/employees/dto/list-employees.query.js";
 import type { UpdateEmployeeInput } from "@/modules/employees/dto/update-employee.dto.js";
-import {
-  fromDateColumn,
-  toDateColumn,
-  type EmployeeStatus,
-} from "@/modules/employees/employees.constants.js";
+import type { EmployeeStatus } from "@/modules/employees/employees.constants.js";
 import {
   EmployeeHasAccountError,
   EmployeeNumberTakenError,
