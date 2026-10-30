@@ -24,12 +24,14 @@ model Organization {
   updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
   deletedAt      DateTime? @map("deleted_at") @db.Timestamptz(3)
 
-  users     User[]
-  roles     Role[]
-  auditLogs AuditLog[]
-  uploads   Upload[]
-  divisions Division[]
-  employees Employee[]
+  users         User[]
+  roles         Role[]
+  auditLogs     AuditLog[]
+  uploads       Upload[]
+  divisions     Division[]
+  employees     Employee[]
+  workSchedules WorkSchedule[]
+  holidays      Holiday[]
 
   @@map("organizations")
 }
@@ -76,6 +78,8 @@ model User {
   uploads             Upload[]
   /// The HR profile this account signs in as (at most one).
   employee            Employee?
+  workSchedules       WorkSchedule[]
+  holidays            Holiday[]
 
   @@index([organizationId])
   @@index([roleId])
@@ -275,4 +279,69 @@ model Employee {
   @@index([divisionId])
   @@index([managerId])
   @@map("employees")
+}
+
+enum ScheduleScope {
+  organization
+  /// Future scope
+  division
+  /// Future scope
+  employee
+}
+
+/// One schedule version (DATA_MODEL.md §6.3). Policy fields are never edited: a new
+/// version is created and the previous one's period is closed (effectiveTo).
+/// Times are local to `timezone`; ordering and ranges are check constraints.
+model WorkSchedule {
+  id               String        @id @default(uuid(7)) @db.Uuid
+  organizationId   String        @map("organization_id") @db.Uuid
+  name             String        @db.VarChar(120)
+  /// Only "organization" until division/employee schedules exist (check constraint).
+  scope            ScheduleScope @default(organization)
+  timezone         String        @db.VarChar(64)
+  /// ISO weekdays, 1 = Monday … 7 = Sunday.
+  workingDays      Int[]         @map("working_days") @db.SmallInt
+  startTime        DateTime      @map("start_time") @db.Time(0)
+  endTime          DateTime      @map("end_time") @db.Time(0)
+  toleranceMinutes Int           @map("tolerance_minutes") @db.SmallInt
+  checkInOpensAt   DateTime      @map("check_in_opens_at") @db.Time(0)
+  checkInClosesAt  DateTime      @map("check_in_closes_at") @db.Time(0)
+  checkOutDeadline DateTime      @map("check_out_deadline") @db.Time(3)
+  /// Inclusive.
+  effectiveFrom    DateTime      @map("effective_from") @db.Date
+  /// Inclusive; null while it's the latest version.
+  effectiveTo      DateTime?     @map("effective_to") @db.Date
+  createdById      String        @map("created_by_id") @db.Uuid
+  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  createdBy    User         @relation(fields: [createdById], references: [id])
+
+  /// Backstop for the overlap check: two versions can never start on the same day.
+  @@unique([organizationId, scope, effectiveFrom])
+  @@index([organizationId, scope, effectiveFrom, effectiveTo])
+  @@index([createdById])
+  @@map("work_schedules")
+}
+
+/// A public holiday: not a working day. At most one active (not deleted) per date,
+/// checked by the service under a lock.
+model Holiday {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  /// Local organization date.
+  date           DateTime  @db.Date
+  name           String    @db.VarChar(160)
+  createdById    String    @map("created_by_id") @db.Uuid
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  createdBy    User         @relation(fields: [createdById], references: [id])
+
+  @@index([organizationId, date])
+  @@index([createdById])
+  @@map("holidays")
 }
