@@ -109,7 +109,7 @@ The `(auth)` route group uses one layout (the shadcn `login-02` block: form on t
 | User menu → Sign out                                 | `logoutAction`                                                        | `POST /auth/logout`                     |
 | Settings → Security → Sign out everywhere            | `logoutAllAction`                                                     | `POST /auth/logout-all`                 |
 
-- `REGISTRATION_ENABLED` is read at **build time** (the pages are static). Keep it in sync with the backend's flag, and rebuild after changing it.
+- `REGISTRATION_ENABLED` is read at **build time** (the pages are static). Keep it in sync with the backend's flag, and rebuild after changing it. Hadir.in keeps it `false` (UX_FLOWS.md §4): accounts come from Admin/HR invitations, and accept-invite, forgot-password and reset-password stay available.
 - `/reset-password`, `/accept-invite` and `/verify-email` set `referrer: "no-referrer"`, so the token in their URL never leaks to other sites.
 - **Links in emails act on a click, never on page load.** Email security scanners open links; a page that used the token on load would burn it before the user arrives.
 - All of these pages are in `proxy.ts`'s `PUBLIC_PATHS`. Signed-in users are sent from `/login` and `/register` to `/`.
