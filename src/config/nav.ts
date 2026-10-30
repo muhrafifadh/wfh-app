@@ -1,7 +1,6 @@
 import {
   FolderIcon,
   LayoutDashboardIcon,
-  ReceiptIcon,
   ScrollTextIcon,
   UsersIcon,
   type LucideIcon,
@@ -23,15 +22,6 @@ export type NavItem = {
 // docs/playbooks/new-feature.md — each feature adds its entry here.
 export const mainNav: NavItem[] = [
   { title: "Dashboard", href: routes.dashboard(), icon: LayoutDashboardIcon },
-  {
-    title: "Invoices",
-    href: routes.invoices(),
-    icon: ReceiptIcon,
-    items: [
-      { title: "All invoices", href: routes.invoices() },
-      { title: "New invoice", href: routes.newInvoice() },
-    ],
-  },
   { title: "Files", href: routes.files(), icon: FolderIcon },
   { title: "Users", href: routes.users(), icon: UsersIcon, permission: "user:read" },
   { title: "Audit log", href: routes.auditLog(), icon: ScrollTextIcon, permission: "audit:read" },
@@ -48,7 +38,7 @@ const titledLinks = mainNav.flatMap((item) => [
 
 /** The nav title for a path; detail pages (/users/123) get their section's title. */
 export function navTitleFor(pathname: string): string | undefined {
-  // Longest matching href wins; on a tie the sub-link ("All invoices") beats its section
+  // Longest matching href wins; on a tie the sub-link beats its section
   let best: { href: string; title: string } | undefined;
   for (const link of titledLinks) {
     const matches = pathname === link.href || pathname.startsWith(`${link.href}/`);

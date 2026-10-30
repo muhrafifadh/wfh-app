@@ -9,15 +9,14 @@ describe("visibleNav", () => {
   });
 
   it("always shows entries that need no permission", () => {
-    expect(visibleNav([]).map((item) => item.title)).toEqual(["Dashboard", "Invoices", "Files"]);
+    expect(visibleNav([]).map((item) => item.title)).toEqual(["Dashboard", "Files"]);
   });
 });
 
 describe("navTitleFor", () => {
   it.each([
     ["/dashboard", "Dashboard"],
-    ["/invoices", "All invoices"],
-    ["/invoices/new", "New invoice"],
+    ["/files", "Files"],
     ["/users/01a11fa3-9fd3-76d3-9390-2bc41e4671d2", "Users"],
   ])("names %s %s", (path, title) => {
     expect(navTitleFor(path)).toBe(title);
