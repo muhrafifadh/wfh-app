@@ -424,6 +424,14 @@ describe("Attendance (e2e)", () => {
       ]);
       const late = await http().get("/v1/attendance/me?status=late").set(auth).expect(200);
       expect(late.body.total).toBe(1);
+      const incomplete = await http()
+        .get("/v1/attendance/me?incomplete=true")
+        .set(auth)
+        .expect(200);
+      expect(incomplete.body.items.map((r: { workDate: string }) => r.workDate)).toEqual([
+        "2026-11-03",
+      ]);
+      await http().get("/v1/attendance/me?incomplete=yes").set(auth).expect(400);
 
       const summary = await http()
         .get("/v1/attendance/me/summary?month=2026-11")

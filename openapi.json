@@ -3590,6 +3590,18 @@
                 "excused"
               ]
             }
+          },
+          {
+            "name": "incomplete",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            }
           }
         ],
         "responses": {

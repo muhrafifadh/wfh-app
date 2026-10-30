@@ -314,7 +314,10 @@ export class AttendanceService {
   ): Promise<Paginated<AttendanceResponseBody>> {
     const employee = await this.requireProfile(user);
     const now = this.clock.now();
-    const { rows, total } = await this.repo.listOwn(user.organizationId, employee.id, query);
+    const { rows, total } = await this.repo.listOwn(user.organizationId, employee.id, {
+      ...query,
+      ...(query.incomplete && { incompleteAt: now }),
+    });
     return {
       items: rows.map((row) => toAttendance(row, now)),
       page: query.page,

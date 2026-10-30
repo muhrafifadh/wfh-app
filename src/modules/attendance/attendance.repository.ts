@@ -87,7 +87,13 @@ export class AttendanceRepository {
   async listOwn(
     organizationId: string,
     employeeId: string,
-    query: PaginationQuery & { from?: LocalDate; to?: LocalDate; status?: AttendanceStatus },
+    query: PaginationQuery & {
+      from?: LocalDate;
+      to?: LocalDate;
+      status?: AttendanceStatus;
+      /** Set: only records that are open past their check-out deadline at this instant. */
+      incompleteAt?: Date;
+    },
     tx: Tx = this.prisma,
   ): Promise<{ rows: AttendanceRow[]; total: number }> {
     const where: Prisma.AttendanceWhereInput = {
@@ -95,6 +101,11 @@ export class AttendanceRepository {
       employeeId,
       ...rangeWhere(query.from, query.to),
       ...(query.status && { status: query.status }),
+      // The same test as isIncomplete()
+      ...(query.incompleteAt && {
+        completion: "open",
+        checkOutClosesAt: { lt: query.incompleteAt },
+      }),
     };
     const [rows, total] = await Promise.all([
       tx.attendance.findMany({

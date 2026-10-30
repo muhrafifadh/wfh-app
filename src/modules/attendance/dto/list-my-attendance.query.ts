@@ -22,6 +22,11 @@ export const listMyAttendanceQuerySchema = rangeRefinements(
     from: z.iso.date().optional(),
     to: z.iso.date().optional(),
     status: z.enum(ATTENDANCE_STATUSES).optional(),
+    /** Only open records past their check-out deadline ("Missing check-out"). */
+    incomplete: z
+      .enum(["true", "false"])
+      .transform((value) => value === "true")
+      .optional(),
   }),
 );
 
