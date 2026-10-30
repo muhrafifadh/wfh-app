@@ -26,6 +26,7 @@ The rules live in [`docs/`](docs/README.md). **Before you write or review code, 
 - Server Components by default. `"use client"` only on the smallest interactive part.
 - Every Server Action: `requireUser()` → Zod validation → backend → revalidate → `ActionResult`.
 - Backend calls only go through `lib/api/client.ts`. Never fetch in `useEffect`.
+- No `Co-Authored-By: Claude …` (or any Anthropic/AI) trailer in commits, and no "Generated with Claude Code" line in commits or PRs. commitlint enforces the trailer rule.
 - No `any`, `@ts-ignore`, hard-coded colors, `process.env` outside `lib/env.ts`, or `../` imports.
 - Filters and pagination live in the URL (nuqs), not in `useState`.
 

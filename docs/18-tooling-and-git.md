@@ -71,6 +71,7 @@ docs: add server actions rules
 - Types: `feat`, `fix`, `refactor`, `perf`, `test`, `docs`, `style`, `chore`, `build`, `ci`.
 - Write the subject in the imperative mood ("add", not "added"), in lowercase, with no period, under 72 characters.
 - Write a commit body when the _why_ isn't obvious.
+- **No AI co-authors:** Commit messages and PR descriptions must not credit Claude, Anthropic, or another AI tool as a co-author (no `Co-Authored-By: Claude …` trailer, no "Generated with Claude Code" line). commitlint rejects a Claude/Anthropic `Co-Authored-By` trailer (`no-ai-co-author`).
 - `feat!:` or a `BREAKING CHANGE:` footer marks a breaking change.
 
 ### Pull requests
