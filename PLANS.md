@@ -120,7 +120,7 @@ Both app repositories started on `main` and clean. Phase 0.5 work is on local br
 |    4A | Frontend shell, branding, auth adjustments, profile             | In review   | 1              |
 |    4B | Frontend employees, divisions, settings, holidays               | In review   | 4A, 2A         |
 |    4C | Frontend attendance, history, employee dashboard                | In review   | 4A, 2B         |
-|    4D | Frontend corrections, team, manager/HR dashboards, reports      | Not started | 4C, 3, 3B      |
+|    4D | Frontend corrections, team, manager/HR dashboards, reports      | In review   | 4C, 3, 3B      |
 |     5 | Verification, demo seed, documentation, pilot walkthrough       | Not started | All            |
 
 Phase numbers match PRD §15. Frontend sub-phases may start as soon as the backend contract they depend on is in `openapi.json`; they do not need to wait for all backend phases.
@@ -607,13 +607,42 @@ pnpm build
 
 ### Phase 4D — Frontend corrections, team, dashboards, and reports
 
-**Status:** Not started
+**Status:** In review — branch `feat/phase-4d` in `frontend-boilerplate` (stacked on `feat/phase-4c-attendance`) and `feat/phase-4d-support` in `backend-boilerplate` (stacked on `feat/phase-4c-attendance-support`); evidence below.
 
 **Objective:** corrections, manager and HR views, and reporting are usable end to end.
 
 **In scope:** `/corrections`, `/corrections/new`, `/corrections/:id`, `/corrections/review`, `/team`, manager and Admin/HR dashboards with trend chart (Recharts), `/reports` with filters, summary, trend, and CSV export.
 
 **Acceptance criteria:** comparison layout shows current vs proposed; no decision buttons on own requests; an already-decided request shows who/when; dashboard numbers match their linked lists; manager views are team-scoped.
+
+**Evidence (2026-10-30):**
+
+| Repo     | Commit    | Change                                                                                                   |
+| -------- | --------- | -------------------------------------------------------------------------------------------------------- |
+| backend  | `e076c90` | Correction responses carry the record's time zone and before/after outcomes (status, lateness, duration); `POST /v1/correction-requests/preview`; review queue `divisionId` filter. |
+| frontend | `795ab7d` | API types refreshed.                                                                                     |
+| frontend | `09124ed` | Shared record schema, formats, badges and date helpers moved to `lib/` and `components/shared` (features don't import each other). |
+| frontend | `5d9e886` | `/corrections/new` with server preview, `/corrections`, `/corrections/:id` with the comparison and decisions. |
+| frontend | `b31c504` | `/corrections/review`, `/team`, `/team/:employeeId`, manager and Admin/HR dashboards with the trend chart, `/reports` with CSV export. |
+
+- Verification: frontend format, lint, typecheck, 239 unit tests (30 files), `api:types:check` and `build` pass; backend lint, format, typecheck, 118 unit tests and 195 e2e tests pass; `openapi.json` regenerated.
+- Browser check on a throwaway seeded database (dropped afterwards):
+  - As an employee: requested a correction for a past day (the server preview showed 8h 40m becoming 9h 02m), was redirected to the pending request, and saw it under My corrections.
+  - As the manager: the dashboard showed team cards, this week's late/absent days, pending requests with Review links and the direct-report list. Approved the request through the confirmation; the page then showed "Approved by Rina Wijaya" with the time. On another request, approved it as Admin/HR through the API while the manager's page was open; the manager's Reject didn't apply and the page showed "Approved by Indah Permata". `/team` for a past date: the Late card listed exactly its one member. Team-scoped `/reports`.
+  - As Admin/HR, in dark mode: the organization cards, division/employee filters, the trend chart with legend and tooltip, and the CSV export (200, `text/csv`, attachment name, header plus 51 rows).
+  - No horizontal scroll at 375 px on reports, the review queue and the dashboard.
+- Acceptance:
+  - Comparison: `/corrections/:id` and the request preview show check-in, check-out, status, lateness and duration, current vs proposed, as calculated by the server (`CorrectionComparison` test).
+  - No decision buttons on own requests: the panel renders only when the server says `canDecide`; the requester sees "Waiting for a decision" (and "You can't decide your own request" if they're a reviewer).
+  - Already decided: the action re-reads the request and returns "already approved/rejected by {name} on {time}" (action test); the page refreshes to the decision.
+  - Numbers match their lists: team cards use the server's summary rules (`team.test.ts`); dashboard and report counts link to reports filtered the same way; numbers without a list behind them (not checked in, not checked out) carry an explanation instead of a link.
+  - Team scope: `/team`, the manager dashboard, the review queue and reports use the backend's team-scoped endpoints; `/team/:id` 404s for anyone not on today's team list.
+- Decisions made during implementation:
+  - The trend chart uses its own palette (`--trend-*`, validated for colour-vision deficiency in light and dark), not the status-badge colours, which fail as adjacent chart fills. Light-mode fills are under 3:1 against white, so the chart always has a legend, a tooltip and a table view.
+  - A CSS comment placed before the `--trend-*` tokens made Next's CSS pipeline drop them from the build. The comment was removed and the tokens are documented in `trend-chart.tsx`; the production build was checked for them.
+  - The CSV export goes through a route handler (`/api/reports/attendance-csv`) that streams the backend response; it needs `report:read_all`, as the backend does.
+  - Dashboards re-render every minute while visible and on returning to the tab, with "Last updated" and a Refresh button.
+  - Managers' "Approve/Reject shortcuts" are Review links to the request page, where the decision is made with the full comparison.
 
 ---
 

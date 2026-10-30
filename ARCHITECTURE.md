@@ -275,6 +275,7 @@ Check-in/out require an `Idempotency-Key` header (`IDEMPOTENCY_KEY_REQUIRED` oth
 | Method | Path                                    | Permission                                        | Purpose                           |
 | ------ | --------------------------------------- | ------------------------------------------------- | --------------------------------- |
 | `POST` | `/v1/correction-requests`               | `correction:submit`                               | Submit a correction.              |
+| `POST` | `/v1/correction-requests/preview`       | `correction:submit`                               | Proposal outcome, not saved.      |
 | `GET`  | `/v1/correction-requests/me`            | `correction:submit`                               | Own requests (status, record).    |
 | `GET`  | `/v1/correction-requests`               | `correction:decide_team` / `correction:decide_all`| Review queue in scope.            |
 | `GET`  | `/v1/correction-requests/:id`           | requester or scoped reviewer                      | Detail with current vs proposed.  |
