@@ -107,8 +107,8 @@ TRUST_PROXY=loopback
 
 # Links in emails point here
 FRONTEND_URL=http://localhost:3000
-# Public sign-up (POST /v1/auth/register)
-REGISTRATION_ENABLED=true
+# Public sign-up (POST /v1/auth/register). Off for Hadir.in: Admin/HR invites accounts.
+REGISTRATION_ENABLED=false
 # smtp (real delivery), console (dev: prints emails), memory (tests), disabled
 MAIL_TRANSPORT=console
 # For MAIL_TRANSPORT=smtp: smtp://user:pass@host:587 (STARTTLS) or smtps://…:465 (TLS)
