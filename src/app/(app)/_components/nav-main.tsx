@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 import { ChevronRightIcon } from "lucide-react";
 
+import { useNavAccess } from "@/app/(app)/_components/use-nav-access";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   SidebarGroup,
@@ -16,19 +17,18 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-import { visibleNav } from "@/config/nav";
-import { useCurrentUser } from "@/features/auth/components/current-user-provider";
+import { navTitleFor, visibleNav } from "@/config/nav";
 
 /** Reads the nav config directly: icon components can't be passed from a Server Component. */
 export function NavMain() {
   const pathname = usePathname();
-  const { permissions } = useCurrentUser();
+  const access = useNavAccess();
 
-  return (
-    <SidebarGroup>
-      <SidebarGroupLabel>Platform</SidebarGroupLabel>
+  return visibleNav(access).map((section) => (
+    <SidebarGroup key={section.label}>
+      <SidebarGroupLabel>{section.label}</SidebarGroupLabel>
       <SidebarMenu>
-        {visibleNav(permissions).map((item) =>
+        {section.items.map((item) =>
           item.items?.length ? (
             <Collapsible
               key={item.title}
@@ -65,7 +65,7 @@ export function NavMain() {
               <SidebarMenuButton
                 asChild
                 tooltip={item.title}
-                isActive={pathname === item.href || pathname.startsWith(`${item.href}/`)}
+                isActive={navTitleFor(pathname) === item.title}
               >
                 <Link href={item.href} aria-current={item.href === pathname ? "page" : undefined}>
                   <item.icon aria-hidden />
@@ -77,5 +77,5 @@ export function NavMain() {
         )}
       </SidebarMenu>
     </SidebarGroup>
-  );
+  ));
 }

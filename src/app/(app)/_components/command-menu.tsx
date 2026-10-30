@@ -7,6 +7,7 @@ import { LogOutIcon, SearchIcon, SettingsIcon, UserPlusIcon, type LucideIcon } f
 import { useTheme } from "next-themes";
 
 import { useSettingsDialog } from "@/app/(app)/_components/settings-dialog";
+import { useNavAccess } from "@/app/(app)/_components/use-nav-access";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -18,10 +19,9 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
-import { visibleNav } from "@/config/nav";
+import { accountLinks, visibleNav } from "@/config/nav";
 import { THEMES } from "@/config/themes";
 import { logoutAction } from "@/features/auth/actions";
-import { useCurrentUser } from "@/features/auth/components/current-user-provider";
 import { userListHref } from "@/features/users/search-params";
 
 type PageLink = { title: string; href: string; icon: LucideIcon; group?: string };
@@ -30,7 +30,8 @@ type PageLink = { title: string; href: string; icon: LucideIcon; group?: string 
 export function CommandMenu() {
   const [open, setOpen] = useState(false);
   const router = useRouter();
-  const { permissions } = useCurrentUser();
+  const access = useNavAccess();
+  const { permissions } = access;
   const { setTheme } = useTheme();
   const settings = useSettingsDialog();
   const [, startTransition] = useTransition();
@@ -53,7 +54,10 @@ export function CommandMenu() {
     action();
   };
 
-  const pages = visibleNav(permissions).flatMap((item): PageLink[] =>
+  const pages = [
+    ...visibleNav(access).flatMap((section) => section.items),
+    ...accountLinks,
+  ].flatMap((item): PageLink[] =>
     item.items?.length
       ? item.items.map((sub) => ({ ...sub, icon: item.icon, group: item.title }))
       : [{ title: item.title, href: item.href, icon: item.icon }],

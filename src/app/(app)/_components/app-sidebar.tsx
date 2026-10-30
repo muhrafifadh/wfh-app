@@ -1,9 +1,8 @@
 import Link from "next/link";
 
-import { GalleryVerticalEndIcon } from "lucide-react";
-
 import { NavMain } from "@/app/(app)/_components/nav-main";
 import { NavUser } from "@/app/(app)/_components/nav-user";
+import { Wordmark } from "@/components/shared/wordmark";
 import {
   Sidebar,
   SidebarContent,
@@ -15,10 +14,12 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { routes } from "@/config/routes";
-import { siteConfig } from "@/config/site";
 
-/** shadcn sidebar-07: collapses to icons, with the user menu in the footer. */
-export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
+/** shadcn sidebar-07: collapses to icons, with the user menu in the footer. The "H" tile stands in for the wordmark when collapsed. */
+export function AppSidebar({
+  organizationName,
+  ...props
+}: React.ComponentProps<typeof Sidebar> & { organizationName: string }) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -26,10 +27,18 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href={routes.dashboard()}>
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <GalleryVerticalEndIcon className="size-4" aria-hidden />
+                <div
+                  aria-hidden
+                  className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary font-semibold text-sidebar-primary-foreground"
+                >
+                  H
                 </div>
-                <span className="truncate font-medium">{siteConfig.name}</span>
+                <div className="grid flex-1 text-left leading-tight">
+                  <Wordmark className="truncate text-base" />
+                  <span className="truncate text-xs text-sidebar-foreground/70">
+                    {organizationName}
+                  </span>
+                </div>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

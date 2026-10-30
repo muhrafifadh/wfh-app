@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useTransition } from "react";
 
-import { ChevronsUpDownIcon, LogOutIcon, SettingsIcon } from "lucide-react";
+import { ChevronsUpDownIcon, LifeBuoyIcon, LogOutIcon, SettingsIcon } from "lucide-react";
 
 import { useSettingsDialog } from "@/app/(app)/_components/settings-dialog";
 import { ThemeMenuSub } from "@/app/(app)/_components/theme-menu";
@@ -21,8 +22,12 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { accountLinks } from "@/config/nav";
+import { roleLabel } from "@/config/roles";
 import { logoutAction } from "@/features/auth/actions";
 import { useCurrentUser } from "@/features/auth/components/current-user-provider";
+import { useMeContext } from "@/features/profile/components/me-context-provider";
+import { supportContactHref } from "@/features/profile/support-contact";
 
 function initials(name: string) {
   return name
@@ -37,6 +42,8 @@ export function NavUser() {
   const { isMobile } = useSidebar();
   const [isPending, startTransition] = useTransition();
   const settings = useSettingsDialog();
+  const { supportContact } = useMeContext().organization;
+  const supportHref = supportContact ? supportContactHref(supportContact) : null;
 
   const identity = (
     <>
@@ -45,7 +52,7 @@ export function NavUser() {
       </Avatar>
       <div className="grid flex-1 text-left text-sm leading-tight">
         <span className="truncate font-medium">{isPending ? "Signing out…" : user.name}</span>
-        <span className="truncate text-xs">{user.email}</span>
+        <span className="truncate text-xs">{roleLabel(user.role.name)}</span>
       </div>
     </>
   );
@@ -72,13 +79,48 @@ export function NavUser() {
           >
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5">{identity}</div>
+              <p className="truncate px-1 pb-1.5 text-xs text-muted-foreground">{user.email}</p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            {accountLinks.map((link) => (
+              <DropdownMenuItem key={link.href} asChild>
+                <Link href={link.href}>
+                  <link.icon aria-hidden />
+                  {link.title}
+                </Link>
+              </DropdownMenuItem>
+            ))}
             <DropdownMenuItem onSelect={() => settings.open()}>
               <SettingsIcon aria-hidden />
               Settings
             </DropdownMenuItem>
             <ThemeMenuSub />
+            <DropdownMenuSeparator />
+            {/* UX_FLOWS.md §3.1: the configurable support contact */}
+            {supportHref ? (
+              <DropdownMenuItem asChild>
+                <a href={supportHref} target="_blank" rel="noreferrer">
+                  <LifeBuoyIcon aria-hidden />
+                  <span className="grid leading-tight">
+                    Get help
+                    <span className="truncate text-xs text-muted-foreground">{supportContact}</span>
+                  </span>
+                </a>
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuLabel className="flex items-start gap-2 font-normal">
+                <LifeBuoyIcon
+                  aria-hidden
+                  className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+                />
+                <span className="grid text-sm leading-tight">
+                  Need help?
+                  <span className="text-xs text-muted-foreground">
+                    {supportContact ?? "Contact your Admin/HR."}
+                  </span>
+                </span>
+              </DropdownMenuLabel>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={() => startTransition(() => logoutAction())}>
               <LogOutIcon aria-hidden />

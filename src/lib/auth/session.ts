@@ -38,3 +38,11 @@ export async function requireUser(): Promise<SessionUser> {
 export function can(user: Pick<SessionUser, "permissions">, permission: Permission): boolean {
   return user.permissions.includes(permission);
 }
+
+/** For routes any one of several permissions opens (e.g. team or organization scope). */
+export function canAny(
+  user: Pick<SessionUser, "permissions">,
+  permissions: readonly Permission[],
+): boolean {
+  return permissions.some((permission) => user.permissions.includes(permission));
+}
