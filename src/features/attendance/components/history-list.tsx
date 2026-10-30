@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { AttendanceBadges } from "@/components/shared/attendance-badges";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ListPagination } from "@/components/shared/list-pagination";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { routes } from "@/config/routes";
-import { AttendanceBadges } from "@/features/attendance/components/attendance-badges";
 import { durationLabel, formatCellTime } from "@/features/attendance/format";
 import { listMyAttendance } from "@/features/attendance/queries";
 import type { Attendance } from "@/features/attendance/schemas";

@@ -1,5 +1,5 @@
+import { AttendanceBadges } from "@/components/shared/attendance-badges";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AttendanceBadges } from "@/features/attendance/components/attendance-badges";
 import { durationLabel, EMPTY, formatClock, lateMessage } from "@/features/attendance/format";
 import type { Attendance } from "@/features/attendance/schemas";
 import { formatDateTime } from "@/lib/format";

@@ -2,7 +2,7 @@ import { HistoryIcon, PencilLineIcon } from "lucide-react";
 
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Badge } from "@/components/ui/badge";
-import type { Attendance } from "@/features/attendance/schemas";
+import type { Attendance } from "@/lib/attendance/schemas";
 
 /** Status, plus "Incomplete" for a missing check-out and the correction indicator. */
 export function AttendanceBadges({

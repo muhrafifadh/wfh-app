@@ -1,10 +1,11 @@
 // Backend src/modules/attendance/attendance.constants.ts and holidays.constants.ts
 
-export const ATTENDANCE_STATUSES = ["present", "late", "absent", "excused"] as const;
-export type AttendanceStatus = (typeof ATTENDANCE_STATUSES)[number];
-
-export const ATTENDANCE_COMPLETIONS = ["open", "complete", "not_applicable"] as const;
-export const ATTENDANCE_SOURCES = ["self_service", "close_day_job"] as const;
+export {
+  ATTENDANCE_COMPLETIONS,
+  ATTENDANCE_SOURCES,
+  ATTENDANCE_STATUSES,
+  type AttendanceStatus,
+} from "@/lib/attendance/schemas";
 
 /** What GET /attendance/today says the card shows (UX_FLOWS.md §7.2). The server decides. */
 export const TODAY_STATES = [

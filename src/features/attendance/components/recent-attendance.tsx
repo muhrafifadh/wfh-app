@@ -2,10 +2,10 @@ import Link from "next/link";
 
 import { ChevronRightIcon } from "lucide-react";
 
+import { AttendanceBadges } from "@/components/shared/attendance-badges";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { routes } from "@/config/routes";
-import { AttendanceBadges } from "@/features/attendance/components/attendance-badges";
 import { canRequestCorrection } from "@/features/attendance/dates";
 import { timesLine } from "@/features/attendance/format";
 import { listRecentAttendance } from "@/features/attendance/queries";

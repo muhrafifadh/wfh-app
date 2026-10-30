@@ -53,3 +53,10 @@ export function formatBytes(bytes: number): string {
   }
   return `${unit === 0 ? value : value.toFixed(1).replace(/\.0$/, "")} ${units[unit]}`;
 }
+
+/** 462 → "7h 42m"; 45 → "45m"; 0 → "0m" (UX_FLOWS.md §3.4). */
+export function formatDuration(minutes: number): string {
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return hours === 0 ? `${rest}m` : `${hours}h ${String(rest).padStart(2, "0")}m`;
+}
