@@ -6075,10 +6075,8 @@
             "nullable": true
           },
           "jobTitle": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "status": {
             "type": "string",
@@ -6417,10 +6415,8 @@
             "type": "string"
           },
           "supportContact": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "retentionYears": {
             "type": "integer",
@@ -7523,10 +7519,8 @@
             "nullable": true
           },
           "supportContact": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           }
         },
         "required": [

@@ -26,5 +26,30 @@ export function buildOpenApiDocument(app: INestApplication): OpenAPIObject {
     .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config, { extraModels: [ErrorResponse] });
-  return cleanupOpenApiDoc(document);
+  return cleanupOpenApiDoc(restoreNullableScalars(document));
+}
+
+type SchemaNode = Record<string, unknown>;
+const isNode = (value: unknown): value is SchemaNode => typeof value === "object" && value !== null;
+
+/**
+ * nestjs-zod describes `z.string().nullable()` as `type: ["string", "null"]`, and
+ * @nestjs/swagger reads any array `type` as "a list of the first type", so the field
+ * became `string[]`. Swagger keeps nestjs-zod's empty-type marker, which real arrays
+ * never carry: rewrite it as `anyOf: [T, null]`, the form cleanupOpenApiDoc turns into
+ * `nullable: true` (as it already does for e.g. `z.email().nullable()`).
+ */
+export function restoreNullableScalars<T>(node: T): T {
+  if (Array.isArray(node)) {
+    for (const item of node) restoreNullableScalars(item);
+  } else if (isNode(node)) {
+    const { items } = node;
+    if (node["x-nestjs_zod-empty-type"] === true && node.type === "array" && isNode(items)) {
+      delete node.type;
+      delete node.items;
+      Object.assign(node, { anyOf: [items, { type: "null" }] });
+    }
+    for (const value of Object.values(node)) restoreNullableScalars(value);
+  }
+  return node;
 }
