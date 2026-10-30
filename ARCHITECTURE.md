@@ -264,7 +264,7 @@ This list is a resource design, not a replacement for OpenAPI. Final endpoints m
 | `GET`   | `/v1/attendance/today`              | `attendance:self`   | Today's status, server time, schedule, allowed actions.  |
 | `POST`  | `/v1/attendance/check-in`           | `attendance:self`   | Check in using server time.                              |
 | `POST`  | `/v1/attendance/check-out`          | `attendance:self`   | Check out today's record.                                |
-| `GET`   | `/v1/attendance/me`                 | `attendance:self`   | Own history (date range, status, pagination).            |
+| `GET`   | `/v1/attendance/me`                 | `attendance:self`   | Own history (date range, status, incomplete, pagination). |
 | `GET`   | `/v1/attendance/me/summary`         | `attendance:self`   | Own summary for a range or month.                        |
 | `GET`   | `/v1/attendance/:id`                | self or scoped      | Record detail with correction history.                   |
 
@@ -275,7 +275,7 @@ Check-in/out require an `Idempotency-Key` header (`IDEMPOTENCY_KEY_REQUIRED` oth
 | Method | Path                                    | Permission                                        | Purpose                           |
 | ------ | --------------------------------------- | ------------------------------------------------- | --------------------------------- |
 | `POST` | `/v1/correction-requests`               | `correction:submit`                               | Submit a correction.              |
-| `GET`  | `/v1/correction-requests/me`            | `correction:submit`                               | Own requests and statuses.        |
+| `GET`  | `/v1/correction-requests/me`            | `correction:submit`                               | Own requests (status, record).    |
 | `GET`  | `/v1/correction-requests`               | `correction:decide_team` / `correction:decide_all`| Review queue in scope.            |
 | `GET`  | `/v1/correction-requests/:id`           | requester or scoped reviewer                      | Detail with current vs proposed.  |
 | `POST` | `/v1/correction-requests/:id/approve`   | `correction:decide_team` / `correction:decide_all`| Approve (first decision wins).    |

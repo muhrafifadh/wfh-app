@@ -119,7 +119,7 @@ Both app repositories started on `main` and clean. Phase 0.5 work is on local br
 |    3B | Backend dashboards and reports                                  | In review   | 2C, 3          |
 |    4A | Frontend shell, branding, auth adjustments, profile             | In review   | 1              |
 |    4B | Frontend employees, divisions, settings, holidays               | In review   | 4A, 2A         |
-|    4C | Frontend attendance, history, employee dashboard                | Not started | 4A, 2B         |
+|    4C | Frontend attendance, history, employee dashboard                | In review   | 4A, 2B         |
 |    4D | Frontend corrections, team, manager/HR dashboards, reports      | Not started | 4C, 3, 3B      |
 |     5 | Verification, demo seed, documentation, pilot walkthrough       | Not started | All            |
 
@@ -531,8 +531,6 @@ pnpm build
 
 ### Phase 4B — Frontend administration
 
-**Status:** Not started
-
 **Status:** In review — branch `feat/phase-4b-admin` in `frontend-boilerplate` (stacked on `feat/phase-4a-shell`) and `feat/phase-4b-admin-support` in `backend-boilerplate` (stacked on `feat/phase-4a-me-context`); evidence below.
 
 **Objective:** Admin/HR manages employees, divisions, settings, and holidays through the UI.
@@ -574,13 +572,36 @@ pnpm build
 
 ### Phase 4C — Frontend attendance and employee dashboard
 
-**Status:** Not started
+**Status:** In review — branch `feat/phase-4c-attendance` in `frontend-boilerplate` (stacked on `feat/phase-4b-admin`) and `feat/phase-4c-attendance-support` in `backend-boilerplate` (stacked on `feat/phase-4b-admin-support`); evidence below.
 
 **Objective:** employees check in/out and understand the result on mobile and desktop.
 
 **In scope:** employee dashboard (`UX_FLOWS.md` §6.1), `/attendance` with every state in §7, client action island with pending state and idempotency key, check-out confirmation, `/attendance/history` daily and monthly views with filters and summary, `/attendance/:id`, error-code mapping, ambiguous-response recovery.
 
 **Acceptance criteria:** every state in `UX_FLOWS.md` §7–8 renders and is tested where relevant; double-clicks never create two intents; organization time is labeled and never used as client-side authority; employees see only their own history.
+
+**Evidence (2026-10-30):**
+
+| Repo     | Commit    | Change                                                                                                   |
+| -------- | --------- | -------------------------------------------------------------------------------------------------------- |
+| backend  | `c1f819d` | `GET /v1/correction-requests/me?attendanceId=` lists one record's requests (its correction history).    |
+| backend  | `935f36c` | `GET /v1/attendance/me?incomplete=true` lists open records past their check-out deadline.               |
+| frontend | `dfb2a52` | API types refreshed.                                                                                     |
+| frontend | `69b1aaf` | `/attendance` today card (every §7.2 state), check-in/out actions with idempotency keys, ambiguous-result recovery, employee `/dashboard`. |
+| frontend | `6202512` | `/attendance/history` (daily list and monthly calendar, URL filters, summary) and `/attendance/:id` with correction history. |
+
+- Verification: frontend format, lint, typecheck, 210 unit tests (25 files), `api:types:check` and `build` pass; backend lint, format, typecheck, 116 unit tests and 192 e2e tests pass; `openapi.json` regenerated.
+- Browser check on a throwaway seeded database (dropped afterwards; its check-in window was widened to 23:00 so the real flow could run after 17:00): as an employee, double-clicked Check in (one POST reached the backend, one record), saw Late with the API's late minutes, the toast and the announcement; checked out through the confirmation dialog and saw both times and the duration; history filters (reversed range refused before any request, edited URL refused on the server, status and Incomplete filters, empty state with Reset filters); monthly calendar; a record with an approved correction shows original vs requested and the decision; another employee's record and a malformed ID are "not found"; the owner (no employee profile) sees the Contact Admin/HR state on the dashboard, `/attendance` and `/attendance/history`. At 375 px: the Check in button is 44 px high above the fold, history becomes cards, and nothing scrolls sideways.
+- Acceptance:
+  - Every §7.2 state has a design and a test (`today-view.test.ts`, `today-card.test.tsx`); §7.3 late copy uses `lateMinutes`; §8 empty states and range validation are tested (`dates.test.ts`).
+  - Double clicks: a ref guard plus the pending state send one action per intent; the intent's key is reused for retries and dropped once the result is known (`today-card.test.tsx`).
+  - Ambiguous results (timeout, network, 5xx) re-check today's state before offering anything; a check-in that turned out recorded is reported as recorded, otherwise the retry reuses the key; if the state can't be read, only "Check my status" is offered.
+  - Organization time: the clock is seeded from `serverTime`, labeled ("Organization time … WIB"), and display-only; "today" comes from the server (`workDate`); boundary re-checks are scheduled from server times and the backend still decides.
+  - Own history only: every read goes to `/attendance/me…` or `/attendance/:id`, which the backend scopes to the caller.
+- Decisions made during implementation:
+  - Today's card re-checks through TanStack Query and a route handler (`/api/attendance/today`): every 5 minutes while the tab is visible, on focus, at the next check-in/check-out boundary, and after an unconfirmed action (docs/08-data-fetching.md).
+  - The "Request correction" CTA shows while no request is pending and the organization's date is within seven days of the work date; the backend still enforces the deadline. `/corrections/new` and `/corrections/:id` are Phase 4D placeholders.
+  - Users without an employee profile get a placeholder dashboard until the manager and Admin/HR dashboards land in 4D.
 
 ---
 
