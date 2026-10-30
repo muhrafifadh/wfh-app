@@ -121,7 +121,7 @@ Both app repositories started on `main` and clean. Phase 0.5 work is on local br
 |    4B | Frontend employees, divisions, settings, holidays               | In review   | 4A, 2A         |
 |    4C | Frontend attendance, history, employee dashboard                | In review   | 4A, 2B         |
 |    4D | Frontend corrections, team, manager/HR dashboards, reports      | In review   | 4C, 3, 3B      |
-|     5 | Verification, demo seed, documentation, pilot walkthrough       | Not started | All            |
+|     5 | Verification, demo seed, documentation, pilot walkthrough       | In review   | All            |
 
 Phase numbers match PRD §15. Frontend sub-phases may start as soon as the backend contract they depend on is in `openapi.json`; they do not need to wait for all backend phases.
 
@@ -648,7 +648,7 @@ pnpm build
 
 ### Phase 5 — Verification, documentation, and pilot walkthrough
 
-**Status:** Not started
+**Status:** In review, awaiting the HR reviewer's sign-off — branch `feat/phase-5-verification` in both app repositories (stacked on the Phase 4D branches); evidence below.
 
 **Objective:** prove the integrated application works locally and is documented.
 
@@ -668,6 +668,49 @@ pnpm build
 - Demo seed reproduces the pilot scenario (Engineering, 10 employees, five working days).
 - A fresh clone can be set up and demoed using only the documentation.
 - The simulated HR reviewer signs off the walkthrough.
+
+**Evidence (2026-10-31):**
+
+| Repo     | Commit    | Change                                                                                                   |
+| -------- | --------- | -------------------------------------------------------------------------------------------------------- |
+| backend  | `6105755` | Seed: a second forgotten check-out with no correction, so walkthrough step 7 works from a fresh seed.    |
+| backend  | `e111d61` | README: overview, setup, demo data, OpenAPI, permission matrix, rules in brief, testing, known limitations. |
+| backend  | `de12b58` | README: copy `.env` before `pnpm install` (found by the clean-setup check).                               |
+| frontend | `e1903af` | Security headers: no framing, `nosniff`, referrer policy, camera/microphone/location refused.            |
+| frontend | `b5475e9` | Walkthrough fixes: employee timestamps in organization time; clearer "leave blank" hints on the correction form. |
+| frontend | `1e61de8` | Scenario D test: formats and states follow Jakarta on a device running in Tokyo.                          |
+| frontend | `2726032`, `0847716` | README: overview, setup, demo accounts, routes, behaviour, testing, known limitations; styling note on new tokens. |
+
+- **Regression:** backend format, lint, typecheck, 118 unit tests, 195 e2e tests and build pass; frontend format, lint, typecheck, 242 tests (31 files, including axe checks), `api:types:check` and build pass.
+- **Migrations:** applied to empty databases (each throwaway database, and the clean-setup check) and on top of the previous state (the dev database through every phase); the e2e suite applies them to `postgres-test` on every run.
+- **Business rules (DOMAIN_RULES.md §17):** A and B (`attendance.e2e-spec.ts` "check-in status": 09:15:00 present/0, 09:15:01 late/1); C ("concurrency" and "Idempotency-Key" groups, and the double-click checks in the browser); D (`timezone.test.ts` in the web app; the backend derives everything from the organization zone); E ("lists own records… and sums them", forgotten check-out then a correction); F ("keeps the record's schedule snapshot when the schedule changes"); G (`corrections.e2e-spec.ts` parallel decisions → one `CORRECTION_ALREADY_DECIDED`, and the browser check in 4D); H ("rejects a holiday", close-day "skips weekends and holidays"); I ("never lets the requester decide their own request, whatever their role"); J ("uses the Jakarta work date at a UTC boundary (Scenario J)").
+- **Security review:**
+  - Authentication: httpOnly, `SameSite=Lax` session cookies (`Secure` in production), refresh rotation and session-expired handling from the boilerplate; login and registration throttled per account and per IP.
+  - Authorization and IDOR: every route declares a permission (the app refuses to start otherwise); records are scoped to the organization and caller (404 outside), covered by e2e tests for attendance, corrections, team and reports; the web app's `/team/:id` checks the team list too.
+  - Mass assignment: strict Zod DTOs; check-in/out accept no body, so time, employee and status always come from the server.
+  - CSRF: Server Actions check the origin; route handlers are read-only GETs (the CSV export is audited, and needs `report:read_all`).
+  - Open redirects: the post-login `next` is limited to same-site paths.
+  - Logging: the logger redacts authorization headers and secrets; errors log codes and request IDs, not bodies. No raw SQL.
+  - Fixed: the web app sent no security headers (now sent on every response).
+- **Pilot walkthrough (UX_FLOWS.md §23)**, on a throwaway database seeded with the demo data (dropped afterwards), with the developer as the simulated HR reviewer:
+
+  | Step | Task                                                      | Result                                                                                       |
+  | ---: | --------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+  | 1    | Log in from a protected-page link                         | Done: `/attendance/history?view=monthly` → login → back to that page.                         |
+  | 2    | Find the schedule and on-time deadline                    | Done: the card shows the schedule, tolerance and "Check in by … to be on time".               |
+  | 3    | Check in (on time and late)                               | On time done live (Present). Late was done live in Phase 4C; both are e2e-tested. The current schedule row was moved to late evening on the throwaway database, because the walkthrough ran at 23:57 on a Friday. |
+  | 4    | Explain the displayed status                              | Done: status word and icon, plus the late message from the API's minutes.                      |
+  | 5    | Check out                                                 | Done through the confirmation; both times and the duration shown.                              |
+  | 6    | Find attendance from three days ago (daily and monthly)   | Done in both views.                                                                            |
+  | 7    | Submit a correction for a missing check-out               | Done from "Request correction" on the recent list; the server preview showed the new duration. Needed the seed fix above. |
+  | 8    | As the manager, approve one correction and reject another | Done; each page then showed who decided and when.                                              |
+  | 9    | As Admin/HR, add an employee, a holiday, and a schedule effective tomorrow | Done (the holiday first hit the seeded 4 November one, and the conflict showed on the date field). |
+  | 10   | As Admin/HR, review the dashboard and the pilot week report | Done; the report reconciled (approved correction complete, rejected one still missing a check-out). |
+
+  Confusing terms found and fixed: "Leave blank to keep none" (now "No check-out is recorded. Leave blank to keep it that way."), and UTC creation times on the employee page. Recorded as a known limitation: a reviewer on `/corrections/:id` sees "My corrections" highlighted in the sidebar.
+- **Clean setup:** both repositories cloned fresh and set up by following only their READMEs, using a separate Compose project and ports so the dev stack stayed untouched. This found one defect, `pnpm install` before `.env` (fixed in the README). After the fix: install, `docker compose up -d`, `pnpm db:migrate`, `pnpm db:seed`, the API on its own port, the web app, and signing in as the demo manager all worked; the new security headers were present. The clone and its volumes were removed afterwards.
+- **Documentation (PRODUCT_REQUIREMENTS.md §17):** overview and architecture, local setup and environment, migrations and seed, OpenAPI, the permission matrix, attendance rules (summary plus DOMAIN_RULES.md), testing, demo accounts and known limitations are in the two app READMEs; this repository's README says how to run both.
+- **Still open:** the HR reviewer's sign-off on this walkthrough, and a screen-reader pass (automated axe checks and keyboard use are done).
 
 ## 7. Cross-cutting verification matrix
 
