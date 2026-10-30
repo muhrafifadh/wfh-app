@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 
 import { pageWindow, parseSort } from "@/common/dto/pagination.js";
-import { PERMISSIONS } from "@/common/types/auth.js";
+import { DEFAULT_ROLES } from "@/common/types/auth.js";
 import { Prisma, type UserTokenPurpose } from "@/generated/prisma/client.js";
 import { PrismaService } from "@/infra/prisma/prisma.service.js";
 import type { Tx } from "@/infra/prisma/prisma.types.js";
@@ -134,8 +134,8 @@ export class UsersRepository {
   }
 
   /**
-   * Self-signup: a new organization with "owner" (all permissions) and
-   * "member" roles, and the user as owner. Returns null if the email is taken.
+   * Self-signup: a new organization with the default roles (DEFAULT_ROLES),
+   * and the user as owner. Returns null if the email is taken.
    */
   async createOwner(data: {
     email: string;
@@ -149,12 +149,16 @@ export class UsersRepository {
           data: { name: data.organizationName },
           select: { id: true },
         });
-        const owner = await tx.role.create({
-          data: { organizationId: organization.id, name: "owner", permissions: [...PERMISSIONS] },
-          select: { id: true },
+        await tx.role.createMany({
+          data: Object.entries(DEFAULT_ROLES).map(([name, permissions]) => ({
+            organizationId: organization.id,
+            name,
+            permissions: [...permissions],
+          })),
         });
-        await tx.role.create({
-          data: { organizationId: organization.id, name: "member", permissions: ["user:read"] },
+        const owner = await tx.role.findUniqueOrThrow({
+          where: { organizationId_name: { organizationId: organization.id, name: "owner" } },
+          select: { id: true },
         });
         return tx.user.create({
           data: {

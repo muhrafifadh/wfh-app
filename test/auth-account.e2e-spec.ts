@@ -2,6 +2,7 @@ import type { NestExpressApplication } from "@nestjs/platform-express";
 
 import request from "supertest";
 
+import { PERMISSIONS } from "@/common/types/auth.js";
 import { MailService } from "@/infra/mail/mail.service.js";
 import { MemoryMailer } from "@/infra/mail/mailers.js";
 import { PrismaService } from "@/infra/prisma/prisma.service.js";
@@ -57,7 +58,7 @@ describe("Account (e2e)", () => {
         email: "ada@example.test",
         name: "Ada",
         emailVerified: false,
-        permissions: ["user:read", "user:manage", "audit:read"],
+        permissions: [...PERMISSIONS],
       });
 
       // A verification link is on its way
@@ -70,7 +71,13 @@ describe("Account (e2e)", () => {
         select: { name: true },
         orderBy: { name: "asc" },
       });
-      expect(roles.map((r) => r.name)).toEqual(["member", "owner"]);
+      expect(roles.map((r) => r.name)).toEqual([
+        "admin_hr",
+        "employee",
+        "manager",
+        "member",
+        "owner",
+      ]);
     });
 
     it("rejects an email that is already registered", async () => {
