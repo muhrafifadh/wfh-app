@@ -13,8 +13,8 @@ import { routes } from "@/config/routes";
 import { loginAction } from "@/features/auth/actions";
 import { FormAlert } from "@/features/auth/components/form-alert";
 import { FormHeader } from "@/features/auth/components/form-header";
-import { applyServerErrors } from "@/features/auth/form-errors";
 import { loginSchema, type LoginInput } from "@/features/auth/schemas";
+import { applyServerErrors } from "@/lib/form-errors";
 
 export function LoginForm({ canRegister }: { canRegister: boolean }) {
   const searchParams = useSearchParams();

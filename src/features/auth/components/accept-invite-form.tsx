@@ -11,8 +11,8 @@ import { Field, FieldGroup } from "@/components/ui/field";
 import { acceptInvitationAction } from "@/features/auth/actions";
 import { FormAlert } from "@/features/auth/components/form-alert";
 import { FormHeader } from "@/features/auth/components/form-header";
-import { applyServerErrors } from "@/features/auth/form-errors";
 import { resetPasswordFormSchema, type ResetPasswordFormInput } from "@/features/auth/schemas";
+import { applyServerErrors } from "@/lib/form-errors";
 
 export function AcceptInviteForm() {
   const token = useSearchParams().get("token");

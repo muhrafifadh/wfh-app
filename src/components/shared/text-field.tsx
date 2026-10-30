@@ -9,11 +9,14 @@ type TextFieldProps<T extends FieldValues> = {
   control: Control<T>;
   name: FieldPath<T>;
   label: string;
-  type?: "text" | "email" | "password";
+  type?: "text" | "email" | "password" | "date" | "time" | "number";
   autoComplete?: string;
   description?: string;
   /** Rendered next to the label, e.g. a "Forgot your password?" link. */
   labelAction?: React.ReactNode;
+  /** Passed to the input, e.g. `min`/`max` for dates, `step` for times. */
+  inputProps?: Pick<React.ComponentProps<"input">, "min" | "max" | "step" | "inputMode" | "onBlur">;
+  disabled?: boolean;
 };
 
 /** One labelled input wired to React Hook Form, with its error under it. */
@@ -25,6 +28,8 @@ export function TextField<T extends FieldValues>({
   autoComplete,
   description,
   labelAction,
+  inputProps,
+  disabled,
 }: TextFieldProps<T>) {
   return (
     <Controller
@@ -37,7 +42,14 @@ export function TextField<T extends FieldValues>({
             {labelAction && <div className="ml-auto">{labelAction}</div>}
           </div>
           <Input
+            {...inputProps}
             {...field}
+            onBlur={(event) => {
+              inputProps?.onBlur?.(event);
+              field.onBlur();
+            }}
+            value={field.value ?? ""}
+            disabled={disabled}
             id={name}
             type={type}
             autoComplete={autoComplete}

@@ -12,8 +12,8 @@ import { routes } from "@/config/routes";
 import { registerAction } from "@/features/auth/actions";
 import { FormAlert } from "@/features/auth/components/form-alert";
 import { FormHeader } from "@/features/auth/components/form-header";
-import { applyServerErrors } from "@/features/auth/form-errors";
 import { registerSchema, type RegisterInput } from "@/features/auth/schemas";
+import { applyServerErrors } from "@/lib/form-errors";
 
 export function RegisterForm() {
   const form = useForm<RegisterInput>({
