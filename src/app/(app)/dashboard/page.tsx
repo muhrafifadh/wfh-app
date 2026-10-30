@@ -1,46 +1,31 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { Suspense } from "react";
 
 import { loadToday } from "@/app/(app)/_components/load-today";
+import { EmployeeSection } from "@/app/(app)/dashboard/_components/employee-section";
+import { OrganizationSection } from "@/app/(app)/dashboard/_components/organization-section";
+import { TeamSection } from "@/app/(app)/dashboard/_components/team-section";
 import { EmptyState } from "@/components/shared/empty-state";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { routes } from "@/config/routes";
-import { AttendanceSummary } from "@/features/attendance/components/attendance-summary";
-import { RecentAttendance } from "@/features/attendance/components/recent-attendance";
-import { TodayCard } from "@/features/attendance/components/today-card";
-import { firstDayOf, lastDayOf, monthOf } from "@/features/attendance/dates";
-import { formatLongDate, formatMonthYear, greeting } from "@/features/attendance/format";
-import { countMyPendingCorrections } from "@/features/corrections/queries";
-import { SupportContact } from "@/features/profile/components/support-contact";
+import { formatLongDate, greeting } from "@/features/attendance/format";
 import { getMeContext } from "@/features/profile/queries";
+import { loadDashboardSearchParams } from "@/features/reports/search-params";
 import { can, requireUser } from "@/lib/auth/session";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
-// UX_FLOWS.md §6.1 — the employee dashboard. Manager and Admin/HR views arrive in Phase 4D.
-export default async function DashboardPage() {
+// UX_FLOWS.md §6 — role-aware: my attendance (with a profile), then my team (Manager)
+// or the organization (Admin/HR). Each part shows only what the caller may see.
+export default async function DashboardPage({ searchParams }: PageProps<"/dashboard">) {
   const user = await requireUser();
-  const context = await getMeContext();
+  const [context, filters] = await Promise.all([
+    getMeContext(),
+    loadDashboardSearchParams(searchParams),
+  ]);
   const { organization } = context;
   const firstName = user.name.split(/\s+/)[0] ?? user.name;
-
-  if (!context.employee || !can(user, "attendance:self")) {
-    return (
-      <>
-        <h1 className="text-2xl font-semibold tracking-tight">Welcome, {firstName}</h1>
-        <p className="text-sm text-muted-foreground">{formatLongDate(organization.workDate)}</p>
-        <EmptyState
-          title="Team and organization dashboards are coming"
-          description="Your account has no employee profile, so there's no attendance of your own. Team and organization views arrive in Phase 4D."
-        />
-      </>
-    );
-  }
-
-  const today = await loadToday();
-  const month = monthOf(organization.workDate);
+  const ownAttendance = Boolean(context.employee) && can(user, "attendance:self");
+  const organizationView = can(user, "attendance:read_all");
+  const teamView = !organizationView && can(user, "attendance:read_team");
+  const today = ownAttendance ? await loadToday() : null;
 
   return (
     <>
@@ -50,69 +35,34 @@ export default async function DashboardPage() {
         </h1>
         <p className="text-sm text-muted-foreground">{formatLongDate(organization.workDate)}</p>
       </div>
-      <TodayCard
-        initialToday={today}
-        supportContact={<SupportContact contact={organization.supportContact} />}
-      />
-      <div className="grid max-w-2xl gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              <h2>{formatMonthYear(month)}</h2>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Suspense fallback={<Skeleton className="h-40" />}>
-              <AttendanceSummary from={firstDayOf(month)} to={lastDayOf(month)} compact />
-            </Suspense>
-          </CardContent>
-        </Card>
-        {can(user, "correction:submit") && (
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                <h2>Corrections</h2>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-2">
-              <Suspense fallback={<Skeleton className="h-8 w-24" />}>
-                <PendingCorrections />
-              </Suspense>
-              <Link
-                href={routes.corrections()}
-                className="text-sm text-primary underline-offset-4 hover:underline"
-              >
-                View my corrections
-              </Link>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-      <section aria-labelledby="recent-heading" className="flex max-w-2xl flex-col gap-3">
-        <div className="flex items-center justify-between gap-2">
-          <h2 id="recent-heading" className="text-lg font-semibold">
-            Recent attendance
-          </h2>
-          <Link
-            href={routes.attendanceHistory()}
-            className="text-sm text-primary underline-offset-4 hover:underline"
-          >
-            View all
-          </Link>
-        </div>
-        <Suspense fallback={<Skeleton className="h-64 rounded-lg" />}>
-          <RecentAttendance count={5} today={organization.workDate} />
-        </Suspense>
-      </section>
+      {ownAttendance && (
+        <EmployeeSection
+          today={today}
+          workDate={organization.workDate}
+          supportContact={organization.supportContact}
+          canRequestCorrections={can(user, "correction:submit")}
+        />
+      )}
+      {organizationView && (
+        <OrganizationSection
+          filters={filters}
+          canFilter={can(user, "employee:manage")}
+          canReview={can(user, "correction:decide_all")}
+        />
+      )}
+      {teamView && (
+        <TeamSection
+          workDate={organization.workDate}
+          canDecide={can(user, "correction:decide_team")}
+          canReport={can(user, "report:read_team")}
+        />
+      )}
+      {!ownAttendance && !organizationView && !teamView && (
+        <EmptyState
+          title="Nothing to show yet"
+          description="Your account has no employee profile and no team or organization view."
+        />
+      )}
     </>
-  );
-}
-
-async function PendingCorrections() {
-  const pending = await countMyPendingCorrections();
-  return (
-    <p className="text-2xl font-semibold tabular-nums">
-      {pending} <span className="text-base font-normal text-muted-foreground">pending</span>
-    </p>
   );
 }

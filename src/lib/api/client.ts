@@ -54,3 +54,30 @@ export async function apiFetch<S extends z.ZodType>(
   const text = await res.text();
   return schema.parse(text ? JSON.parse(text) : undefined);
 }
+
+/**
+ * For downloads (e.g. a CSV export): the backend's response as it is, to stream on.
+ * Errors still throw ApiError, like apiFetch.
+ */
+export async function apiFetchStream(path: string): Promise<Response> {
+  const token = await getAccessToken();
+  const clientChain = (await requestHeaders()).get("x-forwarded-for");
+  const res = await fetch(`${env.API_URL}${path}`, {
+    headers: {
+      ...(token && { Authorization: `Bearer ${token}` }),
+      ...forwardedForHeader(clientChain),
+    },
+    // Exports can take longer than a page read
+    signal: AbortSignal.timeout(60_000),
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const parsed = errorBodySchema.safeParse(await res.json().catch(() => null));
+    if (parsed.success) {
+      const { code, message, details, requestId } = parsed.data.error;
+      throw new ApiError(res.status, code, message, details, requestId);
+    }
+    throw new ApiError(res.status, "UNKNOWN_ERROR", `API GET ${path} failed`);
+  }
+  return res;
+}

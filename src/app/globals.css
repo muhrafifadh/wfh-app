@@ -19,6 +19,10 @@
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
   --color-chart-5: var(--chart-5);
+  --color-trend-present: var(--trend-present);
+  --color-trend-late: var(--trend-late);
+  --color-trend-incomplete: var(--trend-incomplete);
+  --color-trend-absent: var(--trend-absent);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
@@ -99,6 +103,10 @@
   --chart-3: oklch(0.499 0.178 20.692);
   --chart-4: oklch(0.556 0 0);
   --chart-5: oklch(0.371 0 0);
+  --trend-present: oklch(0.669 0.141 162.11);
+  --trend-late: oklch(0.764 0.161 75.12);
+  --trend-incomplete: oklch(0.575 0.163 255.53);
+  --trend-absent: oklch(0.716 0.141 357.39);
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
@@ -145,6 +153,10 @@
   --chart-3: oklch(0.68 0.16 21);
   --chart-4: oklch(0.708 0 0);
   --chart-5: oklch(0.556 0 0);
+  --trend-present: oklch(0.621 0.128 163.11);
+  --trend-late: oklch(0.67 0.143 73.23);
+  --trend-incomplete: oklch(0.622 0.161 255.05);
+  --trend-absent: oklch(0.622 0.171 0.84);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.72 0.16 15);
