@@ -115,7 +115,7 @@ Both app repositories started on `main` and clean. Phase 0.5 work is on local br
 |    2A | Backend work settings, schedule versions, holidays              | In review   | 1              |
 |    2B | Backend attendance core (check-in/out, history, summaries)      | In review   | 2A             |
 |    2C | Backend close-day job and absence                               | In review   | 2B             |
-|     3 | Backend corrections and approvals                               | Not started | 2B             |
+|     3 | Backend corrections and approvals                               | In review   | 2B             |
 |    3B | Backend dashboards and reports                                  | Not started | 2C, 3          |
 |    4A | Frontend shell, branding, auth adjustments, profile             | Not started | 1              |
 |    4B | Frontend employees, divisions, settings, holidays               | Not started | 4A, 2A         |
@@ -392,7 +392,7 @@ pnpm openapi
 
 ### Phase 3 — Backend corrections and approvals
 
-**Status:** Not started
+**Status:** In review — branch `feat/phase-3-corrections` in `backend-boilerplate` (stacked on `feat/phase-2c-close-day`); evidence below.
 
 **Objective:** official, auditable corrections with first-decision-wins approval.
 
@@ -413,6 +413,26 @@ pnpm openapi
 - Version conflict blocks approval.
 
 **Approval gate:** simulated HR UAT on missing check-in, missing check-out, late correction, reject, and conflict scenarios.
+
+**Evidence (2026-10-30):**
+
+| Commit    | Change                                                                                      |
+| --------- | ------------------------------------------------------------------------------------------- |
+| `84d2302` | Migration D, `corrections` module (submit, own list, review queue, detail, approve, reject), `pendingCorrectionId` on attendance, tests, OpenAPI. |
+| `17795cc` | Seed: one approved correction (EMP-003, late → present) and one pending (EMP-004, missing check-out). |
+
+- Verification: format, lint, typecheck pass; 104 unit tests and 179 e2e tests pass (corrections suite repeated 3×); migrations apply to an empty database with no drift; seed run twice gives the same 2 corrections; `openapi.json` regenerated.
+- Mandatory RED tests (`test/corrections.e2e-spec.ts`): approve applies once (version 1 → 2, late → present, 480 worked minutes, snapshots, audit) and a second decision gets `CORRECTION_ALREADY_DECIDED`; reject leaves the record byte-identical; approve‖approve and approve‖reject each give exactly one 200 and one 409 with one snapshot at most; an Admin/HR requester gets `CORRECTION_SELF_APPROVAL_FORBIDDEN` (and the database check refuses it too) while another Admin/HR can decide; a manager gets 404 for a non-report and for a report who became inactive; day 8 at 00:00 WIB is `CORRECTION_WINDOW_CLOSED`, day 7 at 23:59:59 is accepted; a check-out after submission makes approval `CORRECTION_VERSION_CONFLICT`.
+- UAT scenarios covered by tests: missing check-in on an ABSENT record (→ late, still open), missing check-out (→ complete), late correction (→ present), reject, conflict. A walkthrough with the HR persona is still to do.
+- Decisions made during implementation:
+  - Routes follow ARCHITECTURE.md §8.2 (`/v1/correction-requests`). Submit and own list need `correction:submit`; the queue, detail and decisions are `@Authenticated()` with the scope checked in the service (`correction:decide_all` → organization, `correction:decide_team` → active direct reports of an active manager profile, otherwise 403 on the queue and 404 on a record). The queue never shows the caller's own requests; pending requests come oldest first.
+  - One pending request per record is enforced by a unique `pending_attendance_id` column (equal to `attendance_id` while pending, null once decided, kept in step by a check constraint) instead of a partial index, which Prisma would report as drift.
+  - The request stores the resulting pair (`requestedCheckInAt` always set, `requestedCheckOutAt` set when the record would have one); `changes` in the API is derived by comparing with the values at submission.
+  - Proposed times must be on the work date in the record's schedule timezone and not in the future; invalid pairs return the new code `CORRECTION_TIMES_INVALID` (422) with field errors. The deadline uses the record's snapshot timezone.
+  - A version conflict rolls back the whole decision, so the request stays pending; the reviewer rejects it and the employee submits a new one. The message says so.
+  - Recalculation uses the shared calculator (`valuesFor`) and the record's own schedule snapshot (ABSENT rows keep one since Phase 2C). `correctedAt` keeps the first approval time.
+  - Audit entries (`correction.submitted|approved|rejected`) are written right after the transaction commits, through the same event path as every other module, not inside it.
+- Limitations: the audit entry is not in the decision transaction (a crash between commit and audit write would lose the entry; same for all modules). `GET /v1/attendance/:id` shows `corrected` and `pendingCorrectionId`, not the full correction history; team/organization reads of attendance come in Phase 3B.
 
 ---
 

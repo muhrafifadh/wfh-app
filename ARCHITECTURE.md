@@ -267,7 +267,7 @@ This list is a resource design, not a replacement for OpenAPI. Final endpoints m
 | `GET`   | `/v1/attendance/me/summary`         | `attendance:self`   | Own summary for a range or month.                        |
 | `GET`   | `/v1/attendance/:id`                | self or scoped      | Record detail with correction history.                   |
 
-Check-in/out require an `Idempotency-Key` header (`IDEMPOTENCY_KEY_REQUIRED` otherwise) and take an empty body. A replay returns the first result with `Idempotent-Replayed: true`. The API never accepts check-in/out timestamps, employee, organization, or status. `GET /v1/attendance/:id` returns own records only until the team/organization views exist.
+Check-in/out require an `Idempotency-Key` header (`IDEMPOTENCY_KEY_REQUIRED` otherwise) and take an empty body. A replay returns the first result with `Idempotent-Replayed: true`. The API never accepts check-in/out timestamps, employee, organization, or status. `GET /v1/attendance/:id` returns own records only until the team/organization views exist. Attendance responses carry `corrected` and `pendingCorrectionId`.
 
 ### 8.2 Corrections
 
@@ -360,7 +360,7 @@ sequenceDiagram
     end
 ```
 
-A version mismatch rolls back the transaction and returns `CORRECTION_VERSION_CONFLICT`.
+A version mismatch rolls back the transaction and returns `CORRECTION_VERSION_CONFLICT`; the request stays pending. The audit entry is written right after commit through the shared event listener, like every other module.
 
 ## 12. Close-day flow
 

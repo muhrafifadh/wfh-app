@@ -271,7 +271,7 @@ A correction always targets an existing attendance record. For a work date with 
 
 ### 11.2 Deadline
 
-- An employee can submit up to 23:59:59 on the seventh calendar day after `workDate`, in the organization timezone. Later submissions are rejected with `CORRECTION_WINDOW_CLOSED`; there is no override.
+- An employee can submit up to 23:59:59 on the seventh calendar day after `workDate`, in the organization timezone (the timezone of the record's schedule snapshot). Later submissions are rejected with `CORRECTION_WINDOW_CLOSED`; there is no override.
 - The deadline applies to every role, including Admin/HR submitting their own corrections.
 - A pending request does not expire and is never auto-approved.
 
@@ -287,7 +287,7 @@ Final statuses cannot change. Further changes require a new request.
 ### 11.4 Validation
 
 - Requester reason is required, 10–1,000 characters after trimming.
-- Proposed values must produce a valid time pair on the work date (check-out ≥ check-in, both within the work date).
+- Proposed values must produce a valid time pair on the work date (check-out ≥ check-in, both within the work date, neither in the future). A check-out alone is invalid for a record without a check-in. Invalid pairs return `CORRECTION_TIMES_INVALID`.
 - Proposed values must differ from the current values.
 - At most one `PENDING` request per attendance record (`CORRECTION_ALREADY_PENDING`).
 - The requester can never decide their own request, regardless of role (`CORRECTION_SELF_APPROVAL_FORBIDDEN`).
@@ -295,7 +295,7 @@ Final statuses cannot change. Further changes require a new request.
 - Admin/HR can decide any request in the organization except their own.
 - A request whose requester has no eligible decider (e.g. no direct manager) is decided by Admin/HR.
 - A decision note is required for rejection (10–1,000 characters) and optional for approval.
-- If the attendance record changed after submission, approval is rejected with `CORRECTION_VERSION_CONFLICT`; the employee must submit a new request.
+- If the attendance record changed after submission, approval is rejected with `CORRECTION_VERSION_CONFLICT` and the request stays pending; the reviewer rejects it and the employee submits a new request.
 
 ### 11.5 Atomic decision
 
@@ -394,6 +394,7 @@ Audit stores actor, organization, action, target, timestamp, request ID, and non
 | `IDEMPOTENCY_KEY_REQUIRED`           |  400 | Missing or malformed `Idempotency-Key` header.    |
 | `CLOSE_DAY_DATE_NOT_ENDED`           |  422 | Close-day re-run for today or a future date.      |
 | `CORRECTION_WINDOW_CLOSED`           |  422 | Past the seven-day submission deadline.           |
+| `CORRECTION_TIMES_INVALID`           |  422 | Proposed times are not a valid, changed pair.     |
 | `CORRECTION_ALREADY_PENDING`         |  409 | A pending request already exists for the record.  |
 | `CORRECTION_VERSION_CONFLICT`        |  409 | Attendance changed after submission.              |
 | `CORRECTION_ALREADY_DECIDED`         |  409 | Another decision was made first.                  |

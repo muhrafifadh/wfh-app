@@ -357,10 +357,11 @@ A correction always targets an existing attendance record (see `DOMAIN_RULES.md`
 | `employeeId`                | UUID          |  No  | Attendance owner (denormalized for queries).   |
 | `workDate`                  | date          |  No  | Denormalized from attendance.                  |
 | `status`                    | enum          |  No  | `pending`, `approved`, `rejected`.             |
+| `pendingAttendanceId`       | UUID          | Yes  | Unique. `attendanceId` while pending, else null. |
 | `currentCheckInAt`          | timestamptz   | Yes  | Value at submission (for display).             |
 | `currentCheckOutAt`         | timestamptz   | Yes  | Value at submission (for display).             |
-| `requestedCheckInAt`        | timestamptz   | Yes  | Proposed value.                                |
-| `requestedCheckOutAt`       | timestamptz   | Yes  | Proposed value.                                |
+| `requestedCheckInAt`        | timestamptz   |  No  | Check-in if approved (proposed or current).    |
+| `requestedCheckOutAt`       | timestamptz   | Yes  | Check-out if approved (proposed or current).   |
 | `reason`                    | varchar(1000) |  No  | 10–1,000 characters.                           |
 | `requestedById`             | UUID          |  No  | Requesting user.                               |
 | `expectedAttendanceVersion` | integer       |  No  | Optimistic concurrency.                        |
@@ -373,10 +374,10 @@ A correction always targets an existing attendance record (see `DOMAIN_RULES.md`
 
 Constraints and indexes:
 
-- At least one of `requestedCheckInAt` / `requestedCheckOutAt` is present.
+- The requested columns hold the resulting pair; at least one differs from the current values (service check). `requestedCheckOutAt >= requestedCheckInAt`.
 - `decidedById <> requestedById` (check constraint) in addition to the service check.
 - Status controls decision fields: `pending` → `decidedById`, `decidedAt` null; `approved`/`rejected` → both present; `rejected` → `decisionNote` present.
-- Partial unique index: one `pending` request per `(organizationId, attendanceId)`.
+- One `pending` request per record: unique `pendingAttendanceId`, with a check that it equals `attendanceId` exactly while `pending` (a partial index would show as Prisma drift).
 - Decision uses `UPDATE … WHERE id = ? AND status = 'pending'` (first decision wins).
 - Reviewer queue index `(organizationId, status, submittedAt)`.
 - Requester history index `(organizationId, employeeId, workDate DESC)`.
@@ -392,7 +393,7 @@ Constraints and indexes:
 | `schemaVersion`       | smallint    |  No  | JSON shape version.                            |
 | `createdAt`           | timestamptz |  No  | Same transaction as approval.                  |
 
-Snapshots are immutable and store only the needed domain fields, never full Prisma rows or secrets.
+Snapshots are immutable and store only the needed domain fields, never full Prisma rows or secrets. Schema version 1: `status`, `completion`, `checkInAt`, `checkOutAt`, `lateMinutes`, `workedMinutes`, `version`, `correctedAt`.
 
 ## 9. Reporting entities
 
@@ -518,7 +519,7 @@ Final indexes must be validated with `EXPLAIN ANALYZE` on representative volume,
 
 ### Migration D — Corrections
 
-- Add correction request and snapshot, partial unique index, and check constraints.
+- Add correction request and snapshot, the unique pending marker, and check constraints (`20261030062634_add_corrections`).
 
 ### Migration E — Reporting (only if async export is built)
 
@@ -538,7 +539,7 @@ The existing `prisma/seed.ts` is extended (idempotent upserts, refuses productio
 - One inactive employee and one user without an employee profile for negative tests.
 - Default schedule Monday–Friday 09:00–17:00, tolerance 15, check-in window 08:00–17:00, check-out deadline 23:59:59.999.
 - At least one public holiday within the pilot period window for demo.
-- Five working days of history for the pilot employees covering present, late, absent, open/incomplete, complete, and corrected records, plus one pending correction. (Phase 2C seeds the last five working days before the seed runs; corrected and pending-correction records follow with corrections.)
+- Five working days of history for the pilot employees covering present, late, absent, open/incomplete, complete, and corrected records, plus one pending correction. (Phase 2C seeds the last five working days before the seed runs; Phase 3 adds one approved and one pending correction.)
 - Demo passwords come from environment variables (as `SEED_ADMIN_PASSWORD` does today) and are documented in the README, never hard-coded.
 
 Test fixtures cover on-time, exactly-at-tolerance, one-second-late, open, complete, absent, corrected, and two-organization isolation cases.
