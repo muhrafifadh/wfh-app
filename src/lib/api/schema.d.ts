@@ -788,6 +788,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/correction-requests/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CorrectionsController_preview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/correction-requests/me": {
         parameters: {
             query?: never;
@@ -1798,6 +1814,7 @@ export interface components {
             attendanceId: string;
             /** Format: date */
             workDate: string;
+            timezone: string;
             /** @enum {string} */
             status: "pending" | "approved" | "rejected";
             employee: {
@@ -1824,6 +1841,20 @@ export interface components {
                 checkOutAt: string | null;
             };
             changes: ("check_in" | "check_out")[];
+            outcome: {
+                current: {
+                    /** @enum {string} */
+                    status: "present" | "late" | "absent";
+                    lateMinutes: number;
+                    workedMinutes: number | null;
+                };
+                requested: {
+                    /** @enum {string} */
+                    status: "present" | "late" | "absent";
+                    lateMinutes: number;
+                    workedMinutes: number | null;
+                };
+            };
             reason: string;
             /** Format: date-time */
             submittedAt: string;
@@ -1839,6 +1870,50 @@ export interface components {
             } | null;
             canDecide: boolean;
         };
+        PreviewCorrectionDto: {
+            /** Format: uuid */
+            attendanceId: string;
+            /** Format: date-time */
+            requestedCheckInAt?: string;
+            /** Format: date-time */
+            requestedCheckOutAt?: string;
+        };
+        CorrectionPreviewResponse_Output: {
+            /** Format: uuid */
+            attendanceId: string;
+            /** Format: date */
+            workDate: string;
+            timezone: string;
+            /** Format: date-time */
+            submissionClosesAt: string;
+            current: {
+                /** Format: date-time */
+                checkInAt: string | null;
+                /** Format: date-time */
+                checkOutAt: string | null;
+            };
+            requested: {
+                /** Format: date-time */
+                checkInAt: string | null;
+                /** Format: date-time */
+                checkOutAt: string | null;
+            };
+            changes: ("check_in" | "check_out")[];
+            outcome: {
+                current: {
+                    /** @enum {string} */
+                    status: "present" | "late" | "absent";
+                    lateMinutes: number;
+                    workedMinutes: number | null;
+                };
+                requested: {
+                    /** @enum {string} */
+                    status: "present" | "late" | "absent";
+                    lateMinutes: number;
+                    workedMinutes: number | null;
+                };
+            };
+        };
         CorrectionListResponse_Output: {
             items: {
                 /** Format: uuid */
@@ -1847,6 +1922,7 @@ export interface components {
                 attendanceId: string;
                 /** Format: date */
                 workDate: string;
+                timezone: string;
                 /** @enum {string} */
                 status: "pending" | "approved" | "rejected";
                 employee: {
@@ -1873,6 +1949,20 @@ export interface components {
                     checkOutAt: string | null;
                 };
                 changes: ("check_in" | "check_out")[];
+                outcome: {
+                    current: {
+                        /** @enum {string} */
+                        status: "present" | "late" | "absent";
+                        lateMinutes: number;
+                        workedMinutes: number | null;
+                    };
+                    requested: {
+                        /** @enum {string} */
+                        status: "present" | "late" | "absent";
+                        lateMinutes: number;
+                        workedMinutes: number | null;
+                    };
+                };
                 reason: string;
                 /** Format: date-time */
                 submittedAt: string;
@@ -4646,6 +4736,7 @@ export interface operations {
                 pageSize?: number;
                 status?: "pending" | "approved" | "rejected";
                 employeeId?: string;
+                divisionId?: string;
             };
             header?: never;
             path?: never;
@@ -4714,6 +4805,56 @@ export interface operations {
             };
             /** @description CORRECTION_ALREADY_PENDING */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description EMPLOYEE_PROFILE_REQUIRED, CORRECTION_WINDOW_CLOSED, CORRECTION_TIMES_INVALID */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    CorrectionsController_preview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreviewCorrectionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CorrectionPreviewResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
