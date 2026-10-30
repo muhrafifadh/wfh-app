@@ -45,3 +45,22 @@ export const isIncomplete = (
   record: { completion: string; checkOutClosesAt: Date },
   now: Date,
 ): boolean => record.completion === "open" && now > record.checkOutClosesAt;
+
+export type RecordedValues = CheckInStatus & {
+  completion: "open" | "complete";
+  workedMinutes: number | null;
+};
+
+/**
+ * §11.1 — what a record becomes with these timestamps (corrections recalculate
+ * everything; employees never propose a status).
+ */
+export const valuesFor = (
+  checkInAt: Date,
+  checkOutAt: Date | null,
+  onTimeDeadlineAt: Date,
+): RecordedValues => ({
+  ...statusAtCheckIn(checkInAt, onTimeDeadlineAt),
+  completion: checkOutAt ? "complete" : "open",
+  workedMinutes: checkOutAt ? workedMinutesBetween(checkInAt, checkOutAt) : null,
+});

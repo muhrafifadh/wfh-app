@@ -24,6 +24,7 @@ import { AuditModule } from "@/modules/audit/audit.module.js";
 import { AuthModule } from "@/modules/auth/auth.module.js";
 import { JwtAuthGuard } from "@/modules/auth/guards/jwt-auth.guard.js";
 import { PermissionsGuard } from "@/modules/auth/guards/permissions.guard.js";
+import { CorrectionsModule } from "@/modules/corrections/corrections.module.js";
 import { DivisionsModule } from "@/modules/divisions/divisions.module.js";
 import { EmployeesModule } from "@/modules/employees/employees.module.js";
 import { HolidaysModule } from "@/modules/holidays/holidays.module.js";
@@ -101,6 +102,7 @@ import { WorkSettingsModule } from "@/modules/work-settings/work-settings.module
     WorkSettingsModule,
     HolidaysModule,
     AttendanceModule,
+    CorrectionsModule,
   ],
   providers: [
     // Global guards run in this order (docs/09-authorization.md)

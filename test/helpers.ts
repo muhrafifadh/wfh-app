@@ -79,7 +79,7 @@ export const clockOf = (app: NestExpressApplication): FixedClock => app.get(Cloc
 
 export async function resetDatabase(app: NestExpressApplication): Promise<void> {
   await app.get(PrismaService)
-    .$executeRaw`TRUNCATE audit_logs, idempotency_records, attendances, holidays, work_schedules, employees, divisions, uploads, user_tokens, password_reset_tokens, refresh_tokens, sessions, users, roles, organizations RESTART IDENTITY CASCADE`;
+    .$executeRaw`TRUNCATE audit_logs, correction_snapshots, correction_requests, idempotency_records, attendances, holidays, work_schedules, employees, divisions, uploads, user_tokens, password_reset_tokens, refresh_tokens, sessions, users, roles, organizations RESTART IDENTITY CASCADE`;
 }
 
 const queue = (app: NestExpressApplication, name: string): Queue =>

@@ -42,6 +42,14 @@ export type EmployeeProfile = {
   employmentEndDate: string | null;
 };
 
+export type EmployeeSummary = {
+  id: string;
+  employeeNumber: string;
+  fullName: string;
+  status: EmployeeStatus;
+  managerId: string | null;
+};
+
 /** Prisma row → response body (dates become ISO strings, `date` columns YYYY-MM-DD). */
 const toEmployee = (row: EmployeeRow): EmployeeResponseBody => ({
   id: row.id,
@@ -126,6 +134,21 @@ export class EmployeesService {
     take: number,
   ): Promise<string[]> {
     return this.repo.eligibleIdsOn(organizationId, toDateColumn(date), afterId, take);
+  }
+
+  /** A manager's team: their active direct reports (for corrections and team views). */
+  activeReportIds(organizationId: string, managerId: string): Promise<string[]> {
+    return this.repo.activeReportIds(organizationId, managerId);
+  }
+
+  /** Id → number, name, status and manager, for the given employees of the organization. */
+  async summariesByIds(
+    organizationId: string,
+    ids: string[],
+  ): Promise<Map<string, EmployeeSummary>> {
+    if (ids.length === 0) return new Map();
+    const rows = await this.repo.findSummaries(organizationId, [...new Set(ids)]);
+    return new Map(rows.map((row) => [row.id, row]));
   }
 
   /** The caller's own profile (GET /me/employee). */

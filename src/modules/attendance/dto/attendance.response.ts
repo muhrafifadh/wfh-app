@@ -34,7 +34,10 @@ export const attendanceResponseSchema = z.object({
   lateMinutes: z.int(),
   /** Set once complete. */
   workedMinutes: z.int().nullable(),
+  /** An approved correction changed this record. */
   corrected: z.boolean(),
+  /** The correction request waiting for a decision, if any (at most one). */
+  pendingCorrectionId: z.uuid().nullable(),
   schedule: attendanceScheduleSchema,
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),

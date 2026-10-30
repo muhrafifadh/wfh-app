@@ -80,6 +80,14 @@ export class UsersRepository {
     });
   }
 
+  /** Names for display, deactivated and deleted users included. */
+  findNames(organizationId: string, ids: string[], tx: Tx = this.prisma) {
+    return tx.user.findMany({
+      where: { organizationId, id: { in: ids } },
+      select: { id: true, name: true },
+    });
+  }
+
   async list(
     organizationId: string,
     query: ListUsersQueryInput,

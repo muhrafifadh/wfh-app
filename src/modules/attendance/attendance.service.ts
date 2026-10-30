@@ -43,6 +43,7 @@ import {
   checkInWindowAt,
   isIncomplete,
   statusAtCheckIn,
+  valuesFor,
   workedMinutesBetween,
 } from "@/modules/attendance/domain/attendance-calculator.js";
 import type {
@@ -63,6 +64,46 @@ import {
   type ScheduleBoundaries,
 } from "@/modules/work-settings/domain/schedule-policy.js";
 import { WorkSettingsService } from "@/modules/work-settings/work-settings.service.js";
+
+/** What corrections need from a record (its owner, timestamps, snapshot, version). */
+export type CorrectableAttendance = {
+  id: string;
+  employeeId: string;
+  workDate: LocalDate;
+  timezone: string;
+  status: AttendanceRow["status"];
+  checkInAt: Date | null;
+  checkOutAt: Date | null;
+  version: number;
+  pendingCorrectionId: string | null;
+};
+
+/**
+ * The record's domain fields before/after a correction (DATA_MODEL.md §8.2). Bump
+ * ATTENDANCE_SNAPSHOT_VERSION when this shape changes.
+ */
+export type AttendanceSnapshot = {
+  status: AttendanceRow["status"];
+  completion: AttendanceRow["completion"];
+  checkInAt: string | null;
+  checkOutAt: string | null;
+  lateMinutes: number;
+  workedMinutes: number | null;
+  version: number;
+  correctedAt: string | null;
+};
+export const ATTENDANCE_SNAPSHOT_VERSION = 1;
+
+const snapshotFields = (row: AttendanceRow): AttendanceSnapshot => ({
+  status: row.status,
+  completion: row.completion,
+  checkInAt: row.checkInAt?.toISOString() ?? null,
+  checkOutAt: row.checkOutAt?.toISOString() ?? null,
+  lateMinutes: row.lateMinutes,
+  workedMinutes: row.workedMinutes,
+  version: row.version,
+  correctedAt: row.correctedAt?.toISOString() ?? null,
+});
 
 /** A check-in/out result, and whether it was replayed from an earlier request. */
 export type ActionResult = { body: AttendanceResponseBody; replayed: boolean };
@@ -101,6 +142,7 @@ const toAttendance = (row: AttendanceRow, now: Date): AttendanceResponseBody => 
   lateMinutes: row.lateMinutes,
   workedMinutes: row.workedMinutes,
   corrected: row.correctedAt !== null,
+  pendingCorrectionId: row.pendingCorrection?.id ?? null,
   schedule: toScheduleBody(snapshotOf(row)),
   createdAt: row.createdAt.toISOString(),
   updatedAt: row.updatedAt.toISOString(),
@@ -365,6 +407,58 @@ export class AttendanceService {
     const row = employee ? await this.repo.findOwn(user.organizationId, employee.id, id) : null;
     if (!row) throw new NotFoundError("Attendance record");
     return toAttendance(row, this.clock.now());
+  }
+
+  // For corrections (DOMAIN_RULES.md §11). Scope checks are the caller's job.
+
+  async findForCorrection(
+    organizationId: string,
+    id: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<CorrectableAttendance | null> {
+    const row = await this.repo.findInOrganization(organizationId, id, tx);
+    return (
+      row && {
+        id: row.id,
+        employeeId: row.employeeId,
+        workDate: fromDateColumn(row.workDate),
+        timezone: row.scheduleTimezone,
+        status: row.status,
+        checkInAt: row.checkInAt,
+        checkOutAt: row.checkOutAt,
+        version: row.version,
+        pendingCorrectionId: row.pendingCorrection?.id ?? null,
+      }
+    );
+  }
+
+  /**
+   * §11.5 (2–6) — sets the approved timestamps and recalculates status, lateness,
+   * duration and completion from the record's own schedule snapshot. Null if the
+   * record is no longer at `expectedVersion`.
+   */
+  async applyCorrection(
+    organizationId: string,
+    id: string,
+    expectedVersion: number,
+    pair: { checkInAt: Date; checkOutAt: Date | null },
+    now: Date,
+    tx: Prisma.TransactionClient,
+  ): Promise<{ before: AttendanceSnapshot; after: AttendanceSnapshot } | null> {
+    const before = await this.repo.findInOrganization(organizationId, id, tx);
+    if (!before || before.version !== expectedVersion) return null;
+    const after = await this.repo.applyCorrection(
+      id,
+      expectedVersion,
+      {
+        ...valuesFor(pair.checkInAt, pair.checkOutAt, before.onTimeDeadlineAt),
+        checkInAt: pair.checkInAt,
+        checkOutAt: pair.checkOutAt,
+        correctedAt: before.correctedAt ?? now,
+      },
+      tx,
+    );
+    return after && { before: snapshotFields(before), after: snapshotFields(after) };
   }
 
   // Helpers

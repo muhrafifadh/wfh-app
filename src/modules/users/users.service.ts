@@ -122,6 +122,13 @@ export class UsersService {
     await this.repo.updatePasswordHash(id, await hash(password), tx);
   }
 
+  /** Id → display name, for users of the organization (e.g. who decided a correction). */
+  async namesByIds(organizationId: string, ids: string[]): Promise<Map<string, string>> {
+    if (ids.length === 0) return new Map();
+    const rows = await this.repo.findNames(organizationId, [...new Set(ids)]);
+    return new Map(rows.map((row) => [row.id, row.name]));
+  }
+
   // Managing users (user:read / user:manage)
 
   async list(user: AuthUser, query: ListUsersQueryInput): Promise<Paginated<UserResponseBody>> {

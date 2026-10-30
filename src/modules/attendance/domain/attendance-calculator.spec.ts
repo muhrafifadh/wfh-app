@@ -3,6 +3,7 @@ import {
   checkInWindowAt,
   isIncomplete,
   statusAtCheckIn,
+  valuesFor,
   workedMinutesBetween,
 } from "@/modules/attendance/domain/attendance-calculator.js";
 
@@ -55,5 +56,20 @@ describe("attendance calculator", () => {
     expect(
       isIncomplete({ ...record, completion: "complete" }, new Date("2026-11-03T00:00:00Z")),
     ).toBe(false);
+  });
+
+  it("recalculates every derived value from corrected timestamps (§11.1)", () => {
+    expect(valuesFor(wib("09:20:00"), null, onTimeDeadline)).toEqual({
+      status: "late",
+      lateMinutes: 5,
+      completion: "open",
+      workedMinutes: null,
+    });
+    expect(valuesFor(wib("09:00:00"), wib("17:30:59"), onTimeDeadline)).toEqual({
+      status: "present",
+      lateMinutes: 0,
+      completion: "complete",
+      workedMinutes: 510,
+    });
   });
 });

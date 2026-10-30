@@ -191,6 +191,27 @@ export class EmployeesRepository {
     return rows.map((row) => row.id);
   }
 
+  /** Active, non-deleted direct reports of `managerId` (a manager's team, §12). */
+  async activeReportIds(
+    organizationId: string,
+    managerId: string,
+    tx: Tx = this.prisma,
+  ): Promise<string[]> {
+    const rows = await tx.employee.findMany({
+      where: { organizationId, managerId, status: "active", ...notDeleted },
+      select: { id: true },
+    });
+    return rows.map((row) => row.id);
+  }
+
+  /** Names for display, deleted employees included (history outlives them). */
+  findSummaries(organizationId: string, ids: string[], tx: Tx = this.prisma) {
+    return tx.employee.findMany({
+      where: { organizationId, id: { in: ids } },
+      select: { id: true, employeeNumber: true, fullName: true, status: true, managerId: true },
+    });
+  }
+
   // Reporting lines
 
   /**

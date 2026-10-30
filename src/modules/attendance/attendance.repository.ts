@@ -30,6 +30,7 @@ const attendanceRow = {
   correctedAt: true,
   createdAt: true,
   updatedAt: true,
+  pendingCorrection: { select: { id: true } },
 } satisfies Prisma.AttendanceSelect;
 
 export type AttendanceRow = Prisma.AttendanceGetPayload<{ select: typeof attendanceRow }>;
@@ -98,6 +99,15 @@ export class AttendanceRepository {
       where: { id, organizationId, employeeId },
       select: attendanceRow,
     });
+  }
+
+  /** Any record of the organization, or null if missing or elsewhere. */
+  findInOrganization(
+    organizationId: string,
+    id: string,
+    tx: Tx = this.prisma,
+  ): Promise<AttendanceRow | null> {
+    return tx.attendance.findFirst({ where: { id, organizationId }, select: attendanceRow });
   }
 
   async listOwn(
@@ -192,6 +202,28 @@ export class AttendanceRepository {
     const { count } = await tx.attendance.updateMany({
       where: { id, version, checkOutAt: null },
       data: { ...data, completion: "complete", version: { increment: 1 } },
+    });
+    return count === 1
+      ? tx.attendance.findUniqueOrThrow({ where: { id }, select: attendanceRow })
+      : null;
+  }
+
+  /**
+   * §11.5 — applies approved timestamps and their recalculated values if the row is
+   * still at `version`. Null when it changed since (version conflict).
+   */
+  async applyCorrection(
+    id: string,
+    version: number,
+    data: Pick<
+      AttendanceRow,
+      "status" | "completion" | "checkInAt" | "checkOutAt" | "lateMinutes" | "workedMinutes"
+    > & { correctedAt: Date },
+    tx: Tx = this.prisma,
+  ): Promise<AttendanceRow | null> {
+    const { count } = await tx.attendance.updateMany({
+      where: { id, version },
+      data: { ...data, version: { increment: 1 } },
     });
     return count === 1
       ? tx.attendance.findUniqueOrThrow({ where: { id }, select: attendanceRow })

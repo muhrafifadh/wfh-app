@@ -53,4 +53,10 @@ export class AuditListener {
   async onAttendanceEvent(event: AuditableEvent): Promise<void> {
     await this.audit.record(event);
   }
+
+  /** CORRECTION_EVENTS (src/modules/corrections/corrections.events.ts). */
+  @OnEvent("correction.*")
+  async onCorrectionEvent(event: AuditableEvent): Promise<void> {
+    await this.audit.record(event);
+  }
 }
