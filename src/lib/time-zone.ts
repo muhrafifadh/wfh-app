@@ -27,3 +27,20 @@ export function formatTimeIn(isoDateTime: string, timeZone: string): string {
     hourCycle: "h23",
   }).format(new Date(isoDateTime));
 }
+
+/** An instant as a date and minute in a zone: "Tue, 27 Oct 2026, 08:59 WIB". */
+export function formatDateTimeIn(isoDateTime: string, timeZone: string): string {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone,
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(new Date(isoDateTime));
+  const part = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((p) => p.type === type)?.value ?? "";
+  return `${part("weekday")}, ${part("day")} ${part("month")} ${part("year")}, ${part("hour")}:${part("minute")} ${timeZoneLabel(timeZone)}`;
+}

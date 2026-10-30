@@ -29,6 +29,8 @@ export type NavItem = {
   needsEmployeeProfile?: boolean;
   /** Sub-links render the item as a collapsible group. */
   items?: { title: string; href: string }[];
+  /** Detail pages under another path that belong to this entry (/attendance/:id → My history). */
+  detailsUnder?: string;
 };
 
 export type NavSection = { label: string; items: NavItem[] };
@@ -56,6 +58,7 @@ export const navSections: NavSection[] = [
         title: "My history",
         href: routes.attendanceHistory(),
         icon: HistoryIcon,
+        detailsUnder: routes.attendance(),
         anyOf: ["attendance:self"],
         needsEmployeeProfile: true,
       },
@@ -137,16 +140,24 @@ export const visibleNav = (access: NavAccess): NavSection[] =>
     }))
     .filter((section) => section.items.length > 0);
 
-const titledLinks = [...navSections.flatMap((section) => section.items), ...accountLinks].flatMap(
-  (item) => [{ href: item.href, title: item.title }, ...(item.items ?? [])],
-);
+type TitledLink = { href: string; title: string; detailsOnly?: boolean };
+
+const navItems = [...navSections.flatMap((section) => section.items), ...accountLinks];
+const titledLinks: TitledLink[] = [
+  ...navItems.flatMap((item) => [{ href: item.href, title: item.title }, ...(item.items ?? [])]),
+  // Last, so they win the tie with the entry that owns the path itself
+  ...navItems.flatMap((item) =>
+    item.detailsUnder ? [{ href: item.detailsUnder, title: item.title, detailsOnly: true }] : [],
+  ),
+];
 
 /** The nav title for a path; detail pages (/users/123) get their section's title. */
 export function navTitleFor(pathname: string): string | undefined {
-  // Longest matching href wins; on a tie the sub-link beats its section
-  let best: { href: string; title: string } | undefined;
+  // Longest matching href wins; on a tie the later link (a sub-link, a detail owner) wins
+  let best: TitledLink | undefined;
   for (const link of titledLinks) {
-    const matches = pathname === link.href || pathname.startsWith(`${link.href}/`);
+    const matches =
+      (!link.detailsOnly && pathname === link.href) || pathname.startsWith(`${link.href}/`);
     if (matches && (!best || link.href.length >= best.href.length)) best = link;
   }
   return best?.title;

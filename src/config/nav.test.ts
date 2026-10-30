@@ -87,7 +87,7 @@ describe("navTitleFor", () => {
     ["/dashboard", "Dashboard"],
     ["/attendance", "Today's attendance"],
     ["/attendance/history", "My history"],
-    ["/attendance/01a11fa3-9fd3-76d3-9390-2bc41e4671d2", "Today's attendance"],
+    ["/attendance/01a11fa3-9fd3-76d3-9390-2bc41e4671d2", "My history"],
     ["/corrections/review", "Correction review"],
     ["/profile", "My profile"],
     ["/users/01a11fa3-9fd3-76d3-9390-2bc41e4671d2", "Users"],
