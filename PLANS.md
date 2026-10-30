@@ -118,7 +118,7 @@ Both app repositories started on `main` and clean. Phase 0.5 work is on local br
 |     3 | Backend corrections and approvals                               | In review   | 2B             |
 |    3B | Backend dashboards and reports                                  | In review   | 2C, 3          |
 |    4A | Frontend shell, branding, auth adjustments, profile             | In review   | 1              |
-|    4B | Frontend employees, divisions, settings, holidays               | Not started | 4A, 2A         |
+|    4B | Frontend employees, divisions, settings, holidays               | In review   | 4A, 2A         |
 |    4C | Frontend attendance, history, employee dashboard                | Not started | 4A, 2B         |
 |    4D | Frontend corrections, team, manager/HR dashboards, reports      | Not started | 4C, 3, 3B      |
 |     5 | Verification, demo seed, documentation, pilot walkthrough       | Not started | All            |
@@ -533,11 +533,42 @@ pnpm build
 
 **Status:** Not started
 
+**Status:** In review — branch `feat/phase-4b-admin` in `frontend-boilerplate` (stacked on `feat/phase-4a-shell`) and `feat/phase-4b-admin-support` in `backend-boilerplate` (stacked on `feat/phase-4a-me-context`); evidence below.
+
 **Objective:** Admin/HR manages employees, divisions, settings, and holidays through the UI.
 
 **In scope:** `/employees` (list, new, detail/edit, deactivate/reactivate, manager and role assignment, invite), `/divisions`, `/settings/attendance` (with boundary preview and confirmation), `/holidays`; URL filters; loading/empty/error/forbidden/responsive states.
 
 **Acceptance criteria:** all backend CRUD is usable; number/email conflicts map to the right field; filters persist in the URL; the UI never offers retroactive schedule dates; keyboard and automated accessibility checks pass on main flows.
+
+**Evidence (2026-10-30):**
+
+| Repo     | Commit    | Change                                                                                                   |
+| -------- | --------- | -------------------------------------------------------------------------------------------------------- |
+| backend  | `25df0f9` | Divisions report `activeEmployeeCount`; deactivating one with active employees returns 409 `DIVISION_HAS_ACTIVE_EMPLOYEES`. |
+| backend  | `54e620e` | `/v1/me/context` includes the organization's `workDate`.                                                 |
+| frontend | `ca18cb4` | `/divisions`, plus shared `SelectField`, `ListSearch`, `expectedFailure` (error code → approved copy).    |
+| frontend | `8ab3802` | `/employees`, `/employees/new`, `/employees/:id` with the account card.                                  |
+| frontend | `3e9d6fe` | `/holidays`, one year at a time.                                                                         |
+| frontend | `7c907c2` | `/settings/attendance` with preview, conflict warning and old/new confirmation.                          |
+| frontend | `cd59237` | Form schemas accept their own output (found in the browser check), org date from `/me/context`, axe tests. |
+
+- Verification: frontend format, lint, typecheck, 156 unit tests (20 files), `api:types:check` and `build` pass; backend lint, format, typecheck, 116 unit tests and 192 e2e tests pass; `openapi.json` regenerated.
+- Browser check, signed in as the owner of a throwaway seeded database (dropped afterwards): added an employee (taken number shown on the number field after uppercasing, then created with an invitation and redirected to the detail page), changed the manager through the access confirmation, saw a division with an employee offer "View its employees" instead of deactivating, added a past holiday with the warning, previewed and scheduled a schedule version (the current one closed the day before, the upcoming one shown, and the form then warned about the planned version). Users and the audit log still load. No horizontal scroll at 375 px on the employees and settings pages.
+- Acceptance:
+  - CRUD: divisions (create, edit, deactivate, reactivate), employees (create, edit, deactivate, reactivate, invite, link, change role, resend invitation), holidays (create, edit, remove), organization settings and schedule versions are all reachable.
+  - Conflicts: `EMPLOYEE_NUMBER_TAKEN`, `DIVISION_CODE_TAKEN`/`NAME_TAKEN`, `HOLIDAY_DATE_CONFLICT`, `REPORTING_LINE_CYCLE`, `EMAIL_TAKEN`, `SCHEDULE_*` map to their fields (action tests).
+  - URL state: employees (q, division, manager, status, sort, page), divisions (q, status, sort, page), holidays (year).
+  - No retroactive dates: the effective-date input starts at `earliestEffectiveFrom`, earlier dates are refused before submit, and a planned version disables dates on or before it.
+  - Accessibility: `src/app/admin-forms.a11y.test.tsx` runs axe-core (WCAG 2.1 A/AA) on every admin form and dialog, with a self-check that it catches an unlabelled input. Colour contrast stays in `theme.test.ts`. Keyboard use was exercised in the browser for menus and dialogs; a screen-reader pass is still to do.
+- Decisions made during implementation:
+  - Add employee creates the employee, then, if a role is chosen, links the existing account with the work email or sends an invitation. If only the account step fails, the employee is kept and the detail page offers the account step again (an email conflict can only be detected at that step).
+  - Account actions need `user:manage` as well as `employee:manage`; without it the account card is read-only and the role field is hidden.
+  - Manager, division and role options load one page of 100 (enough for the pilot); a searchable picker replaces them if that's outgrown.
+  - The check-out deadline is entered as a minute and covers it entirely ("23:59" is sent as 23:59:59.999, the baseline). Time zones offered: Asia/Jakarta, Asia/Makassar, Asia/Jayapura and the current one.
+  - Deactivating a division with active employees is refused by the backend (new rule, DOMAIN_RULES §4.4) and the UI links to those employees instead.
+  - Pages take "today" from `/me/context` (`workDate`), never from the server or browser clock.
+  - `axe-core` (already installed through `eslint-plugin-jsx-a11y`) is now a direct dev dependency.
 
 ---
 

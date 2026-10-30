@@ -67,6 +67,12 @@ The words **must**, **must not**, and **rejected** are normative. Everything in 
 - Deactivating a user revokes active sessions using the existing authentication mechanism.
 - An employee cannot be their own direct manager, and reporting lines must not form cycles.
 
+### 4.4 Divisions
+
+- Codes are normalized to uppercase; names are unique ignoring case.
+- An inactive division accepts no new assignments (`DIVISION_INACTIVE`).
+- A division with active employees cannot be deactivated (`DIVISION_HAS_ACTIVE_EMPLOYEES`); move them first. Inactive employees keep their division and history.
+
 ## 5. Time and work dates
 
 ### 5.1 Storage and display
@@ -410,6 +416,7 @@ Audit stores actor, organization, action, target, timestamp, request ID, and non
 | `DIVISION_CODE_TAKEN`                |  409 | Division code already used.                       |
 | `DIVISION_NAME_TAKEN`                |  409 | Division name already used (ignoring case).       |
 | `DIVISION_INACTIVE`                  |  422 | Division is inactive; no new assignments.         |
+| `DIVISION_HAS_ACTIVE_EMPLOYEES`      |  409 | Division still has active employees.              |
 | `HOLIDAY_DATE_CONFLICT`              |  409 | An active holiday already exists for the date.    |
 | `SCHEDULE_EFFECTIVE_DATE_TOO_EARLY`  |  422 | Schedule change effective today or earlier.       |
 | `SCHEDULE_PERIOD_OVERLAP`            |  409 | A version already starts on or after that date.   |

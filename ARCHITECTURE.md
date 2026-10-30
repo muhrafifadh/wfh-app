@@ -260,7 +260,7 @@ This list is a resource design, not a replacement for OpenAPI. Final endpoints m
 | Method  | Path                                | Permission          | Purpose                                                  |
 | ------- | ----------------------------------- | ------------------- | -------------------------------------------------------- |
 | `GET`   | `/v1/me/employee`                   | authenticated       | Own employee profile.                                    |
-| `GET`   | `/v1/me/context`                    | authenticated       | App shell: organization name, time zone, support contact, own profile summary. |
+| `GET`   | `/v1/me/context`                    | authenticated       | App shell: organization name, time zone, today's work date, support contact, own profile summary. |
 | `GET`   | `/v1/attendance/today`              | `attendance:self`   | Today's status, server time, schedule, allowed actions.  |
 | `POST`  | `/v1/attendance/check-in`           | `attendance:self`   | Check in using server time.                              |
 | `POST`  | `/v1/attendance/check-out`          | `attendance:self`   | Check out today's record.                                |
