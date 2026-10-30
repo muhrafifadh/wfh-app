@@ -280,9 +280,12 @@ export class WorkSettingsService {
   }
 
   /** What every signed-in user may see about their organization (GET /me/context). */
-  async publicSettingsOf(
-    organizationId: string,
-  ): Promise<{ name: string; timezone: string; supportContact: string | null }> {
+  async publicSettingsOf(organizationId: string): Promise<{
+    name: string;
+    timezone: string;
+    workDate: LocalDate;
+    supportContact: string | null;
+  }> {
     const [settings, today] = await Promise.all([
       this.repo.findSettings(organizationId),
       this.today(organizationId, this.clock.now()),
@@ -290,6 +293,7 @@ export class WorkSettingsService {
     return {
       name: settings.name,
       timezone: today.timezone,
+      workDate: today.workDate,
       supportContact: settings.supportContact,
     };
   }

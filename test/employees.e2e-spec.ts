@@ -374,7 +374,13 @@ describe("Employees (e2e)", () => {
         .set(await as(user))
         .expect(200);
       expect(res.body).toEqual({
-        organization: { name: expect.any(String), timezone: "Asia/Jakarta", supportContact: null },
+        organization: {
+          name: expect.any(String),
+          timezone: "Asia/Jakarta",
+          // FixedClock: Monday 2 November 2026, 10:00 WIB
+          workDate: "2026-11-02",
+          supportContact: null,
+        },
         employee: {
           id: employee.id,
           employeeNumber: employee.employeeNumber,

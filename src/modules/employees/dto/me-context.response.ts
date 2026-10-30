@@ -9,6 +9,8 @@ export const meContextResponseSchema = z.object({
     name: z.string(),
     /** The zone of the schedule in force today (DOMAIN_RULES §5.3). */
     timezone: z.string(),
+    /** Today in the organization (DOMAIN_RULES §5.2), so clients never use their own clock. */
+    workDate: z.iso.date(),
     supportContact: z.string().nullable(),
   }),
   /** Null when the user records no attendance (e.g. an Admin/HR-only account). */
