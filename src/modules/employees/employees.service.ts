@@ -32,6 +32,16 @@ import {
 import { userStatusOf } from "@/modules/users/users.constants.js";
 import { UsersService } from "@/modules/users/users.service.js";
 
+/** What attendance needs to know about an employee. */
+export type EmployeeProfile = {
+  id: string;
+  employeeNumber: string;
+  fullName: string;
+  status: EmployeeStatus;
+  employmentStartDate: string;
+  employmentEndDate: string | null;
+};
+
 /** Prisma row → response body (dates become ISO strings, `date` columns YYYY-MM-DD). */
 const toEmployee = (row: EmployeeRow): EmployeeResponseBody => ({
   id: row.id,
@@ -88,6 +98,24 @@ export class EmployeesService {
 
   async findOne(user: AuthUser, id: string): Promise<EmployeeResponseBody> {
     return toEmployee(await this.load(user.organizationId, id));
+  }
+
+  /** The profile a user records attendance as, or null (for attendance). */
+  async findProfileForUser(
+    organizationId: string,
+    userId: string,
+  ): Promise<EmployeeProfile | null> {
+    const row = await this.repo.findByUser(organizationId, userId);
+    return (
+      row && {
+        id: row.id,
+        employeeNumber: row.employeeNumber,
+        fullName: row.fullName,
+        status: row.status,
+        employmentStartDate: fromDateColumn(row.employmentStartDate),
+        employmentEndDate: row.employmentEndDate ? fromDateColumn(row.employmentEndDate) : null,
+      }
+    );
   }
 
   /** The caller's own profile (GET /me/employee). */

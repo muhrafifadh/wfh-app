@@ -271,6 +271,10 @@ export class WorkSettingsService {
 
   // Used by holidays and attendance
 
+  async supportContactOf(organizationId: string): Promise<string | null> {
+    return (await this.repo.findSettings(organizationId)).supportContact;
+  }
+
   /** Every version in force on some day from `from` to `to`, newest first. */
   async schedulesBetween(
     organizationId: string,

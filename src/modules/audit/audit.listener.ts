@@ -47,4 +47,10 @@ export class AuditListener {
   async onHolidayEvent(event: AuditableEvent): Promise<void> {
     await this.audit.record(event);
   }
+
+  /** ATTENDANCE_EVENTS (src/modules/attendance/attendance.events.ts). */
+  @OnEvent("attendance.*")
+  async onAttendanceEvent(event: AuditableEvent): Promise<void> {
+    await this.audit.record(event);
+  }
 }
