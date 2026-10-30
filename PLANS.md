@@ -112,7 +112,7 @@ Both app repositories started on `main` and clean. Phase 0.5 work is on local br
 |     0 | Boilerplate assessment, test baseline, gap analysis             | In review   | —              |
 |   0.5 | Security upgrade and project setup                              | In review   | 0              |
 |     1 | Backend foundation: roles/permissions, divisions, employees     | In review   | 0              |
-|    2A | Backend work settings, schedule versions, holidays              | Not started | 1              |
+|    2A | Backend work settings, schedule versions, holidays              | In review   | 1              |
 |    2B | Backend attendance core (check-in/out, history, summaries)      | Not started | 2A             |
 |    2C | Backend close-day job and absence                               | Not started | 2B             |
 |     3 | Backend corrections and approvals                               | Not started | 2B             |
@@ -247,7 +247,7 @@ pnpm openapi
 
 ### Phase 2A — Backend work settings, schedules, and holidays
 
-**Status:** Not started
+**Status:** In review — branch `feat/phase-2a-work-settings` in `backend-boilerplate` (stacked on `feat/phase-1-master-data`); evidence below.
 
 **Objective:** the backend determines the effective schedule, working days, and every attendance boundary deterministically.
 
@@ -272,6 +272,26 @@ pnpm openapi
 - Boundary tests never depend on the real host clock.
 
 **Verification:** fixed-clock unit tests, timezone integration tests, overlap concurrency test, migration/e2e/OpenAPI checks.
+
+**Evidence (2026-10-30):**
+
+| Commit    | Change                                                                                          |
+| --------- | ----------------------------------------------------------------------------------------------- |
+| `1ad44a1` | `Clock` (`SystemClock`, `FixedClock`) and Intl-based time zone helpers (DST gaps and overlaps). |
+| `3282d25` | Migration `add_schedules_and_holidays` with check constraints.                                  |
+| `cff810e` | `work-settings` and `holidays` modules, `GET /v1/work-calendar`, audit events, tests, OpenAPI.  |
+| `2e205c3` | Seed: baseline schedule from 2026-01-05, holidays 2026-11-04 (demo) and 2026-12-25.             |
+
+- Verification: format, lint, typecheck pass; 71 unit tests and 125 e2e tests pass; `prisma migrate diff` shows no drift; `openapi.json` regenerated (7 new paths). The test app runs on a `FixedClock` (Monday 2 November 2026, 10:00 WIB), so no test reads the host clock.
+- Acceptance: the baseline gives 08:00 / 09:15 / 17:00 / 23:59:59.999 WIB (unit and e2e preview); today and past dates are rejected; overlapping versions are rejected, including two parallel requests (one 201, one 409); the closed version's policy fields are unchanged; weekends and active holidays are non-working.
+- Decisions made during implementation:
+  - The time zone belongs to the schedule version. The work date is the local date in the zone of the version in force on it; `Organization.timezone` is only the default before any schedule exists. `PATCH /v1/work-settings` can't change the zone: that takes a new version (DOMAIN_RULES §5.3).
+  - A new version is always open-ended. It closes the current open version the day before it starts; a version already starting on or after its date is a `SCHEDULE_PERIOD_OVERLAP`. Planned versions can't be deleted yet.
+  - Overlap and the one-holiday-per-date rule are checked under per-organization advisory locks (Prisma can't describe exclusion constraints or partial unique indexes without schema drift). `(organizationId, scope, effectiveFrom)` is unique as a backstop.
+  - `divisionId`/`employeeId` targets aren't added yet; a check constraint keeps `scope = 'organization'`.
+  - `POST /v1/work-schedules/preview` validates a version and returns its UTC boundaries for 7 days without saving. `GET /v1/work-calendar?from&to` (≤ 62 days, `holiday:manage`) shows working days and why a day isn't one.
+  - Holidays on past dates are allowed and audited with `past: true`.
+  - The pilot week is assumed to be 2–6 November 2026; adjust the demo holiday in Phase 2B if the history days change.
 
 ---
 

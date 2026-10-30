@@ -71,7 +71,7 @@ Add:
 
 | Field            | Type         | Rule                                                      |
 | ---------------- | ------------ | --------------------------------------------------------- |
-| `timezone`       | varchar(64)  | Required, default `Asia/Jakarta`, validated IANA name.    |
+| `timezone`       | varchar(64)  | Required, default `Asia/Jakarta`. Default zone before any schedule exists; afterwards the work date follows the zone of the schedule in force. |
 | `supportContact` | varchar(255) | Nullable; shown in the UI as the support contact.         |
 | `retentionYears` | smallint     | Required, default 5, range 1–10.                          |
 
@@ -221,8 +221,6 @@ One row is one schedule version. Old rows are never edited to change historical 
 | `organizationId`   | UUID         |  No  | Tenant owner.                                 |
 | `name`             | varchar(120) |  No  | e.g. "Default schedule".                      |
 | `scope`            | enum         |  No  | Baseline always `organization`.               |
-| `divisionId`       | UUID         | Yes  | Future scope.                                 |
-| `employeeId`       | UUID         | Yes  | Future scope.                                 |
 | `timezone`         | varchar(64)  |  No  | IANA zone.                                    |
 | `workingDays`      | smallint[]   |  No  | ISO weekday 1–7; baseline `[1,2,3,4,5]`.      |
 | `startTime`        | time(0)      |  No  | Baseline 09:00.                               |
@@ -244,7 +242,8 @@ Constraints:
 - `effectiveTo >= effectiveFrom` when present.
 - `workingDays` is non-empty, unique, and each value is 1–7.
 - Scope controls target nullability: organization → both targets null.
-- No overlapping periods for the same organization/scope/target. Use a PostgreSQL exclusion constraint, or transactional validation with an appropriate lock.
+- Scope is `organization` only (check constraint). `divisionId`/`employeeId` targets are added with division/employee schedules (future scope).
+- No overlapping periods for the same organization/scope: checked in a transaction under a per-organization advisory lock; unique `(organizationId, scope, effectiveFrom)` as a backstop. A new version is open-ended and closes the current one the day before it starts.
 - Resolution index `(organizationId, scope, effectiveFrom, effectiveTo)`.
 
 ### 6.4 `Holiday`
@@ -260,7 +259,7 @@ Constraints:
 | `updatedAt`      | timestamptz  |  No  | Server timestamp.               |
 | `deletedAt`      | timestamptz  | Yes  | Soft delete.                    |
 
-- Unique `(organizationId, date)` for active rows (`HOLIDAY_DATE_CONFLICT`).
+- One active row per `(organizationId, date)` (`HOLIDAY_DATE_CONFLICT`), checked by the service under a per-organization advisory lock (a partial unique index can't be described in the Prisma schema). Index `(organizationId, date)`.
 - Adding a holiday for a date that already has attendance or `ABSENT` rows does not delete them; it is audited and reported to Admin/HR.
 
 ## 7. Attendance entities

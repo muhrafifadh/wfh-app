@@ -406,6 +406,8 @@ Audit stores actor, organization, action, target, timestamp, request ID, and non
 | `DIVISION_NAME_TAKEN`                |  409 | Division name already used (ignoring case).       |
 | `DIVISION_INACTIVE`                  |  422 | Division is inactive; no new assignments.         |
 | `HOLIDAY_DATE_CONFLICT`              |  409 | An active holiday already exists for the date.    |
+| `SCHEDULE_EFFECTIVE_DATE_TOO_EARLY`  |  422 | Schedule change effective today or earlier.       |
+| `SCHEDULE_PERIOD_OVERLAP`            |  409 | A version already starts on or after that date.   |
 
 Messages are in English and may change; codes must not change once released in API v1.
 

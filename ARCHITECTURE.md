@@ -300,7 +300,9 @@ Check-in/out require an `Idempotency-Key` header. The API never accepts check-in
 | CRUD          | `/v1/divisions`              | `division:manage`   | Divisions.                                                |
 | `GET/PATCH`   | `/v1/work-settings`          | `policy:manage`     | Timezone, support contact, retention.                     |
 | `GET/POST`    | `/v1/work-schedules`         | `policy:manage`     | Schedule versions (create new effective version).         |
-| CRUD          | `/v1/holidays`               | `holiday:manage`    | Public holidays.                                          |
+| `POST`        | `/v1/work-schedules/preview` | `policy:manage`     | Validate a version and show its boundaries, not saved.    |
+| CRUD          | `/v1/holidays`               | `holiday:manage`    | Public holidays (`DELETE` is a soft delete).              |
+| `GET`         | `/v1/work-calendar`          | `holiday:manage`    | Working days for a range (≤ 62 days) and why not.         |
 | `POST`        | `/v1/attendance/close-day`   | `policy:manage`     | Re-run close-day for a date (audited).                    |
 
 Existing `/v1/users`, `/v1/roles` (if present), and `/v1/audit-logs` endpoints are reused unchanged. Final naming, DTOs, error codes, pagination, and response statuses must be set in OpenAPI before the frontend depends on them, and must follow `backend-boilerplate/docs/05-api-design.md`.
