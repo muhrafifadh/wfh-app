@@ -53,6 +53,7 @@ export type ActiveUser = {
   name: string;
   organizationId: string;
   emailVerified: boolean;
+  role: { id: string; name: string };
   permissions: Permission[];
 };
 
@@ -101,6 +102,7 @@ export class UsersService {
     return {
       ...rest,
       emailVerified: emailVerifiedAt !== null,
+      role: { id: role.id, name: role.name },
       permissions: role.permissions.filter(isPermission),
     };
   }

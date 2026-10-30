@@ -10,6 +10,8 @@ export const meResponseSchema = z.object({
   organizationId: z.uuid(),
   /** False until the user clicks the link in the verification email. */
   emailVerified: z.boolean(),
+  /** Display only: access is decided by `permissions`. */
+  role: z.object({ id: z.uuid(), name: z.string() }),
   permissions: z.array(z.enum(PERMISSIONS)),
 });
 

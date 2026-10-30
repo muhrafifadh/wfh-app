@@ -58,6 +58,7 @@ describe("Auth (e2e)", () => {
         name: expect.any(String),
         organizationId: user.organizationId,
         emailVerified: true,
+        role: { id: user.roleId, name: expect.any(String) },
         permissions: ["user:read"],
       });
     });

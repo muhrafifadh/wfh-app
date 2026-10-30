@@ -11,6 +11,7 @@ import type { CreateEmployeeInput } from "@/modules/employees/dto/create-employe
 import type { EmployeeResponseBody } from "@/modules/employees/dto/employee.response.js";
 import type { LinkAccountInput } from "@/modules/employees/dto/link-account.dto.js";
 import type { ListEmployeesQueryInput } from "@/modules/employees/dto/list-employees.query.js";
+import type { MeContextResponseBody } from "@/modules/employees/dto/me-context.response.js";
 import type { UpdateEmployeeInput } from "@/modules/employees/dto/update-employee.dto.js";
 import type { EmployeeStatus } from "@/modules/employees/employees.constants.js";
 import {
@@ -31,6 +32,7 @@ import {
 } from "@/modules/employees/employees.repository.js";
 import { userStatusOf } from "@/modules/users/users.constants.js";
 import { UsersService } from "@/modules/users/users.service.js";
+import { WorkSettingsService } from "@/modules/work-settings/work-settings.service.js";
 
 /** What attendance needs to know about an employee. */
 export type EmployeeProfile = {
@@ -93,6 +95,7 @@ export class EmployeesService {
     private readonly prisma: PrismaService,
     private readonly divisions: DivisionsService,
     private readonly users: UsersService,
+    private readonly workSettings: WorkSettingsService,
     private readonly events: EventEmitter2,
   ) {}
 
@@ -167,6 +170,23 @@ export class EmployeesService {
     const employee = await this.repo.findByUser(user.organizationId, user.id);
     if (!employee) throw new EmployeeProfileRequiredError();
     return toEmployee(employee);
+  }
+
+  /** The app shell's context (GET /me/context): organization basics and the own profile. */
+  async contextFor(user: AuthUser): Promise<MeContextResponseBody> {
+    const [organization, employee] = await Promise.all([
+      this.workSettings.publicSettingsOf(user.organizationId),
+      this.repo.findByUser(user.organizationId, user.id),
+    ]);
+    return {
+      organization,
+      employee: employee && {
+        id: employee.id,
+        employeeNumber: employee.employeeNumber,
+        fullName: employee.fullName,
+        status: employee.status,
+      },
+    };
   }
 
   /** A new employee has no reports yet, so any active manager is fine (no cycle possible). */

@@ -50,7 +50,7 @@ export class UsersRepository {
         name: true,
         organizationId: true,
         emailVerifiedAt: true,
-        role: { select: { permissions: true } },
+        role: { select: { id: true, name: true, permissions: true } },
       },
     });
   }

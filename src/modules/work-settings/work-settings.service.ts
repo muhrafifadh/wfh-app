@@ -279,6 +279,21 @@ export class WorkSettingsService {
     return (await this.repo.findSettings(organizationId)).supportContact;
   }
 
+  /** What every signed-in user may see about their organization (GET /me/context). */
+  async publicSettingsOf(
+    organizationId: string,
+  ): Promise<{ name: string; timezone: string; supportContact: string | null }> {
+    const [settings, today] = await Promise.all([
+      this.repo.findSettings(organizationId),
+      this.today(organizationId, this.clock.now()),
+    ]);
+    return {
+      name: settings.name,
+      timezone: today.timezone,
+      supportContact: settings.supportContact,
+    };
+  }
+
   /** Every version in force on some day from `from` to `to`, newest first. */
   async schedulesBetween(
     organizationId: string,

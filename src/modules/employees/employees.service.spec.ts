@@ -16,6 +16,7 @@ import {
 import type { EmployeeRow, EmployeesRepository } from "@/modules/employees/employees.repository.js";
 import { EmployeesService } from "@/modules/employees/employees.service.js";
 import type { UsersService } from "@/modules/users/users.service.js";
+import type { WorkSettingsService } from "@/modules/work-settings/work-settings.service.js";
 
 const ORG = "01a00000-0000-7000-8000-000000000001";
 const ME = "01a00000-0000-7000-8000-000000000002";
@@ -67,6 +68,7 @@ describe("EmployeesService", () => {
       prisma,
       mock<DivisionsService>(),
       users,
+      mock<WorkSettingsService>(),
       mock<EventEmitter2>(),
     );
   });

@@ -364,4 +364,32 @@ describe("Employees (e2e)", () => {
       expect(res.body.error.code).toBe("EMPLOYEE_PROFILE_REQUIRED");
     });
   });
+
+  describe("GET /v1/me/context", () => {
+    it("gives any signed-in user the organization basics and their own profile", async () => {
+      const user = await createUser(app, { sameOrganizationAs: hr });
+      const employee = await createEmployee(app, hr, { divisionId, userId: user.id });
+      const res = await http()
+        .get("/v1/me/context")
+        .set(await as(user))
+        .expect(200);
+      expect(res.body).toEqual({
+        organization: { name: expect.any(String), timezone: "Asia/Jakarta", supportContact: null },
+        employee: {
+          id: employee.id,
+          employeeNumber: employee.employeeNumber,
+          fullName: expect.any(String),
+          status: "active",
+        },
+      });
+    });
+
+    it("returns a null profile for a user without one", async () => {
+      const res = await http()
+        .get("/v1/me/context")
+        .set(await as(hr))
+        .expect(200);
+      expect(res.body.employee).toBeNull();
+    });
+  });
 });

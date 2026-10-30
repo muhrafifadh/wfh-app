@@ -60,7 +60,7 @@ export class WorkSettingsRepository {
   findSettings(organizationId: string, tx: Tx = this.prisma) {
     return tx.organization.findUniqueOrThrow({
       where: { id: organizationId },
-      select: { timezone: true, supportContact: true, retentionYears: true },
+      select: { name: true, timezone: true, supportContact: true, retentionYears: true },
     });
   }
 

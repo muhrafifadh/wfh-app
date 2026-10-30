@@ -75,6 +75,7 @@ describe("WorkSettingsService", () => {
     vi.resetAllMocks();
     prisma.$transaction.mockImplementation(((fn: (tx: unknown) => unknown) => fn(prisma)) as never);
     repo.findSettings.mockResolvedValue({
+      name: "Acme",
       timezone: "Asia/Jakarta",
       supportContact: null,
       retentionYears: 5,

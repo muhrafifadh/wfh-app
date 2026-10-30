@@ -2553,6 +2553,32 @@
         ]
       }
     },
+    "/v1/me/context": {
+      "get": {
+        "operationId": "MeController_context",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeContextResponse_Output"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "me"
+        ]
+      }
+    },
     "/v1/work-settings": {
       "get": {
         "operationId": "WorkSettingsController_get",
@@ -5206,6 +5232,24 @@
           "emailVerified": {
             "type": "boolean"
           },
+          "role": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "additionalProperties": false
+          },
           "permissions": {
             "type": "array",
             "items": {
@@ -5236,6 +5280,7 @@
           "name",
           "organizationId",
           "emailVerified",
+          "role",
           "permissions"
         ],
         "additionalProperties": false
@@ -6298,6 +6343,70 @@
         },
         "required": [
           "mode"
+        ],
+        "additionalProperties": false
+      },
+      "MeContextResponse_Output": {
+        "type": "object",
+        "properties": {
+          "organization": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "timezone": {
+                "type": "string"
+              },
+              "supportContact": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "timezone",
+              "supportContact"
+            ],
+            "additionalProperties": false
+          },
+          "employee": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "employeeNumber": {
+                "type": "string"
+              },
+              "fullName": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "inactive"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "employeeNumber",
+              "fullName",
+              "status"
+            ],
+            "additionalProperties": false,
+            "nullable": true
+          }
+        },
+        "required": [
+          "organization",
+          "employee"
         ],
         "additionalProperties": false
       },
