@@ -24,14 +24,16 @@ model Organization {
   updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
   deletedAt      DateTime? @map("deleted_at") @db.Timestamptz(3)
 
-  users         User[]
-  roles         Role[]
-  auditLogs     AuditLog[]
-  uploads       Upload[]
-  divisions     Division[]
-  employees     Employee[]
-  workSchedules WorkSchedule[]
-  holidays      Holiday[]
+  users              User[]
+  roles              Role[]
+  auditLogs          AuditLog[]
+  uploads            Upload[]
+  divisions          Division[]
+  employees          Employee[]
+  workSchedules      WorkSchedule[]
+  holidays           Holiday[]
+  attendances        Attendance[]
+  idempotencyRecords IdempotencyRecord[]
 
   @@map("organizations")
 }
@@ -80,6 +82,7 @@ model User {
   employee            Employee?
   workSchedules       WorkSchedule[]
   holidays            Holiday[]
+  idempotencyRecords  IdempotencyRecord[]
 
   @@index([organizationId])
   @@index([roleId])
@@ -271,6 +274,7 @@ model Employee {
   division     Division     @relation(fields: [divisionId], references: [id])
   manager      Employee?    @relation("ReportingLine", fields: [managerId], references: [id], onDelete: Restrict)
   reports      Employee[]   @relation("ReportingLine")
+  attendances  Attendance[]
 
   @@unique([organizationId, employeeNumber])
   @@index([organizationId, status, divisionId])
@@ -317,6 +321,7 @@ model WorkSchedule {
 
   organization Organization @relation(fields: [organizationId], references: [id])
   createdBy    User         @relation(fields: [createdById], references: [id])
+  attendances  Attendance[]
 
   /// Backstop for the overlap check: two versions can never start on the same day.
   @@unique([organizationId, scope, effectiveFrom])
@@ -344,4 +349,110 @@ model Holiday {
   @@index([organizationId, date])
   @@index([createdById])
   @@map("holidays")
+}
+
+enum AttendanceStatus {
+  present
+  late
+  absent
+  /// Future scope
+  excused
+}
+
+/// "not_started" is never stored: it means no row exists yet.
+enum AttendanceCompletion {
+  open
+  complete
+  not_applicable
+}
+
+enum AttendanceSource {
+  self_service
+  close_day_job
+}
+
+/**
+ * One employee's attendance on one work date (DATA_MODEL.md §7.1). Timestamps are
+ * server time. The schedule boundaries are a snapshot taken at check-in, so a later
+ * schedule change never alters this row. Never hard-deleted during retention.
+ */
+model Attendance {
+  id               String               @id @default(uuid(7)) @db.Uuid
+  organizationId   String               @map("organization_id") @db.Uuid
+  employeeId       String               @map("employee_id") @db.Uuid
+  workScheduleId   String?              @map("work_schedule_id") @db.Uuid
+  workDate         DateTime             @map("work_date") @db.Date
+  status           AttendanceStatus
+  completion       AttendanceCompletion
+  source           AttendanceSource
+  checkInAt        DateTime?            @map("check_in_at") @db.Timestamptz(3)
+  checkOutAt       DateTime?            @map("check_out_at") @db.Timestamptz(3)
+  lateMinutes      Int                  @default(0) @map("late_minutes")
+  /// Set when complete: floor((checkOutAt - checkInAt) / 1 minute).
+  workedMinutes    Int?                 @map("worked_minutes")
+  scheduleTimezone String               @map("schedule_timezone") @db.VarChar(64)
+  scheduledStartAt DateTime             @map("scheduled_start_at") @db.Timestamptz(3)
+  scheduledEndAt   DateTime             @map("scheduled_end_at") @db.Timestamptz(3)
+  onTimeDeadlineAt DateTime             @map("on_time_deadline_at") @db.Timestamptz(3)
+  checkInOpensAt   DateTime             @map("check_in_opens_at") @db.Timestamptz(3)
+  checkInClosesAt  DateTime             @map("check_in_closes_at") @db.Timestamptz(3)
+  checkOutClosesAt DateTime             @map("check_out_closes_at") @db.Timestamptz(3)
+  closeDayRunId    String?              @map("close_day_run_id") @db.VarChar(64)
+  /// Incremented on every change (compare-and-set for check-out and corrections).
+  version          Int                  @default(1)
+  /// Set when the first correction is approved.
+  correctedAt      DateTime?            @map("corrected_at") @db.Timestamptz(3)
+  createdAt        DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime             @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  organization       Organization        @relation(fields: [organizationId], references: [id])
+  employee           Employee            @relation(fields: [employeeId], references: [id])
+  workSchedule       WorkSchedule?       @relation(fields: [workScheduleId], references: [id], onDelete: Restrict)
+  idempotencyRecords IdempotencyRecord[]
+
+  @@unique([organizationId, employeeId, workDate])
+  @@index([organizationId, employeeId, workDate(sort: Desc)])
+  @@index([organizationId, workDate, status, completion])
+  @@index([organizationId, workDate, employeeId])
+  @@index([employeeId])
+  @@index([workScheduleId])
+  @@map("attendances")
+}
+
+enum IdempotencyAction {
+  attendance_check_in
+  attendance_check_out
+}
+
+/**
+ * DATA_MODEL.md §7.2 — the durable result of a check-in/out request, so a retry with
+ * the same Idempotency-Key gets the same answer. Only successful results are kept;
+ * a failed request releases its key.
+ */
+model IdempotencyRecord {
+  id             String            @id @default(uuid(7)) @db.Uuid
+  organizationId String            @map("organization_id") @db.Uuid
+  userId         String            @map("user_id") @db.Uuid
+  /// SHA-256 of the header value.
+  key            String            @db.VarChar(128)
+  action         IdempotencyAction
+  /// SHA-256 of the canonical request context (action, employee, work date).
+  requestHash    String            @map("request_hash") @db.Char(64)
+  attendanceId   String?           @map("attendance_id") @db.Uuid
+  responseStatus Int?              @map("response_status") @db.SmallInt
+  responseBody   Json?             @map("response_body")
+  lockedAt       DateTime          @map("locked_at") @db.Timestamptz(3)
+  completedAt    DateTime?         @map("completed_at") @db.Timestamptz(3)
+  expiresAt      DateTime          @map("expires_at") @db.Timestamptz(3)
+  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  attendance   Attendance?  @relation(fields: [attendanceId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, userId, key])
+  @@index([expiresAt])
+  @@index([userId])
+  @@index([attendanceId])
+  @@map("idempotency_records")
 }
