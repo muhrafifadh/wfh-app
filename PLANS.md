@@ -117,7 +117,7 @@ Both app repositories started on `main` and clean. Phase 0.5 work is on local br
 |    2C | Backend close-day job and absence                               | In review   | 2B             |
 |     3 | Backend corrections and approvals                               | In review   | 2B             |
 |    3B | Backend dashboards and reports                                  | In review   | 2C, 3          |
-|    4A | Frontend shell, branding, auth adjustments, profile             | Not started | 1              |
+|    4A | Frontend shell, branding, auth adjustments, profile             | In review   | 1              |
 |    4B | Frontend employees, divisions, settings, holidays               | Not started | 4A, 2A         |
 |    4C | Frontend attendance, history, employee dashboard                | Not started | 4A, 2B         |
 |    4D | Frontend corrections, team, manager/HR dashboards, reports      | Not started | 4C, 3, 3B      |
@@ -473,7 +473,7 @@ pnpm openapi
 
 ### Phase 4A — Frontend shell, branding, and auth adjustments
 
-**Status:** Not started
+**Status:** In review — branch `feat/phase-4a-shell` in `frontend-boilerplate` (from `chore/hadirin-setup`) and `feat/phase-4a-me-context` in `backend-boilerplate` (stacked on `feat/phase-3b-reports`); evidence below.
 
 **Objective:** the boilerplate looks and navigates like Hadir.in without changing its foundations.
 
@@ -499,6 +499,33 @@ pnpm test
 pnpm api:types:check
 pnpm build
 ```
+
+**Evidence (2026-10-30):**
+
+| Repo     | Commit    | Change                                                                                                    |
+| -------- | --------- | --------------------------------------------------------------------------------------------------------- |
+| backend  | `fa7c96d` | `/v1/auth/me` gains `role { id, name }`; new `GET /v1/me/context` (organization name, today's time zone, support contact, own profile or null). |
+| backend  | `bdd26f2` | OpenAPI fix: top-level `z.string().nullable()` was published as `string[]` (`jobTitle`, `supportContact`). |
+| backend  | `d8fc3f4` | `.env.example` and docs: `REGISTRATION_ENABLED=false`.                                                     |
+| frontend | `7a2be2f` | Regenerated API types; full `PERMISSIONS` list; session carries the role; role display names.             |
+| frontend | `700516c` | Brand tokens (light and dark), status tones, text wordmark, `StatusBadge`, rebranded login.              |
+| frontend | `68c7987` | Role-based navigation, `/me/context` in the shell, `/profile`, Get help item, placeholder pages for 4B–4D. |
+| frontend | `14db4ef` | `.env.example` and docs: registration off.                                                                 |
+
+- Verification: frontend format, lint, typecheck, 93 unit tests, `api:types:check` and `build` pass; backend lint, typecheck, format, 116 unit tests and 191 e2e tests pass, `openapi.json` regenerated.
+- Acceptance:
+  - Navigation: `src/config/nav.test.ts` checks the §3.3 table for the Employee, Manager and Admin/HR default roles, with and without an employee profile.
+  - Contrast: `src/app/theme.test.ts` reads `globals.css` and checks 12 text/background pairs in light and dark against 4.5:1 (white on `#A50034` is 7.9:1; `#A50034` on `#F7C6C7` is 5.2:1).
+  - Registration: `/register` returns 404 with the flag off; protected routes redirect to `/login?next=…` (checked in the browser).
+  - Not yet checked by hand: signed-in login, logout, refresh, invite, users and audit flows. The code paths are unchanged apart from the role field, and the unit tests pass; a walkthrough with the seeded accounts is still to do.
+- Decisions made during implementation:
+  - The shell needs the role name, time zone, support contact and whether the user is an employee, but `GET /v1/work-settings` needs `policy:manage`. `role` was added to `/auth/me`, and the rest comes from the new `GET /v1/me/context` (any signed-in user), so the auth module doesn't depend on Hadir.in modules.
+  - "With profile" in §3.3 means the user has an employee profile (active or not); attendance entries also need `attendance:self` or `correction:submit`.
+  - Navigation is grouped as Overview, My attendance, Team & reports, Administration. My profile sits in the user menu and the command menu. The boilerplate's Files page stays reachable but leaves the navigation.
+  - Pages from Phases 4B–4D exist as placeholders that already check permissions and profile, so the navigation never links to a 404. Each is replaced by its phase.
+  - `--destructive` moved to `oklch(0.52 0.2 27)` in light mode so it meets AA on its soft background; status tones are `success`, `warning`, `info` (each with `-soft`), plus `destructive-soft`.
+  - Organization time is shown in the header as "Times in WIB" (WIB/WITA/WIT for Indonesian zones, Intl short names otherwise).
+  - Local `.env` files still have `REGISTRATION_ENABLED=true`; only the examples and defaults changed.
 
 ---
 
