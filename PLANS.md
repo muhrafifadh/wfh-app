@@ -111,7 +111,7 @@ Both app repositories started on `main` and clean. Phase 0.5 work is on local br
 | ----: | --------------------------------------------------------------- | ----------- | -------------- |
 |     0 | Boilerplate assessment, test baseline, gap analysis             | In review   | —              |
 |   0.5 | Security upgrade and project setup                              | In review   | 0              |
-|     1 | Backend foundation: roles/permissions, divisions, employees     | Not started | 0              |
+|     1 | Backend foundation: roles/permissions, divisions, employees     | In review   | 0              |
 |    2A | Backend work settings, schedule versions, holidays              | Not started | 1              |
 |    2B | Backend attendance core (check-in/out, history, summaries)      | Not started | 2A             |
 |    2C | Backend close-day job and absence                               | Not started | 2B             |
@@ -176,7 +176,7 @@ pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm api:types:
 
 ### Phase 1 — Backend foundation and employee management
 
-**Status:** Not started
+**Status:** In review — branch `feat/phase-1-master-data` in `backend-boilerplate` (stacked on `chore/hadirin-setup`); evidence below.
 
 **Objective:** roles, permissions, and employee/division master data as the foundation for every transaction.
 
@@ -221,6 +221,27 @@ pnpm openapi
 ```
 
 **Approval gate:** review migration, permission list, OpenAPI, and negative access tests.
+
+**Evidence (2026-10-30):**
+
+| Commit    | Change                                                                                       |
+| --------- | -------------------------------------------------------------------------------------------- |
+| `9eaa771` | Permissions and `DEFAULT_ROLES`; registration creates every default role.                    |
+| `ae049d4` | Migration `add_master_data`: organization settings, divisions, employees, checks, role data. |
+| `6761657` | `divisions` and `employees` modules, `GET /v1/me/employee`, audit events, tests, OpenAPI.    |
+| `a065d94` | Pilot seed (divisions, EMP-001…EMP-010, HR-001, inactive EMP-099).                           |
+
+- Verification: format, lint, typecheck pass; 55 unit tests and 103 e2e tests pass (77 e2e before); `prisma migrate diff` shows no drift; `openapi.json` regenerated (10 new paths).
+- The migration's role data step was run twice against an organization with only the legacy `owner` role: it gained `admin_hr`, `manager`, `employee`, the owner went from 3 to 15 permissions, and the second run changed nothing. The seed was also run twice with the same result.
+- Decisions made during implementation:
+  - Division and employee uniqueness covers soft-deleted rows too (Prisma can't express partial unique indexes without schema drift). Nothing deletes them in Phase 1: they are deactivated.
+  - Division names are unique ignoring case, checked by the service; the database enforces exact-match uniqueness.
+  - The employee number can't be changed after creation, so it is never reused.
+  - Manager changes take a per-organization advisory lock before the recursive cycle check, so two concurrent changes can't form a cycle.
+  - `POST /v1/employees/:id/account` takes `{ mode: "invite", email, roleId }` or `{ mode: "link", userId, roleId? }` and also needs `user:manage`. Role changes are audited as `user.updated` by the users module.
+  - `GET /v1/me/employee` returns `EMPLOYEE_PROFILE_REQUIRED` (422) when the user has no profile.
+  - Deactivating an employee doesn't disable their user account; deactivating a division only blocks new assignments.
+- Follow-up for Phase 4A: the frontend's hand-copied `PERMISSIONS` list and generated API types must be refreshed (`pnpm api:types`).
 
 ---
 

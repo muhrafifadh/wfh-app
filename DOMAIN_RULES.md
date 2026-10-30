@@ -397,6 +397,14 @@ Audit stores actor, organization, action, target, timestamp, request ID, and non
 | `CORRECTION_ALREADY_DECIDED`         |  409 | Another decision was made first.                  |
 | `CORRECTION_SELF_APPROVAL_FORBIDDEN` |  403 | Requester tried to decide their own request.      |
 | `REPORTING_LINE_CYCLE`               |  422 | Manager assignment would create a cycle.          |
+| `MANAGER_INACTIVE`                   |  422 | The chosen manager is inactive.                   |
+| `EMPLOYMENT_PERIOD_INVALID`          |  422 | Employment end date is before the start date.     |
+| `EMPLOYEE_NUMBER_TAKEN`              |  409 | Number already used in the organization.          |
+| `EMPLOYEE_HAS_ACCOUNT`               |  409 | Employee already has a user account.              |
+| `USER_HAS_EMPLOYEE`                  |  409 | User already belongs to another employee.         |
+| `DIVISION_CODE_TAKEN`                |  409 | Division code already used.                       |
+| `DIVISION_NAME_TAKEN`                |  409 | Division name already used (ignoring case).       |
+| `DIVISION_INACTIVE`                  |  422 | Division is inactive; no new assignments.         |
 | `HOLIDAY_DATE_CONFLICT`              |  409 | An active holiday already exists for the date.    |
 
 Messages are in English and may change; codes must not change once released in API v1.

@@ -172,8 +172,9 @@ IdempotencyAction
 
 Constraints and indexes:
 
-- Unique `(organizationId, code)` for non-deleted rows.
-- Unique case-insensitive `(organizationId, name)` for non-deleted rows, or consistent name normalization.
+- Unique `(organizationId, code)` across all rows (divisions are deactivated, not deleted).
+- Unique `(organizationId, name)` in the database; the service also rejects names that differ only in case.
+- Code is uppercase, 2–32 characters, `^[A-Z0-9][A-Z0-9-]{1,31}$` (check constraint).
 - Index `(organizationId, status, name)`.
 - Divisions with historical employees are never hard-deleted.
 
@@ -416,12 +417,13 @@ The existing `AuditLog` model is reused. Suggested actions:
 division.created
 division.updated
 division.deactivated
+division.reactivated
 employee.created
 employee.updated
 employee.deactivated
 employee.reactivated
 employee.manager_changed
-employee.role_changed
+employee.account_linked    # role changes are recorded as user.updated (roleFrom/roleTo)
 work_schedule.created
 organization.settings_updated
 holiday.created

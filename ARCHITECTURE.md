@@ -296,7 +296,7 @@ Check-in/out require an `Idempotency-Key` header. The API never accepts check-in
 | Method        | Path                         | Permission          | Purpose                                                   |
 | ------------- | ---------------------------- | ------------------- | --------------------------------------------------------- |
 | CRUD          | `/v1/employees`              | `employee:manage`   | Employee profiles, division, manager, activation.         |
-| `POST`        | `/v1/employees/:id/account`  | `employee:manage`   | Invite/link a user account and set its role.              |
+| `POST`        | `/v1/employees/:id/account`  | `employee:manage` + `user:manage` | Invite (`mode: invite`) or link (`mode: link`) a user; set its role. |
 | CRUD          | `/v1/divisions`              | `division:manage`   | Divisions.                                                |
 | `GET/PATCH`   | `/v1/work-settings`          | `policy:manage`     | Timezone, support contact, retention.                     |
 | `GET/POST`    | `/v1/work-schedules`         | `policy:manage`     | Schedule versions (create new effective version).         |
