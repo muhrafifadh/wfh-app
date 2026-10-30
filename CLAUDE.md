@@ -24,6 +24,7 @@ The rules live in [`docs/`](docs/README.md). **Before you write or review code, 
 - Every route has `@RequirePermissions(...)`, `@Authenticated()` or `@Public()` (the app won't start otherwise). Every record loaded by ID is checked against the caller's organization (404 if it doesn't match).
 - Strict Zod DTOs for every input. A response DTO for every output. Never return raw Prisma rows.
 - Services throw `AppError` subclasses with stable codes, never `HttpException`.
+- No `Co-Authored-By: Claude …` (or any Anthropic/AI) trailer in commits, and no "Generated with Claude Code" line in commits or PRs. commitlint enforces the trailer rule.
 - Never edit a migration after it's merged. Never write SQL by concatenating strings. Never read `process.env` outside `src/config/`.
 - The API contract (`docs/05-api-design.md`) is shared with the frontend. Call out any change to it.
 
