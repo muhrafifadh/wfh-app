@@ -62,7 +62,7 @@ export async function createTestApp(
 
 export async function resetDatabase(app: NestExpressApplication): Promise<void> {
   await app.get(PrismaService)
-    .$executeRaw`TRUNCATE audit_logs, uploads, user_tokens, password_reset_tokens, refresh_tokens, sessions, users, roles, organizations RESTART IDENTITY CASCADE`;
+    .$executeRaw`TRUNCATE audit_logs, employees, divisions, uploads, user_tokens, password_reset_tokens, refresh_tokens, sessions, users, roles, organizations RESTART IDENTITY CASCADE`;
 }
 
 const queue = (app: NestExpressApplication, name: string): Queue =>
@@ -148,4 +148,52 @@ export async function authHeader(
     .get(JwtService, { strict: false })
     .signAsync({ sid: session.id }, { subject: user.id, ...options });
   return { Authorization: `Bearer ${token}` };
+}
+
+let codeSequence = 0;
+
+/** A division in the user's organization (active unless asked otherwise). */
+export async function createDivision(
+  app: NestExpressApplication,
+  owner: Pick<TestUser, "organizationId">,
+  options: { inactive?: boolean; name?: string } = {},
+): Promise<{ id: string; code: string; name: string }> {
+  const n = ++codeSequence;
+  return app.get(PrismaService).division.create({
+    data: {
+      organizationId: owner.organizationId,
+      code: `DIV-${n}`,
+      name: options.name ?? `Division ${n}`,
+      status: options.inactive ? "inactive" : "active",
+    },
+    select: { id: true, code: true, name: true },
+  });
+}
+
+/** An employee in the user's organization, in a new division unless one is given. */
+export async function createEmployee(
+  app: NestExpressApplication,
+  owner: Pick<TestUser, "organizationId">,
+  options: {
+    divisionId?: string;
+    managerId?: string;
+    userId?: string;
+    inactive?: boolean;
+  } = {},
+): Promise<{ id: string; employeeNumber: string; divisionId: string }> {
+  const n = ++codeSequence;
+  const divisionId = options.divisionId ?? (await createDivision(app, owner)).id;
+  return app.get(PrismaService).employee.create({
+    data: {
+      organizationId: owner.organizationId,
+      employeeNumber: `EMP-${String(n).padStart(3, "0")}`,
+      fullName: `Employee ${n}`,
+      divisionId,
+      managerId: options.managerId ?? null,
+      userId: options.userId ?? null,
+      status: options.inactive ? "inactive" : "active",
+      employmentStartDate: new Date("2026-01-05T00:00:00.000Z"),
+    },
+    select: { id: true, employeeNumber: true, divisionId: true },
+  });
 }

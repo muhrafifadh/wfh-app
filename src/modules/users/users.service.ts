@@ -27,7 +27,7 @@ import {
 import {
   EMAIL_VERIFICATION_TTL_MS,
   INVITATION_TTL_MS,
-  type UserStatus,
+  userStatusOf,
 } from "@/modules/users/users.constants.js";
 import {
   CannotChangeOwnAccountError,
@@ -56,16 +56,13 @@ export type ActiveUser = {
   permissions: Permission[];
 };
 
-const statusOf = (row: Pick<UserRow, "disabledAt" | "passwordHash">): UserStatus =>
-  row.disabledAt ? "deactivated" : row.passwordHash === null ? "invited" : "active";
-
 /** Prisma row → response body (docs/06-validation-and-dtos.md: dates become ISO strings here). */
 const toUser = (row: UserRow): UserResponseBody => ({
   id: row.id,
   email: row.email,
   name: row.name,
   role: row.role,
-  status: statusOf(row),
+  status: userStatusOf(row),
   emailVerified: row.emailVerifiedAt !== null,
   createdAt: row.createdAt.toISOString(),
   updatedAt: row.updatedAt.toISOString(),
@@ -161,7 +158,7 @@ export class UsersService {
   /** Sends a fresh invitation link (the old one stops working). */
   async resendInvitation(user: AuthUser, id: string): Promise<UserResponseBody> {
     const target = await this.load(user, id);
-    if (statusOf(target) !== "invited") throw new UserNotInvitedError();
+    if (userStatusOf(target) !== "invited") throw new UserNotInvitedError();
     await this.enqueueEmail("invitation", id);
     return toUser(target);
   }

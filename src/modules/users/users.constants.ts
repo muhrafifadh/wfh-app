@@ -5,4 +5,10 @@ export const EMAIL_VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000;
 export const USER_STATUSES = ["active", "invited", "deactivated"] as const;
 export type UserStatus = (typeof USER_STATUSES)[number];
 
+export const userStatusOf = (row: {
+  disabledAt: Date | null;
+  passwordHash: string | null;
+}): UserStatus =>
+  row.disabledAt ? "deactivated" : row.passwordHash === null ? "invited" : "active";
+
 export const USER_SORT_FIELDS = ["name", "email", "createdAt"] as const;

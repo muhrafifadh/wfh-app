@@ -22,6 +22,8 @@ import { AuditModule } from "@/modules/audit/audit.module.js";
 import { AuthModule } from "@/modules/auth/auth.module.js";
 import { JwtAuthGuard } from "@/modules/auth/guards/jwt-auth.guard.js";
 import { PermissionsGuard } from "@/modules/auth/guards/permissions.guard.js";
+import { DivisionsModule } from "@/modules/divisions/divisions.module.js";
+import { EmployeesModule } from "@/modules/employees/employees.module.js";
 import { UploadsModule } from "@/modules/uploads/uploads.module.js";
 import { UsersModule } from "@/modules/users/users.module.js";
 
@@ -89,6 +91,8 @@ import { UsersModule } from "@/modules/users/users.module.js";
     AuthModule,
     AuditModule,
     UploadsModule,
+    DivisionsModule,
+    EmployeesModule,
   ],
   providers: [
     // Global guards run in this order (docs/09-authorization.md)
