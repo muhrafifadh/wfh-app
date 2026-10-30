@@ -335,6 +335,12 @@ Constraints:
 - Same key with a different request hash → `IDEMPOTENCY_KEY_REUSED`.
 - Cleanup may delete expired rows; this never deletes attendance.
 
+Implementation notes (Phase 2B):
+
+- The key is stored as the SHA-256 of the header value; the request context is action + employee + work date.
+- The record is claimed in the same transaction as the attendance write. Only successful results are kept; a failed attempt rolls back and frees the key.
+- An expired record (`expiresAt` passed, 24 hours) is taken over by the next request with that key.
+
 Redis may cache the same result, but the database row is the durable fallback.
 
 ## 8. Correction entities

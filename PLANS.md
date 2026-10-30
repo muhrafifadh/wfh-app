@@ -113,7 +113,7 @@ Both app repositories started on `main` and clean. Phase 0.5 work is on local br
 |   0.5 | Security upgrade and project setup                              | In review   | 0              |
 |     1 | Backend foundation: roles/permissions, divisions, employees     | In review   | 0              |
 |    2A | Backend work settings, schedule versions, holidays              | In review   | 1              |
-|    2B | Backend attendance core (check-in/out, history, summaries)      | Not started | 2A             |
+|    2B | Backend attendance core (check-in/out, history, summaries)      | In review   | 2A             |
 |    2C | Backend close-day job and absence                               | Not started | 2B             |
 |     3 | Backend corrections and approvals                               | Not started | 2B             |
 |    3B | Backend dashboards and reports                                  | Not started | 2C, 3          |
@@ -297,7 +297,7 @@ pnpm openapi
 
 ### Phase 2B — Backend attendance core
 
-**Status:** Not started
+**Status:** In review — branch `feat/phase-2b-attendance` in `backend-boilerplate` (stacked on `feat/phase-2a-work-settings`); evidence below.
 
 **Objective:** authoritative, idempotent, concurrency-safe, tenant-safe check-in/out, history, and summaries.
 
@@ -335,6 +335,26 @@ pnpm openapi
 **Verification:** calculator/service unit tests, real-Postgres e2e, concurrency test, tenant/permission negative tests, OpenAPI diff.
 
 **Approval gate:** Engineering review signs off transaction isolation, idempotency, time boundaries, and schema constraints.
+
+**Evidence (2026-10-30):**
+
+| Commit    | Change                                                                                     |
+| --------- | ------------------------------------------------------------------------------------------ |
+| `fd6d59e` | Migration `add_attendance`: attendance with snapshot and check constraints; idempotency records. |
+| `a7be01a` | Shared calculator (status, late minutes, window, deadline, worked minutes, incomplete).   |
+| `00240c2` | Check-in/out, today, own history/summary/detail, idempotency, audit events, tests, OpenAPI. |
+
+- Verification: format, lint, typecheck pass; 86 unit tests and 157 e2e tests pass (attendance suite repeated 3× without failures); `prisma migrate diff` shows no drift; `openapi.json` regenerated (6 new paths, `Idempotency-Key` header documented).
+- Every mandatory RED test has an e2e case on real Postgres with a frozen clock: 09:15:00/09:15:01, 07:59:59/08:00:00/17:00:00/17:00:01, weekend and holiday, check-out at 23:59:59.999 accepted and at 00:00 rejected, client-supplied fields rejected, parallel check-in (3 → one row) and check-out (first kept, `version` 2), same-key replay (sequential and parallel), changed context, no/inactive profile, cross-tenant and colleague 404, schedule change after check-in, Scenario J.
+- Decisions made during implementation:
+  - Transaction isolation is PostgreSQL's default READ COMMITTED. Correctness comes from the unique `(organizationId, employeeId, workDate)` index, the compare-and-set check-out (`checkOutAt IS NULL AND version = n`), and the idempotency claim (`INSERT … ON CONFLICT DO NOTHING`), which makes a same-key request wait for the first one's commit.
+  - The key is claimed in the same transaction as the attendance write. Only successful results are stored; a failed attempt rolls back and frees the key, so a retry is evaluated again (e.g. `CHECK_IN_TOO_EARLY` at 07:59, then success at 08:00). The key is stored as a SHA-256 hash, lives 24 hours, and its request context is action + employee + work date. Replays add the `Idempotent-Replayed: true` header with an identical body.
+  - New code `IDEMPOTENCY_KEY_REQUIRED` (400) for a missing or malformed key.
+  - An existing record is checked before the window, so a second check-in after 17:00 says `ATTENDANCE_ALREADY_CHECKED_IN`.
+  - Just after midnight, checking out an open record from the previous day returns `CHECK_OUT_WINDOW_CLOSED` (not `ATTENDANCE_NOT_CHECKED_IN`).
+  - `GET /v1/attendance/today` always returns 200 with a `state` (`no_profile`, `inactive`, `non_working_day`, `before_window`, `ready_to_check_in`, `window_closed`, `checked_in`, `check_out_closed`, `checked_out`) and `canCheckIn`/`canCheckOut`, matching UX_FLOWS §7.2.
+  - `GET /v1/attendance/:id` returns own records only; team/organization scopes and correction history arrive with Phases 3/3B.
+  - Not done here: idempotency-record cleanup job and seeded attendance history (both planned with close-day in Phase 2C).
 
 ---
 

@@ -267,7 +267,7 @@ This list is a resource design, not a replacement for OpenAPI. Final endpoints m
 | `GET`   | `/v1/attendance/me/summary`         | `attendance:self`   | Own summary for a range or month.                        |
 | `GET`   | `/v1/attendance/:id`                | self or scoped      | Record detail with correction history.                   |
 
-Check-in/out require an `Idempotency-Key` header. The API never accepts check-in/out timestamps in the body.
+Check-in/out require an `Idempotency-Key` header (`IDEMPOTENCY_KEY_REQUIRED` otherwise) and take an empty body. A replay returns the first result with `Idempotent-Replayed: true`. The API never accepts check-in/out timestamps, employee, organization, or status. `GET /v1/attendance/:id` returns own records only until the team/organization views exist.
 
 ### 8.2 Corrections
 
