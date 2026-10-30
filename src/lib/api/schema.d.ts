@@ -4523,6 +4523,7 @@ export interface operations {
                 from?: string;
                 to?: string;
                 status?: "present" | "late" | "absent" | "excused";
+                incomplete?: "true" | "false";
             };
             header?: never;
             path?: never;
@@ -4737,6 +4738,7 @@ export interface operations {
                 page?: number;
                 pageSize?: number;
                 status?: "pending" | "approved" | "rejected";
+                attendanceId?: string;
             };
             header?: never;
             path?: never;
