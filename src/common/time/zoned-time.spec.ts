@@ -1,6 +1,7 @@
 import {
   addDays,
   formatTimeOfDay,
+  formatZoned,
   isoWeekday,
   isValidTimeZone,
   localDateOf,
@@ -67,5 +68,17 @@ describe("zoned time", () => {
     }
     expect(formatTimeOfDay(9 * 3600_000 + 15 * 60_000)).toBe("09:15:00");
     expect(formatTimeOfDay(24 * 3600_000 - 1, "milliseconds")).toBe("23:59:59.999");
+  });
+
+  it("formats an instant on the zone's wall clock with its offset", () => {
+    expect(formatZoned(new Date("2026-11-02T02:05:12.345Z"), "Asia/Jakarta")).toBe(
+      "2026-11-02T09:05:12+07:00",
+    );
+    expect(formatZoned(new Date("2026-03-29T01:30:00Z"), "Europe/Berlin")).toBe(
+      "2026-03-29T03:30:00+02:00",
+    );
+    expect(formatZoned(new Date("2026-11-02T15:00:00Z"), "America/St_Johns")).toBe(
+      "2026-11-02T11:30:00-03:30",
+    );
   });
 });

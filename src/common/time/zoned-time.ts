@@ -70,6 +70,19 @@ export const localDateOf = (instant: Date, timeZone: string): LocalDate => {
   return `${String(w.year).padStart(4, "0")}-${String(w.month).padStart(2, "0")}-${String(w.day).padStart(2, "0")}`;
 };
 
+/** The instant on the zone's wall clock with its offset, e.g. "2026-11-02T09:05:12+07:00". */
+export const formatZoned = (instant: Date, timeZone: string): string => {
+  const w = wallClock(instant, timeZone);
+  const offsetMinutes = Math.round(offsetMs(instant, timeZone) / 60_000);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const sign = offsetMinutes < 0 ? "-" : "+";
+  const abs = Math.abs(offsetMinutes);
+  return (
+    `${localDateOf(instant, timeZone)}T${pad(w.hour)}:${pad(w.minute)}:${pad(w.second)}` +
+    `${sign}${pad(Math.floor(abs / 60))}:${pad(abs % 60)}`
+  );
+};
+
 /**
  * The instant when the wall clock in `timeZone` shows `date` + `msOfDay`.
  * A time shown twice (clocks go back) is the earlier instant; a time skipped by a
