@@ -2,6 +2,7 @@
 // Pure functions: callers pass the instant (from Clock).
 
 import { addDays, localDateOf, zonedToUtc, type LocalDate } from "@/common/time/zoned-time.js";
+import { valuesFor } from "@/modules/attendance/domain/attendance-calculator.js";
 
 /** §11.2 — submissions are accepted until 23:59:59 on the seventh day after the work date. */
 export const CORRECTION_WINDOW_DAYS = 7;
@@ -64,4 +65,25 @@ export const proposalErrors = (
     );
   }
   return errors;
+};
+
+export type Outcome = {
+  status: "present" | "late" | "absent";
+  lateMinutes: number;
+  workedMinutes: number | null;
+};
+
+/**
+ * What a record shows for a time pair, by the same rules approval applies (§11.5):
+ * no check-in is an absence; otherwise status, lateness and duration are recalculated
+ * from the record's on-time deadline.
+ */
+export const outcomeOf = (pair: TimePair, onTimeDeadlineAt: Date): Outcome => {
+  if (!pair.checkInAt) return { status: "absent", lateMinutes: 0, workedMinutes: null };
+  const values = valuesFor(pair.checkInAt, pair.checkOutAt, onTimeDeadlineAt);
+  return {
+    status: values.status,
+    lateMinutes: values.lateMinutes,
+    workedMinutes: values.workedMinutes,
+  };
 };

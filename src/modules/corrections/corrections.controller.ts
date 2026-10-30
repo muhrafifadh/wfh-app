@@ -28,6 +28,7 @@ import type { AuthUser } from "@/common/types/auth.js";
 import { CorrectionsService } from "@/modules/corrections/corrections.service.js";
 import {
   CorrectionListResponse,
+  CorrectionPreviewResponse,
   CorrectionResponse,
 } from "@/modules/corrections/dto/correction.response.js";
 import {
@@ -38,7 +39,10 @@ import {
   ListCorrectionsQuery,
   ListMyCorrectionsQuery,
 } from "@/modules/corrections/dto/list-corrections.query.js";
-import { SubmitCorrectionDto } from "@/modules/corrections/dto/submit-correction.dto.js";
+import {
+  PreviewCorrectionDto,
+  SubmitCorrectionDto,
+} from "@/modules/corrections/dto/submit-correction.dto.js";
 
 const DECIDE_PERMISSIONS =
   "Needs correction:decide_team (active direct reports) or correction:decide_all (organization).";
@@ -62,6 +66,20 @@ export class CorrectionsController {
   })
   submit(@CurrentUser() user: AuthUser, @Body() dto: SubmitCorrectionDto) {
     return this.corrections.submit(user, dto);
+  }
+
+  /** What a proposal would change (status, lateness, duration), without submitting it. */
+  @Post("preview")
+  @RequirePermissions("correction:submit")
+  @HttpCode(HttpStatus.OK)
+  @ZodResponse({ status: 200, type: CorrectionPreviewResponse })
+  @ApiNotFoundResponse({ type: ErrorResponse, description: "NOT_FOUND" })
+  @ApiUnprocessableEntityResponse({
+    type: ErrorResponse,
+    description: "EMPLOYEE_PROFILE_REQUIRED, CORRECTION_WINDOW_CLOSED, CORRECTION_TIMES_INVALID",
+  })
+  preview(@CurrentUser() user: AuthUser, @Body() dto: PreviewCorrectionDto) {
+    return this.corrections.preview(user, dto);
   }
 
   /** Your own requests, newest first. */

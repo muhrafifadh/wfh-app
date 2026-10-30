@@ -23,13 +23,15 @@ const correctionRow = {
   decisionNote: true,
   submittedAt: true,
   decidedAt: true,
+  // The schedule snapshot never changes, so before/after outcomes stay reproducible
+  attendance: { select: { onTimeDeadlineAt: true, scheduleTimezone: true } },
 } satisfies Prisma.CorrectionRequestSelect;
 
 export type CorrectionRow = Prisma.CorrectionRequestGetPayload<{ select: typeof correctionRow }>;
 
 export type CorrectionInsert = Omit<
   CorrectionRow,
-  "id" | "status" | "decidedById" | "decisionNote" | "decidedAt"
+  "id" | "status" | "decidedById" | "decisionNote" | "decidedAt" | "attendance"
 >;
 
 export type CorrectionFilter = {
@@ -40,6 +42,7 @@ export type CorrectionFilter = {
   excludeRequestedById?: string;
   employeeId?: string;
   attendanceId?: string;
+  divisionId?: string;
   /** Only these employees (a manager's team). */
   employeeIds?: string[];
 };
@@ -70,6 +73,7 @@ export class CorrectionsRepository {
       ...(filter.status && { status: filter.status }),
       ...(filter.requestedById && { requestedById: filter.requestedById }),
       ...(filter.attendanceId && { attendanceId: filter.attendanceId }),
+      ...(filter.divisionId && { employee: { divisionId: filter.divisionId } }),
       ...(filter.excludeRequestedById && { requestedById: { not: filter.excludeRequestedById } }),
       ...(filter.employeeIds && { employeeId: { in: filter.employeeIds } }),
       // An explicit employee narrows the scope above, it never widens it

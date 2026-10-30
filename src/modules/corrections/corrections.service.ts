@@ -33,11 +33,15 @@ import {
 } from "@/modules/corrections/corrections.repository.js";
 import {
   canSubmitAt,
+  outcomeOf,
   proposalErrors,
   resultingPair,
   submissionClosesAt,
 } from "@/modules/corrections/domain/correction-policy.js";
-import type { CorrectionResponseBody } from "@/modules/corrections/dto/correction.response.js";
+import type {
+  CorrectionPreviewBody,
+  CorrectionResponseBody,
+} from "@/modules/corrections/dto/correction.response.js";
 import type {
   ApproveCorrectionInput,
   RejectCorrectionInput,
@@ -46,7 +50,10 @@ import type {
   ListCorrectionsQueryInput,
   ListMyCorrectionsQueryInput,
 } from "@/modules/corrections/dto/list-corrections.query.js";
-import type { SubmitCorrectionInput } from "@/modules/corrections/dto/submit-correction.dto.js";
+import type {
+  PreviewCorrectionInput,
+  SubmitCorrectionInput,
+} from "@/modules/corrections/dto/submit-correction.dto.js";
 import { EmployeeProfileRequiredError } from "@/modules/employees/employees.errors.js";
 import { EmployeesService } from "@/modules/employees/employees.service.js";
 import { UsersService } from "@/modules/users/users.service.js";
@@ -62,7 +69,14 @@ const inScope = (scope: ReviewScope, employeeId: string): boolean =>
 
 const sameInstant = (a: Date | null, b: Date | null) => a?.getTime() === b?.getTime();
 
-const changesOf = (row: CorrectionRow): CorrectionChange[] => [
+const iso = (date: Date | null) => date?.toISOString() ?? null;
+
+const changesOf = (row: {
+  requestedCheckInAt: Date | null;
+  currentCheckInAt: Date | null;
+  requestedCheckOutAt: Date | null;
+  currentCheckOutAt: Date | null;
+}): CorrectionChange[] => [
   ...(sameInstant(row.requestedCheckInAt, row.currentCheckInAt) ? [] : ["check_in" as const]),
   ...(sameInstant(row.requestedCheckOutAt, row.currentCheckOutAt) ? [] : ["check_out" as const]),
 ];
@@ -82,30 +96,9 @@ export class CorrectionsService {
   // Submitting (§11.1–11.4)
 
   async submit(user: AuthUser, input: SubmitCorrectionInput): Promise<CorrectionResponseBody> {
-    const employee = await this.employees.findProfileForUser(user.organizationId, user.id);
-    if (!employee) throw new EmployeeProfileRequiredError();
     const now = this.clock.now();
-
-    // Only your own records; anyone else's is "not found"
-    const record = await this.attendance.findForCorrection(user.organizationId, input.attendanceId);
-    if (!record || record.employeeId !== employee.id) throw new NotFoundError("Attendance record");
-
-    if (!canSubmitAt(now, record.workDate, record.timezone)) {
-      throw new CorrectionWindowClosedError(submissionClosesAt(record.workDate, record.timezone));
-    }
+    const { employee, record, pair } = await this.checkProposal(user, input, now);
     if (record.pendingCorrectionId) throw new CorrectionAlreadyPendingError();
-
-    const proposal = {
-      ...(input.requestedCheckInAt && { checkInAt: new Date(input.requestedCheckInAt) }),
-      ...(input.requestedCheckOutAt && { checkOutAt: new Date(input.requestedCheckOutAt) }),
-    };
-    const errors = proposalErrors(record, proposal, {
-      workDate: record.workDate,
-      timeZone: record.timezone,
-      now,
-    });
-    if (Object.keys(errors).length > 0) throw new CorrectionTimesInvalidError(errors);
-    const pair = resultingPair(record, proposal);
 
     const row = await this.repo.insert({
       organizationId: user.organizationId,
@@ -129,6 +122,62 @@ export class CorrectionsService {
   }
 
   // Reading
+
+  /**
+   * What a proposal would do, without submitting it: the same checks as submit()
+   * (own record, deadline, valid times) and the recalculated outcome.
+   */
+  async preview(user: AuthUser, input: PreviewCorrectionInput): Promise<CorrectionPreviewBody> {
+    const now = this.clock.now();
+    const { record, pair } = await this.checkProposal(user, input, now);
+    const current = { checkInAt: record.checkInAt, checkOutAt: record.checkOutAt };
+    return {
+      attendanceId: record.id,
+      workDate: record.workDate,
+      timezone: record.timezone,
+      submissionClosesAt: new Date(
+        submissionClosesAt(record.workDate, record.timezone).getTime() - 1,
+      ).toISOString(),
+      current: { checkInAt: iso(current.checkInAt), checkOutAt: iso(current.checkOutAt) },
+      requested: { checkInAt: iso(pair.checkInAt), checkOutAt: iso(pair.checkOutAt) },
+      changes: changesOf({
+        currentCheckInAt: current.checkInAt,
+        currentCheckOutAt: current.checkOutAt,
+        requestedCheckInAt: pair.checkInAt,
+        requestedCheckOutAt: pair.checkOutAt,
+      }),
+      outcome: {
+        current: outcomeOf(current, record.onTimeDeadlineAt),
+        requested: outcomeOf(pair, record.onTimeDeadlineAt),
+      },
+    };
+  }
+
+  /** §11.1–11.4 — the caller's own record, within the deadline, with valid times. */
+  private async checkProposal(user: AuthUser, input: PreviewCorrectionInput, now: Date) {
+    const employee = await this.employees.findProfileForUser(user.organizationId, user.id);
+    if (!employee) throw new EmployeeProfileRequiredError();
+
+    // Only your own records; anyone else's is "not found"
+    const record = await this.attendance.findForCorrection(user.organizationId, input.attendanceId);
+    if (!record || record.employeeId !== employee.id) throw new NotFoundError("Attendance record");
+
+    if (!canSubmitAt(now, record.workDate, record.timezone)) {
+      throw new CorrectionWindowClosedError(submissionClosesAt(record.workDate, record.timezone));
+    }
+
+    const proposal = {
+      ...(input.requestedCheckInAt && { checkInAt: new Date(input.requestedCheckInAt) }),
+      ...(input.requestedCheckOutAt && { checkOutAt: new Date(input.requestedCheckOutAt) }),
+    };
+    const errors = proposalErrors(record, proposal, {
+      workDate: record.workDate,
+      timeZone: record.timezone,
+      now,
+    });
+    if (Object.keys(errors).length > 0) throw new CorrectionTimesInvalidError(errors);
+    return { employee, record, pair: resultingPair(record, proposal) };
+  }
 
   async listMine(
     user: AuthUser,
@@ -164,6 +213,7 @@ export class CorrectionsService {
       status: query.status,
       excludeRequestedById: user.id,
       employeeId: query.employeeId,
+      divisionId: query.divisionId,
       ...(scope.kind === "team" && { employeeIds: [...scope.employeeIds] }),
     };
     const { rows, total } = await this.repo.list(
@@ -310,6 +360,7 @@ export class CorrectionsService {
         id: row.id,
         attendanceId: row.attendanceId,
         workDate: fromDateColumn(row.workDate),
+        timezone: row.attendance.scheduleTimezone,
         status: row.status,
         employee: {
           id: row.employeeId,
@@ -326,6 +377,16 @@ export class CorrectionsService {
           checkOutAt: row.requestedCheckOutAt?.toISOString() ?? null,
         },
         changes: changesOf(row),
+        outcome: {
+          current: outcomeOf(
+            { checkInAt: row.currentCheckInAt, checkOutAt: row.currentCheckOutAt },
+            row.attendance.onTimeDeadlineAt,
+          ),
+          requested: outcomeOf(
+            { checkInAt: row.requestedCheckInAt, checkOutAt: row.requestedCheckOutAt },
+            row.attendance.onTimeDeadlineAt,
+          ),
+        },
         reason: row.reason,
         submittedAt: row.submittedAt.toISOString(),
         decision:

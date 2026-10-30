@@ -76,6 +76,8 @@ export type CorrectableAttendance = {
   status: AttendanceRow["status"];
   checkInAt: Date | null;
   checkOutAt: Date | null;
+  /** From the schedule snapshot: what status and lateness are judged against. */
+  onTimeDeadlineAt: Date;
   version: number;
   pendingCorrectionId: string | null;
 };
@@ -391,6 +393,7 @@ export class AttendanceService {
         status: row.status,
         checkInAt: row.checkInAt,
         checkOutAt: row.checkOutAt,
+        onTimeDeadlineAt: row.onTimeDeadlineAt,
         version: row.version,
         pendingCorrectionId: row.pendingCorrection?.id ?? null,
       }

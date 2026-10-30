@@ -1,5 +1,6 @@
 import {
   canSubmitAt,
+  outcomeOf,
   proposalErrors,
   resultingPair,
   submissionClosesAt,
@@ -97,6 +98,30 @@ describe("correction policy", () => {
       ],
     ])("rejects %s", (_name, current, proposal, errors, now = context.now) => {
       expect(proposalErrors(current, proposal, { ...context, now })).toEqual(errors);
+    });
+  });
+
+  describe("outcomeOf (§11.5)", () => {
+    const deadline = wib(WORK_DATE, "09:15:00");
+
+    it("recalculates status, lateness and duration from the on-time deadline", () => {
+      expect(
+        outcomeOf(
+          { checkInAt: wib(WORK_DATE, "09:15:00"), checkOutAt: wib(WORK_DATE, "17:15:00") },
+          deadline,
+        ),
+      ).toEqual({ status: "present", lateMinutes: 0, workedMinutes: 480 });
+      expect(
+        outcomeOf({ checkInAt: wib(WORK_DATE, "09:15:01"), checkOutAt: null }, deadline),
+      ).toEqual({ status: "late", lateMinutes: 1, workedMinutes: null });
+    });
+
+    it("treats no check-in as an absence", () => {
+      expect(outcomeOf({ checkInAt: null, checkOutAt: null }, deadline)).toEqual({
+        status: "absent",
+        lateMinutes: 0,
+        workedMinutes: null,
+      });
     });
   });
 });

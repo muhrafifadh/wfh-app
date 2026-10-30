@@ -19,6 +19,8 @@ export class ListMyCorrectionsQuery extends createZodDto(listMyCorrectionsQueryS
 export const listCorrectionsQuerySchema = paginationQuerySchema.extend({
   status: z.enum(CORRECTION_STATUSES).default("pending"),
   employeeId: z.uuid().optional(),
+  /** Requests from employees currently in this division. */
+  divisionId: z.uuid().optional(),
 });
 
 export type ListCorrectionsQueryInput = z.infer<typeof listCorrectionsQuerySchema>;

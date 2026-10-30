@@ -118,6 +118,11 @@ describe("Corrections (e2e)", () => {
           checkOutAt: "2026-11-02T10:00:00.000Z",
         },
         changes: ["check_in", "check_out"],
+        timezone: "Asia/Jakarta",
+        outcome: {
+          current: { status: "late", lateMinutes: 15, workedMinutes: null },
+          requested: { status: "present", lateMinutes: 0, workedMinutes: 480 },
+        },
         requestedBy: { id: report.user.id },
         decision: null,
         canDecide: false,
@@ -431,6 +436,72 @@ describe("Corrections (e2e)", () => {
       expect((await http().get("/v1/correction-requests").set(auth).expect(200)).body.total).toBe(
         0,
       );
+    });
+  });
+
+  describe("previewing", () => {
+    it("shows what a proposal would do, without submitting it", async () => {
+      const attendanceId = await openMonday(report);
+      at(TUESDAY, "10:00:00");
+      const preview = await http()
+        .post("/v1/correction-requests/preview")
+        .set(report.auth)
+        .send({ attendanceId, requestedCheckOutAt: wib(MONDAY, "17:45:00") })
+        .expect(200);
+      expect(preview.body).toEqual({
+        attendanceId,
+        workDate: MONDAY,
+        timezone: "Asia/Jakarta",
+        submissionClosesAt: "2026-11-09T16:59:59.999Z",
+        current: { checkInAt: "2026-11-02T02:30:00.000Z", checkOutAt: null },
+        requested: {
+          checkInAt: "2026-11-02T02:30:00.000Z",
+          checkOutAt: "2026-11-02T10:45:00.000Z",
+        },
+        changes: ["check_out"],
+        outcome: {
+          current: { status: "late", lateMinutes: 15, workedMinutes: null },
+          requested: { status: "late", lateMinutes: 15, workedMinutes: 495 },
+        },
+      });
+      expect(await prisma().correctionRequest.count()).toBe(0);
+    });
+
+    it("applies submit's checks: own record, valid times", async () => {
+      const attendanceId = await openMonday(report);
+      at(TUESDAY, "10:00:00");
+      await http()
+        .post("/v1/correction-requests/preview")
+        .set(other.auth)
+        .send({ attendanceId, requestedCheckOutAt: wib(MONDAY, "17:00:00") })
+        .expect(404);
+      const invalid = await http()
+        .post("/v1/correction-requests/preview")
+        .set(report.auth)
+        .send({ attendanceId, requestedCheckOutAt: wib(MONDAY, "08:00:00") })
+        .expect(422);
+      expect(invalid.body.error.code).toBe("CORRECTION_TIMES_INVALID");
+      expect(invalid.body.error.details.fieldErrors).toHaveProperty("requestedCheckOutAt");
+    });
+  });
+
+  describe("review queue filters", () => {
+    it("narrows the queue to a division", async () => {
+      const attendanceId = await openMonday(report);
+      at(TUESDAY, "10:00:00");
+      await submit(report, { attendanceId, requestedCheckOutAt: wib(MONDAY, "17:00:00") }).expect(
+        201,
+      );
+      const inDivision = await http()
+        .get(`/v1/correction-requests?divisionId=${divisionId}`)
+        .set(hr.auth)
+        .expect(200);
+      expect(inDivision.body.total).toBe(1);
+      const elsewhere = await http()
+        .get(`/v1/correction-requests?divisionId=${randomUUID()}`)
+        .set(hr.auth)
+        .expect(200);
+      expect(elsewhere.body.total).toBe(0);
     });
   });
 
