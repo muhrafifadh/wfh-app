@@ -9,8 +9,9 @@ NestJS 12 (ESM) · TypeScript · PostgreSQL 17 · Prisma 7 · Redis + BullMQ · 
 Requires Node 24 (`nvm use`), pnpm (`corepack enable`), and Docker.
 
 ```bash
+cp .env.example .env        # first: install runs `prisma generate`, which reads DATABASE_URL
+                            # set SEED_ADMIN_PASSWORD (12+ characters); change ports if they clash
 pnpm install
-cp .env.example .env        # set SEED_ADMIN_PASSWORD (12+ characters); change ports if they clash
 docker compose up -d        # project "hadirin": Postgres and Redis (dev + test), S3-compatible storage
 pnpm db:migrate             # applies every migration to the dev database
 pnpm db:seed                # the demo organization (see "Demo data")
