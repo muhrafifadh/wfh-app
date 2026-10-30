@@ -271,6 +271,10 @@ export class WorkSettingsService {
 
   // Used by holidays and attendance
 
+  organizationIds(): Promise<string[]> {
+    return this.repo.organizationIds();
+  }
+
   async supportContactOf(organizationId: string): Promise<string | null> {
     return (await this.repo.findSettings(organizationId)).supportContact;
   }

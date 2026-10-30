@@ -66,6 +66,12 @@ export class IdempotencyRepository {
     return null;
   }
 
+  /** Deletes expired records (never attendance). Returns how many. */
+  async purgeExpired(now: Date, tx: Tx = this.prisma): Promise<number> {
+    const { count } = await tx.idempotencyRecord.deleteMany({ where: { expiresAt: { lte: now } } });
+    return count;
+  }
+
   async complete(
     claim: Pick<IdempotencyClaim, "organizationId" | "userId" | "key">,
     result: { attendanceId: string; responseStatus: number; responseBody: Prisma.InputJsonValue },

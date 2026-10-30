@@ -118,6 +118,16 @@ export class EmployeesService {
     );
   }
 
+  /** One batch of employees close-day must account for on `date` (see the repository). */
+  eligibleIdsOn(
+    organizationId: string,
+    date: string,
+    afterId: string | null,
+    take: number,
+  ): Promise<string[]> {
+    return this.repo.eligibleIdsOn(organizationId, toDateColumn(date), afterId, take);
+  }
+
   /** The caller's own profile (GET /me/employee). */
   async findMine(user: AuthUser): Promise<EmployeeResponseBody> {
     const employee = await this.repo.findByUser(user.organizationId, user.id);

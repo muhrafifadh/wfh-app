@@ -25,5 +25,11 @@ export const IDEMPOTENCY_TTL_MS = 24 * 60 * 60 * 1000;
 /** Visible ASCII without spaces, e.g. a UUID. */
 export const IDEMPOTENCY_KEY_PATTERN = /^[\x21-\x7e]{1,128}$/;
 
+/** Employees per close-day insert batch. */
+export const CLOSE_DAY_BATCH_SIZE = 200;
+
+/** Close-day for a date starts this long after local midnight (§10: 00:05). */
+export const CLOSE_DAY_DELAY_MS = 5 * 60_000;
+
 /** Longest range for own history filters and summaries. */
 export const MAX_RANGE_DAYS = 366;

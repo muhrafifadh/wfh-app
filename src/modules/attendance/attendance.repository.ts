@@ -157,6 +157,29 @@ export class AttendanceRepository {
   }
 
   /**
+   * §10 — inserts ABSENT rows for employees with no record yet; existing rows (with or
+   * without check-out) are left exactly as they are. Returns how many were created.
+   */
+  async insertAbsences(
+    rows: (Omit<CheckInInsert, "status" | "lateMinutes" | "checkInAt"> & {
+      closeDayRunId: string;
+    })[],
+    tx: Tx = this.prisma,
+  ): Promise<number> {
+    const { count } = await tx.attendance.createMany({
+      data: rows.map((row) => ({
+        ...row,
+        status: "absent" as const,
+        completion: "not_applicable" as const,
+        source: "close_day_job" as const,
+        lateMinutes: 0,
+      })),
+      skipDuplicates: true,
+    });
+    return count;
+  }
+
+  /**
    * §8.3 compare-and-set: records the check-out only if there's none yet and the row
    * is still at `version`. Null when another request got there first.
    */

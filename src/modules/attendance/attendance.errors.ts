@@ -84,6 +84,18 @@ export class CheckOutWindowClosedError extends AppError {
   }
 }
 
+/** Close-day only processes dates that have ended in the organization's zone. */
+export class CloseDayDateNotEndedError extends AppError {
+  readonly status = 422;
+  readonly code = "CLOSE_DAY_DATE_NOT_ENDED";
+
+  constructor(earliestOpen: string) {
+    super(`Only dates before ${earliestOpen} can be closed.`, {
+      fieldErrors: { date: [`Use a date before ${earliestOpen}`] },
+    });
+  }
+}
+
 export class IdempotencyKeyRequiredError extends AppError {
   readonly status = 400;
   readonly code = "IDEMPOTENCY_KEY_REQUIRED";

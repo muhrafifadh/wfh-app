@@ -164,6 +164,33 @@ export class EmployeesRepository {
     }
   }
 
+  /**
+   * Active employees employed on `date`, by id after `afterId` (keyset batches for
+   * close-day). Deactivated ones are left out, so deactivation stops future absences.
+   */
+  async eligibleIdsOn(
+    organizationId: string,
+    date: Date,
+    afterId: string | null,
+    take: number,
+    tx: Tx = this.prisma,
+  ): Promise<string[]> {
+    const rows = await tx.employee.findMany({
+      where: {
+        organizationId,
+        ...notDeleted,
+        status: "active",
+        employmentStartDate: { lte: date },
+        OR: [{ employmentEndDate: null }, { employmentEndDate: { gte: date } }],
+        ...(afterId && { id: { gt: afterId } }),
+      },
+      select: { id: true },
+      orderBy: { id: "asc" },
+      take,
+    });
+    return rows.map((row) => row.id);
+  }
+
   // Reporting lines
 
   /**

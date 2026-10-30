@@ -17,11 +17,17 @@ import type { Env } from "@/config/env.js";
 import { configureApp } from "@/configure-app.js";
 import { Clock, FixedClock } from "@/infra/clock/clock.js";
 import { PrismaService } from "@/infra/prisma/prisma.service.js";
+import { ATTENDANCE_JOBS_QUEUE } from "@/modules/attendance/jobs/attendance-jobs.queue.js";
 import { PASSWORD_RESET_QUEUE } from "@/modules/auth/jobs/password-reset.queue.js";
 import { UPLOADS_CLEANUP_QUEUE } from "@/modules/uploads/jobs/uploads-cleanup.queue.js";
 import { USER_EMAILS_QUEUE } from "@/modules/users/jobs/user-emails.queue.js";
 
-const QUEUES = [USER_EMAILS_QUEUE, PASSWORD_RESET_QUEUE, UPLOADS_CLEANUP_QUEUE];
+const QUEUES = [
+  USER_EMAILS_QUEUE,
+  PASSWORD_RESET_QUEUE,
+  UPLOADS_CLEANUP_QUEUE,
+  ATTENDANCE_JOBS_QUEUE,
+];
 
 /** AppConfig with some values replaced, for tests of config-dependent behavior. */
 class OverriddenConfig extends AppConfig {

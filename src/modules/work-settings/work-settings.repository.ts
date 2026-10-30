@@ -76,6 +76,16 @@ export class WorkSettingsRepository {
     });
   }
 
+  /** Every organization, for jobs that run per organization (close-day). */
+  async organizationIds(tx: Tx = this.prisma): Promise<string[]> {
+    const rows = await tx.organization.findMany({
+      where: { deletedAt: null },
+      select: { id: true },
+      orderBy: { id: "asc" },
+    });
+    return rows.map((row) => row.id);
+  }
+
   // Schedule versions (organization scope only, for now)
 
   findSchedule(organizationId: string, id: string, tx: Tx = this.prisma) {

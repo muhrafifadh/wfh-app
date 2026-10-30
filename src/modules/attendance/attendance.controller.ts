@@ -30,6 +30,7 @@ import { RequirePermissions } from "@/common/decorators/require-permissions.deco
 import { ErrorResponse } from "@/common/dto/error.response.js";
 import type { AuthUser } from "@/common/types/auth.js";
 import { AttendanceService, type ActionResult } from "@/modules/attendance/attendance.service.js";
+import { CloseDayService } from "@/modules/attendance/close-day.service.js";
 import {
   AttendanceListResponse,
   AttendanceResponse,
@@ -37,6 +38,7 @@ import {
   TodayResponse,
 } from "@/modules/attendance/dto/attendance.response.js";
 import { AttendanceActionDto } from "@/modules/attendance/dto/check-in.dto.js";
+import { CloseDayDto, CloseDayResponse } from "@/modules/attendance/dto/close-day.dto.js";
 import {
   AttendanceSummaryQuery,
   ListMyAttendanceQuery,
@@ -59,7 +61,10 @@ const markReplay = (res: Response, result: ActionResult) => {
 @ApiForbiddenResponse({ type: ErrorResponse, description: "FORBIDDEN" })
 @Controller("attendance")
 export class AttendanceController {
-  constructor(private readonly attendance: AttendanceService) {}
+  constructor(
+    private readonly attendance: AttendanceService,
+    private readonly closeDay: CloseDayService,
+  ) {}
 
   /** What the attendance card shows now: state, boundaries, record, allowed actions. */
   @Get("today")
@@ -122,6 +127,19 @@ export class AttendanceController {
     @Res({ passthrough: true }) res: Response,
   ) {
     return markReplay(res, await this.attendance.checkOut(user, key));
+  }
+
+  /**
+   * Re-runs close-day for a date that has ended: missing records become ABSENT.
+   * Safe to repeat (existing records are never changed). Audited.
+   */
+  @Post("close-day")
+  @RequirePermissions("policy:manage")
+  @HttpCode(HttpStatus.OK)
+  @ZodResponse({ status: 200, type: CloseDayResponse })
+  @ApiUnprocessableEntityResponse({ type: ErrorResponse, description: "CLOSE_DAY_DATE_NOT_ENDED" })
+  rerunCloseDay(@CurrentUser() user: AuthUser, @Body() dto: CloseDayDto) {
+    return this.closeDay.rerun(user, dto.date);
   }
 
   /** Own history, newest work date first. */
