@@ -1,4 +1,4 @@
-import { addDays, timeZoneLabel, todayIn } from "@/lib/time-zone";
+import { addDays, formatTimeIn, timeZoneLabel, todayIn } from "@/lib/time-zone";
 
 describe("timeZoneLabel", () => {
   it.each([
@@ -28,5 +28,12 @@ describe("addDays", () => {
     ["2026-03-01", -1, "2026-02-28"],
   ])("%s + %i is %s", (date, days, expected) => {
     expect(addDays(date, days)).toBe(expected);
+  });
+});
+
+describe("formatTimeIn", () => {
+  it("shows the zone's wall-clock time", () => {
+    expect(formatTimeIn("2026-11-02T01:00:00.000Z", "Asia/Jakarta")).toBe("08:00:00");
+    expect(formatTimeIn("2026-11-02T16:59:59.999Z", "Asia/Jakarta")).toBe("23:59:59");
   });
 });

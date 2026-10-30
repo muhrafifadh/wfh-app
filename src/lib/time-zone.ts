@@ -29,3 +29,14 @@ export function addDays(date: string, days: number): string {
   value.setUTCDate(value.getUTCDate() + days);
   return value.toISOString().slice(0, 10);
 }
+
+/** An instant as the wall-clock time in a zone: "2026-11-02T01:00:00Z" in Jakarta → "08:00:00". */
+export function formatTimeIn(isoDateTime: string, timeZone: string): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone,
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  }).format(new Date(isoDateTime));
+}
