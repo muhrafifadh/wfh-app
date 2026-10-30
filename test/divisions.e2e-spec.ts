@@ -7,6 +7,7 @@ import { PrismaService } from "@/infra/prisma/prisma.service.js";
 import {
   authHeader,
   createDivision,
+  createEmployee,
   createTestApp,
   createUser,
   resetDatabase,
@@ -54,6 +55,7 @@ describe("Divisions (e2e)", () => {
       code: "ENG",
       name: "Engineering",
       status: "active",
+      activeEmployeeCount: 0,
       createdAt: expect.any(String),
       updatedAt: expect.any(String),
     });
@@ -152,5 +154,30 @@ describe("Divisions (e2e)", () => {
       "division.deactivated",
       "division.reactivated",
     ]);
+  });
+
+  it("counts active employees and refuses to deactivate while any remain", async () => {
+    const division = await createDivision(app, hr);
+    const auth = await as(hr);
+    const active = await createEmployee(app, hr, { divisionId: division.id });
+    await createEmployee(app, hr, { divisionId: division.id, inactive: true });
+
+    const listed = await http().get("/v1/divisions").set(auth).expect(200);
+    expect(listed.body.items[0].activeEmployeeCount).toBe(1);
+
+    const refused = await http()
+      .post(`/v1/divisions/${division.id}/deactivate`)
+      .set(auth)
+      .expect(409);
+    expect(refused.body.error).toMatchObject({
+      code: "DIVISION_HAS_ACTIVE_EMPLOYEES",
+      details: { activeEmployeeCount: 1 },
+    });
+
+    await app
+      .get(PrismaService)
+      .employee.update({ where: { id: active.id }, data: { status: "inactive" } });
+    const done = await http().post(`/v1/divisions/${division.id}/deactivate`).set(auth).expect(200);
+    expect(done.body).toMatchObject({ status: "inactive", activeEmployeeCount: 0 });
   });
 });

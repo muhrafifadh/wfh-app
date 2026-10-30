@@ -16,6 +16,8 @@ const divisionRow = {
   status: true,
   createdAt: true,
   updatedAt: true,
+  // Read-only count across the employees table, like the reports queries (ARCHITECTURE §6.7)
+  _count: { select: { employees: { where: { status: "active", ...notDeleted } } } },
 } satisfies Prisma.DivisionSelect;
 
 export type DivisionRow = Prisma.DivisionGetPayload<{ select: typeof divisionRow }>;
@@ -111,5 +113,17 @@ export class DivisionsRepository {
 
   setStatus(id: string, status: DivisionStatus, tx: Tx = this.prisma): Promise<DivisionRow> {
     return tx.division.update({ where: { id }, data: { status }, select: divisionRow });
+  }
+
+  /**
+   * Deactivates only while no active employee is in the division, in one statement,
+   * so an employee assigned since the caller's check still blocks it. False if blocked.
+   */
+  async deactivateIfEmpty(id: string, tx: Tx = this.prisma): Promise<boolean> {
+    const { count } = await tx.division.updateMany({
+      where: { id, employees: { none: { status: "active", ...notDeleted } } },
+      data: { status: "inactive" },
+    });
+    return count === 1;
   }
 }

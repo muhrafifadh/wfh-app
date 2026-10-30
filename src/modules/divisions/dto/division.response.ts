@@ -9,6 +9,8 @@ export const divisionResponseSchema = z.object({
   code: z.string(),
   name: z.string(),
   status: z.enum(DIVISION_STATUSES),
+  /** Active, not deleted employees currently in the division. */
+  activeEmployeeCount: z.int().nonnegative(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
 });

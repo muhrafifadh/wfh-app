@@ -34,3 +34,15 @@ export class DivisionInactiveError extends AppError {
     });
   }
 }
+
+/** UX_FLOWS §13: move the division's active employees elsewhere first. */
+export class DivisionHasActiveEmployeesError extends AppError {
+  readonly status = 409;
+  readonly code = "DIVISION_HAS_ACTIVE_EMPLOYEES";
+
+  constructor(activeEmployeeCount: number) {
+    super("Move this division's active employees to another division before deactivating it.", {
+      activeEmployeeCount,
+    });
+  }
+}

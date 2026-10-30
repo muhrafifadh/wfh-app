@@ -82,12 +82,13 @@ export class DivisionsController {
     return this.divisions.update(user, id, dto);
   }
 
-  /** No new employees can be assigned to it. Reversible with /reactivate. */
+  /** No new employees can be assigned to it. Refused while active employees remain. */
   @Post(":id/deactivate")
   @RequirePermissions("division:manage")
   @HttpCode(HttpStatus.OK)
   @ZodResponse({ status: 200, type: DivisionResponse })
   @ApiNotFoundResponse({ type: ErrorResponse, description: "NOT_FOUND" })
+  @ApiConflictResponse({ type: ErrorResponse, description: "DIVISION_HAS_ACTIVE_EMPLOYEES" })
   deactivate(@CurrentUser() user: AuthUser, @Param("id", ParseUUIDPipe) id: string) {
     return this.divisions.deactivate(user, id);
   }

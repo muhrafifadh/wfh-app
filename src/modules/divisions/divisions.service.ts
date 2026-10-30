@@ -6,6 +6,7 @@ import { NotFoundError } from "@/common/errors/app-error.js";
 import type { AuthUser } from "@/common/types/auth.js";
 import {
   DivisionCodeTakenError,
+  DivisionHasActiveEmployeesError,
   DivisionInactiveError,
   DivisionNameTakenError,
 } from "@/modules/divisions/divisions.errors.js";
@@ -25,6 +26,7 @@ const toDivision = (row: DivisionRow): DivisionResponseBody => ({
   code: row.code,
   name: row.name,
   status: row.status,
+  activeEmployeeCount: row._count.employees,
   createdAt: row.createdAt.toISOString(),
   updatedAt: row.updatedAt.toISOString(),
 });
@@ -80,8 +82,8 @@ export class DivisionsService {
   }
 
   /**
-   * Stops new employees from being assigned to it. Employees already in it stay,
-   * with their history. Safe to repeat.
+   * Stops new employees from being assigned to it. Refused while active employees
+   * are still in it (UX_FLOWS §13); inactive ones keep their history. Safe to repeat.
    */
   async deactivate(user: AuthUser, id: string): Promise<DivisionResponseBody> {
     return this.setStatus(user, id, "inactive");
@@ -117,7 +119,16 @@ export class DivisionsService {
     const target = await this.load(user.organizationId, id);
     if (target.status === status) return toDivision(target);
 
-    const updated = await this.repo.setStatus(id, status);
+    if (status === "inactive") {
+      if (target._count.employees > 0 || !(await this.repo.deactivateIfEmpty(id))) {
+        const { _count } = await this.load(user.organizationId, id);
+        throw new DivisionHasActiveEmployeesError(_count.employees);
+      }
+    }
+    const updated =
+      status === "inactive"
+        ? await this.load(user.organizationId, id)
+        : await this.repo.setStatus(id, status);
     await this.emit(
       status === "active" ? DIVISION_EVENTS.reactivated : DIVISION_EVENTS.deactivated,
       user,

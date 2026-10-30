@@ -1936,6 +1936,16 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "DIVISION_HAS_ACTIVE_EMPLOYEES",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5736,6 +5746,11 @@
                     "inactive"
                   ]
                 },
+                "activeEmployeeCount": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
                 "createdAt": {
                   "type": "string",
                   "format": "date-time",
@@ -5752,6 +5767,7 @@
                 "code",
                 "name",
                 "status",
+                "activeEmployeeCount",
                 "createdAt",
                 "updatedAt"
               ],
@@ -5803,6 +5819,11 @@
               "inactive"
             ]
           },
+          "activeEmployeeCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time",
@@ -5819,6 +5840,7 @@
           "code",
           "name",
           "status",
+          "activeEmployeeCount",
           "createdAt",
           "updatedAt"
         ],
