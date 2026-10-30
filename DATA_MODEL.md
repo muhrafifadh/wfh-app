@@ -538,7 +538,7 @@ The existing `prisma/seed.ts` is extended (idempotent upserts, refuses productio
 - One inactive employee and one user without an employee profile for negative tests.
 - Default schedule Monday–Friday 09:00–17:00, tolerance 15, check-in window 08:00–17:00, check-out deadline 23:59:59.999.
 - At least one public holiday within the pilot period window for demo.
-- Five working days of history for the pilot employees covering present, late, absent, open/incomplete, complete, and corrected records, plus one pending correction.
+- Five working days of history for the pilot employees covering present, late, absent, open/incomplete, complete, and corrected records, plus one pending correction. (Phase 2C seeds the last five working days before the seed runs; corrected and pending-correction records follow with corrections.)
 - Demo passwords come from environment variables (as `SEED_ADMIN_PASSWORD` does today) and are documented in the README, never hard-coded.
 
 Test fixtures cover on-time, exactly-at-tolerance, one-second-late, open, complete, absent, corrected, and two-organization isolation cases.

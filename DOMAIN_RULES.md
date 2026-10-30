@@ -392,6 +392,7 @@ Audit stores actor, organization, action, target, timestamp, request ID, and non
 | `CHECK_OUT_WINDOW_CLOSED`            |  422 | Check-out deadline has passed.                    |
 | `IDEMPOTENCY_KEY_REUSED`             |  409 | Key used with a different context.                |
 | `IDEMPOTENCY_KEY_REQUIRED`           |  400 | Missing or malformed `Idempotency-Key` header.    |
+| `CLOSE_DAY_DATE_NOT_ENDED`           |  422 | Close-day re-run for today or a future date.      |
 | `CORRECTION_WINDOW_CLOSED`           |  422 | Past the seven-day submission deadline.           |
 | `CORRECTION_ALREADY_PENDING`         |  409 | A pending request already exists for the record.  |
 | `CORRECTION_VERSION_CONFLICT`        |  409 | Attendance changed after submission.              |

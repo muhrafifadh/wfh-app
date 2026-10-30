@@ -114,7 +114,7 @@ Both app repositories started on `main` and clean. Phase 0.5 work is on local br
 |     1 | Backend foundation: roles/permissions, divisions, employees     | In review   | 0              |
 |    2A | Backend work settings, schedule versions, holidays              | In review   | 1              |
 |    2B | Backend attendance core (check-in/out, history, summaries)      | In review   | 2A             |
-|    2C | Backend close-day job and absence                               | Not started | 2B             |
+|    2C | Backend close-day job and absence                               | In review   | 2B             |
 |     3 | Backend corrections and approvals                               | Not started | 2B             |
 |    3B | Backend dashboards and reports                                  | Not started | 2C, 3          |
 |    4A | Frontend shell, branding, auth adjustments, profile             | Not started | 1              |
@@ -360,7 +360,7 @@ pnpm openapi
 
 ### Phase 2C — Backend close-day and absence
 
-**Status:** Not started
+**Status:** In review — branch `feat/phase-2c-close-day` in `backend-boilerplate` (stacked on `feat/phase-2b-attendance`); evidence below.
 
 **Objective:** working days without check-in become `ABSENT` exactly once.
 
@@ -369,6 +369,24 @@ pnpm openapi
 **Acceptance criteria:** active scheduled employees without check-in become absent exactly once; non-working days, holidays, inactive employees, and dates outside employment are skipped; re-runs give the same result; open records stay open.
 
 **Verification:** fixed-clock job tests, re-run idempotency test, e2e with the test database.
+
+**Evidence (2026-10-30):**
+
+| Commit    | Change                                                                                       |
+| --------- | -------------------------------------------------------------------------------------------- |
+| `4706d16` | Close-day service, `attendance-jobs` queue (tick, close-day, idempotency purge), re-run endpoint, tests, OpenAPI. |
+| `cb59b25` | Seed: five working days of pilot history before today (present, late, absent, open).        |
+
+- Verification: format, lint, typecheck pass; 86 unit tests and 164 e2e tests pass (close-day suite repeated 2×); no schema change; `openapi.json` regenerated (`POST /v1/attendance/close-day`).
+- Acceptance: on a Friday with complete, open, missing, inactive, left-before and not-yet-started employees, only the missing one becomes `ABSENT` (created 1, skipped 2); a re-run creates 0 and leaves every row's version and `updatedAt` unchanged; the open record stays open; Saturday and a holiday create nothing; another organization's employees are untouched; the scheduled run is not due at 00:04:59 WIB, is due at 00:05:00, and two ticks yield one job and one audit entry.
+- Decisions made during implementation:
+  - A BullMQ scheduler ticks every 15 minutes (UTC) and queues `close-day` for each organization whose local time is past 00:05, for the previous work date. The job id is `close-day-<organization>-<date>` and is kept 3 days, so repeated ticks don't run it again; a missed tick is caught up by the next one on the same day. Older missed dates need the manual re-run.
+  - ABSENT rows are inserted with `ON CONFLICT DO NOTHING` in batches of 200 (keyset by employee id). A failed batch is logged and counted; the job then fails and BullMQ retries it (5 attempts), and the retry only creates what's still missing.
+  - ABSENT rows keep the day's schedule snapshot and `workScheduleId`, so corrections can use them.
+  - `POST /v1/attendance/close-day { date }` (`policy:manage`) runs synchronously for a date before today and returns the counts. New code `CLOSE_DAY_DATE_NOT_ENDED` (422). Audited as `attendance.close_day_rerun` (actor) and, for scheduled runs, `attendance.marked_absent` (no actor), one entry per organization and date with the counts and run id.
+  - Eligibility is evaluated at run time: an employee deactivated before a re-run is skipped.
+  - A daily job (03:30 UTC) deletes expired idempotency records.
+  - The seed history is relative to the day it runs (the last five working days in Jakarta), so it stays inside the correction window; re-running on another day adds that day's records.
 
 ---
 

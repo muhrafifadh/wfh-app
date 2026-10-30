@@ -381,6 +381,8 @@ sequenceDiagram
 
 The job is scheduled at 00:05 organization time. The scheduler sends an explicit `workDate`, so a retry after time has passed never processes the wrong date. For the local demo, Admin/HR can trigger a re-run for a specific date.
 
+Implementation: a UTC job scheduler ticks every 15 minutes and queues `close-day` (job id per organization and date, kept 3 days) for organizations past 00:05 local time. The worker inserts ABSENT rows in batches of 200 with `ON CONFLICT DO NOTHING`; failed batches make the job fail and retry. `POST /v1/attendance/close-day` runs the same logic synchronously for an ended date.
+
 ## 13. Frontend rendering and state
 
 - The dashboard and `/attendance` are Server Components that fetch today's initial state.
