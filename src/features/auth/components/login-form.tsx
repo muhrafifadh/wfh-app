@@ -35,8 +35,8 @@ export function LoginForm({ canRegister }: { canRegister: boolean }) {
     <form onSubmit={form.handleSubmit(handleSubmit)} noValidate className="flex flex-col gap-6">
       <FieldGroup>
         <FormHeader
-          title="Login to your account"
-          description="Enter your email below to login to your account"
+          title="Sign in to Hadir.in"
+          description="Check in for your work-from-home day with your work email."
         />
         {searchParams.get("reset") === "1" && !errors.root && (
           <FormAlert
@@ -71,7 +71,7 @@ export function LoginForm({ canRegister }: { canRegister: boolean }) {
 
         <Field>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Signing in…" : "Login"}
+            {isSubmitting ? "Signing in…" : "Sign in"}
           </Button>
           {canRegister && (
             <FieldDescription className="text-center">
