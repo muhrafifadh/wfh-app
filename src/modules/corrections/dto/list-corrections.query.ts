@@ -7,6 +7,8 @@ import { CORRECTION_STATUSES } from "@/modules/corrections/corrections.constants
 /** Own requests, newest submission first. */
 export const listMyCorrectionsQuerySchema = paginationQuerySchema.extend({
   status: z.enum(CORRECTION_STATUSES).optional(),
+  /** One record's requests (its correction history). */
+  attendanceId: z.uuid().optional(),
 });
 
 export type ListMyCorrectionsQueryInput = z.infer<typeof listMyCorrectionsQuerySchema>;

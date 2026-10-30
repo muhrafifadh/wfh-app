@@ -580,6 +580,11 @@ describe("Corrections (e2e)", () => {
         .set(report.auth)
         .expect(200);
       expect(pendingOnly.body.items.map((item: { id: string }) => item.id)).toEqual([b.body.id]);
+      const forFirst = await http()
+        .get(`/v1/correction-requests/me?attendanceId=${first}`)
+        .set(report.auth)
+        .expect(200);
+      expect(forFirst.body.items.map((item: { id: string }) => item.id)).toEqual([a.body.id]);
       expect(
         (await http().get("/v1/correction-requests/me").set(other.auth).expect(200)).body.total,
       ).toBe(0);

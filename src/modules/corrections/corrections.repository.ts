@@ -39,6 +39,7 @@ export type CorrectionFilter = {
   /** Leave out this requester's own requests (a reviewer's queue). */
   excludeRequestedById?: string;
   employeeId?: string;
+  attendanceId?: string;
   /** Only these employees (a manager's team). */
   employeeIds?: string[];
 };
@@ -68,6 +69,7 @@ export class CorrectionsRepository {
       organizationId: filter.organizationId,
       ...(filter.status && { status: filter.status }),
       ...(filter.requestedById && { requestedById: filter.requestedById }),
+      ...(filter.attendanceId && { attendanceId: filter.attendanceId }),
       ...(filter.excludeRequestedById && { requestedById: { not: filter.excludeRequestedById } }),
       ...(filter.employeeIds && { employeeId: { in: filter.employeeIds } }),
       // An explicit employee narrows the scope above, it never widens it

@@ -135,7 +135,12 @@ export class CorrectionsService {
     query: ListMyCorrectionsQueryInput,
   ): Promise<Paginated<CorrectionResponseBody>> {
     const { rows, total } = await this.repo.list(
-      { organizationId: user.organizationId, requestedById: user.id, status: query.status },
+      {
+        organizationId: user.organizationId,
+        requestedById: user.id,
+        status: query.status,
+        attendanceId: query.attendanceId,
+      },
       query,
       "desc",
     );
