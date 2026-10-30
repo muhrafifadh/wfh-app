@@ -1,5 +1,5 @@
 // Development data. Safe to run repeatedly (upserts). Never runs in production.
-// Hadir.in pilot master data: DATA_MODEL.md §16 (schedules and attendance come in later phases).
+// Hadir.in pilot data: DATA_MODEL.md §16 (attendance history comes in a later phase).
 import { hash } from "@node-rs/argon2";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { config } from "dotenv";
@@ -24,6 +24,28 @@ const email = (SEED_ADMIN_EMAIL ?? "admin@example.com").toLowerCase();
 const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: DATABASE_URL }) });
 
 const PILOT_START = new Date("2026-01-05T00:00:00.000Z");
+
+/** Times of day for `time` columns (Prisma uses 1970-01-01 UTC). */
+const time = (value: string) => new Date(`1970-01-01T${value}Z`);
+
+// DOMAIN_RULES.md §6.1 baseline, in force since the pilot employees started
+const BASELINE_SCHEDULE = {
+  name: "Default schedule",
+  timezone: "Asia/Jakarta",
+  workingDays: [1, 2, 3, 4, 5],
+  startTime: time("09:00:00"),
+  endTime: time("17:00:00"),
+  toleranceMinutes: 15,
+  checkInOpensAt: time("08:00:00"),
+  checkInClosesAt: time("17:00:00"),
+  checkOutDeadline: time("23:59:59.999"),
+};
+
+// A demo holiday inside the pilot window (week of 2 November 2026) and a real one
+const HOLIDAYS = [
+  { date: "2026-11-04", name: "Company Day (demo)" },
+  { date: "2026-12-25", name: "Christmas Day" },
+];
 
 const DIVISIONS = [
   { code: "ENG", name: "Engineering" },
@@ -111,7 +133,7 @@ async function main(): Promise<void> {
   }
 
   // The owner has no employee profile: the "user without a profile" fixture
-  await prisma.user.upsert({
+  const owner = await prisma.user.upsert({
     where: { email },
     update: { roleId: roles.owner, disabledAt: null, deletedAt: null },
     create: {
@@ -177,9 +199,41 @@ async function main(): Promise<void> {
     employeeIds.set(seed.number, employee.id);
   }
 
+  await prisma.workSchedule.upsert({
+    where: {
+      organizationId_scope_effectiveFrom: {
+        organizationId: organization.id,
+        scope: "organization",
+        effectiveFrom: PILOT_START,
+      },
+    },
+    update: BASELINE_SCHEDULE,
+    create: {
+      ...BASELINE_SCHEDULE,
+      organizationId: organization.id,
+      effectiveFrom: PILOT_START,
+      createdById: owner.id,
+    },
+  });
+
+  for (const holiday of HOLIDAYS) {
+    const date = new Date(`${holiday.date}T00:00:00.000Z`);
+    const existing = await prisma.holiday.findFirst({
+      where: { organizationId: organization.id, date, deletedAt: null },
+    });
+    if (existing) {
+      await prisma.holiday.update({ where: { id: existing.id }, data: { name: holiday.name } });
+    } else {
+      await prisma.holiday.create({
+        data: { organizationId: organization.id, date, name: holiday.name, createdById: owner.id },
+      });
+    }
+  }
+
   console.warn(
     `Seeded organization "Acme": owner ${email}, ${DIVISIONS.length} divisions, ` +
-      `${EMPLOYEES.length} employees (demo accounts use SEED_DEMO_PASSWORD).`,
+      `${EMPLOYEES.length} employees, the baseline schedule and ${HOLIDAYS.length} holidays ` +
+      "(demo accounts use SEED_DEMO_PASSWORD).",
   );
 }
 
