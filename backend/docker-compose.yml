@@ -1,0 +1,69 @@
+# Local infrastructure: `docker compose up -d`
+name: hadirin
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: hadirin
+    ports: ["${POSTGRES_PORT:-5432}:5432"]
+    volumes: [postgres-data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      retries: 10
+
+  # Separate database for e2e tests, wiped freely (in-memory storage)
+  postgres-test:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: hadirin_test
+    ports: ["${POSTGRES_TEST_PORT:-5433}:5432"]
+    tmpfs: [/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports: ["${REDIS_PORT:-6379}:6379"]
+
+  # Separate Redis for e2e tests (BullMQ queues), nothing persisted
+  redis-test:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports: ["${REDIS_TEST_PORT:-6380}:6379"]
+
+  # S3-compatible storage for uploads (RustFS, a MinIO drop-in: MinIO no longer publishes
+  # images). Console: http://localhost:9001, sign in with the keys below.
+  # Outside production the API creates its bucket (and CORS rules) on startup.
+  storage:
+    image: rustfs/rustfs:1.0.0
+    environment:
+      RUSTFS_ACCESS_KEY: devaccesskey
+      RUSTFS_SECRET_KEY: devsecretkey
+      RUSTFS_ADDRESS: ":9000"
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_CONSOLE_ADDRESS: ":9001"
+    ports:
+      - "${STORAGE_PORT:-9000}:9000"
+      - "${STORAGE_CONSOLE_PORT:-9001}:9001"
+    volumes: [storage-data:/data]
+
+  # Optional dev inbox: `docker compose --profile mail up -d`, then open
+  # http://localhost:8025 and set MAIL_TRANSPORT=smtp, SMTP_URL=smtp://localhost:1025
+  mailpit:
+    image: axllent/mailpit:v1.31
+    profiles: [mail]
+    ports:
+      - "${MAILPIT_SMTP_PORT:-1025}:1025"
+      - "${MAILPIT_UI_PORT:-8025}:8025"
+
+volumes:
+  postgres-data:
+  storage-data:

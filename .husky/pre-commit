@@ -1,0 +1,4 @@
+# Each app formats and lints its own staged files
+staged=$(git diff --cached --name-only)
+if echo "$staged" | grep -q '^backend/'; then pnpm --dir backend exec lint-staged; fi
+if echo "$staged" | grep -q '^frontend/'; then pnpm --dir frontend exec lint-staged; fi

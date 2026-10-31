@@ -1,6 +1,2 @@
-# The app repositories have their own history
-/backend-boilerplate/
-/frontend-boilerplate/
-
 /.pnpm-store/
 .DS_Store

@@ -5,7 +5,7 @@
 | Status    | Target logical model for the baseline scope             |
 | Version   | 0.2                                                     |
 | Date      | 30 October 2026                                         |
-| Database  | PostgreSQL 17 via Prisma 7 (`backend-boilerplate`)      |
+| Database  | PostgreSQL 17 via Prisma 7 (`backend`)      |
 
 ## 1. Purpose
 
@@ -13,7 +13,7 @@ This document turns the PRD and domain rules into an implementable data model. I
 
 ## 2. Conventions
 
-These follow the existing `backend-boilerplate/prisma/schema.prisma`:
+These follow the existing `backend/prisma/schema.prisma`:
 
 - Primary keys use UUIDv7 (`@default(uuid(7)) @db.Uuid`).
 - Database tables and columns use `snake_case` (`@@map`/`@map`); Prisma models/fields use `PascalCase`/`camelCase`.

@@ -6,7 +6,7 @@
 | Version       | 0.2                                                     |
 | Date          | 30 October 2026                                         |
 | Product owner | Developer                                               |
-| Repositories  | `backend-boilerplate`, `frontend-boilerplate`           |
+| Repository    | `hadir-in`: `backend/`, `frontend/`, docs at the root   |
 
 ## 1. Purpose
 
@@ -23,10 +23,12 @@ Read these before planning or implementing a phase:
 3. [`ARCHITECTURE.md`](ARCHITECTURE.md) — components, modules, runtime flows, API resources, reliability.
 4. [`DATA_MODEL.md`](DATA_MODEL.md) — entities, permissions, constraints, indexes, retention, migrations, seed.
 5. [`UX_FLOWS.md`](UX_FLOWS.md) — routes, screen states, copy, branding, accessibility.
-6. Engineering docs in `backend-boilerplate/docs/` and `frontend-boilerplate/docs/`, plus each repo's `CLAUDE.md`/`AGENTS.md`.
-7. `backend-boilerplate/openapi.json` — the machine-readable API contract once endpoints exist.
+6. Engineering docs in `backend/docs/` and `frontend/docs/`, plus each repo's `CLAUDE.md`/`AGENTS.md`.
+7. `backend/openapi.json` — the machine-readable API contract once endpoints exist.
 
 The official take-home assignment brief overrides all of the above on conflict.
+
+> **Repository layout (31 October 2026).** Phases 0–5 were built in two separate repositories, `backend-boilerplate` and `frontend-boilerplate`, with this documentation in a third. They are now one repository, `hadir-in`, with the apps in `backend/` and `frontend/` and their full history merged in. The phase evidence below names the old folders as `backend` and `frontend`; the per-phase branches it mentions lived in the old repositories and were folded in through `feat/phase-5-verification`, which contains every phase.
 
 When sources conflict:
 
@@ -151,12 +153,12 @@ Phase numbers match PRD §15. Frontend sub-phases may start as soon as the backe
 **Baseline commands:**
 
 ```bash
-cd backend-boilerplate
+cd backend
 pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e
 ```
 
 ```bash
-cd frontend-boilerplate
+cd frontend
 pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm api:types:check && pnpm build
 ```
 
@@ -176,7 +178,7 @@ pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm api:types:
 
 ### Phase 1 — Backend foundation and employee management
 
-**Status:** In review — branch `feat/phase-1-master-data` in `backend-boilerplate` (stacked on `chore/hadirin-setup`); evidence below.
+**Status:** In review — branch `feat/phase-1-master-data` in `backend` (stacked on `chore/hadirin-setup`); evidence below.
 
 **Objective:** roles, permissions, and employee/division master data as the foundation for every transaction.
 
@@ -211,7 +213,7 @@ pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm api:types:
 **Verification:**
 
 ```bash
-cd backend-boilerplate
+cd backend
 pnpm format:check
 pnpm lint
 pnpm typecheck
@@ -247,7 +249,7 @@ pnpm openapi
 
 ### Phase 2A — Backend work settings, schedules, and holidays
 
-**Status:** In review — branch `feat/phase-2a-work-settings` in `backend-boilerplate` (stacked on `feat/phase-1-master-data`); evidence below.
+**Status:** In review — branch `feat/phase-2a-work-settings` in `backend` (stacked on `feat/phase-1-master-data`); evidence below.
 
 **Objective:** the backend determines the effective schedule, working days, and every attendance boundary deterministically.
 
@@ -297,7 +299,7 @@ pnpm openapi
 
 ### Phase 2B — Backend attendance core
 
-**Status:** In review — branch `feat/phase-2b-attendance` in `backend-boilerplate` (stacked on `feat/phase-2a-work-settings`); evidence below.
+**Status:** In review — branch `feat/phase-2b-attendance` in `backend` (stacked on `feat/phase-2a-work-settings`); evidence below.
 
 **Objective:** authoritative, idempotent, concurrency-safe, tenant-safe check-in/out, history, and summaries.
 
@@ -360,7 +362,7 @@ pnpm openapi
 
 ### Phase 2C — Backend close-day and absence
 
-**Status:** In review — branch `feat/phase-2c-close-day` in `backend-boilerplate` (stacked on `feat/phase-2b-attendance`); evidence below.
+**Status:** In review — branch `feat/phase-2c-close-day` in `backend` (stacked on `feat/phase-2b-attendance`); evidence below.
 
 **Objective:** working days without check-in become `ABSENT` exactly once.
 
@@ -392,7 +394,7 @@ pnpm openapi
 
 ### Phase 3 — Backend corrections and approvals
 
-**Status:** In review — branch `feat/phase-3-corrections` in `backend-boilerplate` (stacked on `feat/phase-2c-close-day`); evidence below.
+**Status:** In review — branch `feat/phase-3-corrections` in `backend` (stacked on `feat/phase-2c-close-day`); evidence below.
 
 **Objective:** official, auditable corrections with first-decision-wins approval.
 
@@ -438,7 +440,7 @@ pnpm openapi
 
 ### Phase 3B — Backend dashboards and reports
 
-**Status:** In review — branch `feat/phase-3b-reports` in `backend-boilerplate` (stacked on `feat/phase-3-corrections`); evidence below.
+**Status:** In review — branch `feat/phase-3b-reports` in `backend` (stacked on `feat/phase-3-corrections`); evidence below.
 
 **Objective:** read-only aggregates for team, organization, and reports.
 
@@ -473,13 +475,13 @@ pnpm openapi
 
 ### Phase 4A — Frontend shell, branding, and auth adjustments
 
-**Status:** In review — branch `feat/phase-4a-shell` in `frontend-boilerplate` (from `chore/hadirin-setup`) and `feat/phase-4a-me-context` in `backend-boilerplate` (stacked on `feat/phase-3b-reports`); evidence below.
+**Status:** In review — branch `feat/phase-4a-shell` in `frontend` (from `chore/hadirin-setup`) and `feat/phase-4a-me-context` in `backend` (stacked on `feat/phase-3b-reports`); evidence below.
 
 **Objective:** the boilerplate looks and navigates like Hadir.in without changing its foundations.
 
 **In scope:**
 
-- Apply brand tokens through the existing theme (`frontend-boilerplate/docs/07-styling-and-theming.md`); text wordmark; page titles "Hadir.in".
+- Apply brand tokens through the existing theme (`frontend/docs/07-styling-and-theming.md`); text wordmark; page titles "Hadir.in".
 - Permission-based navigation per `UX_FLOWS.md` §3.3; remove the example invoices pages from navigation.
 - Hide registration (`REGISTRATION_ENABLED=false` in both `.env.example` files and docs).
 - `/profile` page; support contact in the help menu.
@@ -490,7 +492,7 @@ pnpm openapi
 **Verification:**
 
 ```bash
-cd frontend-boilerplate
+cd frontend
 pnpm api:types
 pnpm format:check
 pnpm lint
@@ -531,7 +533,7 @@ pnpm build
 
 ### Phase 4B — Frontend administration
 
-**Status:** In review — branch `feat/phase-4b-admin` in `frontend-boilerplate` (stacked on `feat/phase-4a-shell`) and `feat/phase-4b-admin-support` in `backend-boilerplate` (stacked on `feat/phase-4a-me-context`); evidence below.
+**Status:** In review — branch `feat/phase-4b-admin` in `frontend` (stacked on `feat/phase-4a-shell`) and `feat/phase-4b-admin-support` in `backend` (stacked on `feat/phase-4a-me-context`); evidence below.
 
 **Objective:** Admin/HR manages employees, divisions, settings, and holidays through the UI.
 
@@ -572,7 +574,7 @@ pnpm build
 
 ### Phase 4C — Frontend attendance and employee dashboard
 
-**Status:** In review — branch `feat/phase-4c-attendance` in `frontend-boilerplate` (stacked on `feat/phase-4b-admin`) and `feat/phase-4c-attendance-support` in `backend-boilerplate` (stacked on `feat/phase-4b-admin-support`); evidence below.
+**Status:** In review — branch `feat/phase-4c-attendance` in `frontend` (stacked on `feat/phase-4b-admin`) and `feat/phase-4c-attendance-support` in `backend` (stacked on `feat/phase-4b-admin-support`); evidence below.
 
 **Objective:** employees check in/out and understand the result on mobile and desktop.
 
@@ -607,7 +609,7 @@ pnpm build
 
 ### Phase 4D — Frontend corrections, team, dashboards, and reports
 
-**Status:** In review — branch `feat/phase-4d` in `frontend-boilerplate` (stacked on `feat/phase-4c-attendance`) and `feat/phase-4d-support` in `backend-boilerplate` (stacked on `feat/phase-4c-attendance-support`); evidence below.
+**Status:** In review — branch `feat/phase-4d` in `frontend` (stacked on `feat/phase-4c-attendance`) and `feat/phase-4d-support` in `backend` (stacked on `feat/phase-4c-attendance-support`); evidence below.
 
 **Objective:** corrections, manager and HR views, and reporting are usable end to end.
 

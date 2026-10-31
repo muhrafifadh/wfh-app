@@ -1,0 +1,75 @@
+# frontend/docs/18-tooling-and-git.md — every PR must pass all of these.
+name: Frontend
+
+on:
+  pull_request:
+    # The API types come from backend/openapi.json, so backend changes run this too
+    paths:
+      ["frontend/**", "backend/openapi.json", ".github/workflows/frontend.yml"]
+  push:
+    branches: [main]
+    paths:
+      ["frontend/**", "backend/openapi.json", ".github/workflows/frontend.yml"]
+
+concurrency:
+  group: frontend-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    env:
+      # Placeholder values so lib/env.ts validation passes during the build.
+      # Not secrets: the build never contacts the backend.
+      API_URL: http://localhost:8000/v1
+      SESSION_SECRET: ci-placeholder-ci-placeholder-ci-placeholder
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: frontend/package.json
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Format
+        run: pnpm format:check
+
+      - name: Lint
+        run: pnpm lint
+
+      # The backend's committed contract, from the same commit. Fails when the
+      # backend changed its API and `pnpm api:types` hasn't been run here.
+      - name: API types match backend/openapi.json
+        run: pnpm api:types:check
+
+      # Includes src/**/contract.ts: Zod schemas must equal the generated API types
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+      - name: Audit production dependencies
+        run: pnpm audit --prod --audit-level high
