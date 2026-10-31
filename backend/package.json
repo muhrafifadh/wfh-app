@@ -22,7 +22,7 @@
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate",
-    "prepare": "husky",
+    "prepare": "cd .. && husky",
     "db:seed": "prisma db seed",
     "openapi": "nest build && NODE_ENV=test node dist/scripts/export-openapi.js"
   },

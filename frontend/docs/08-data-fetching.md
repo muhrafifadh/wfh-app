@@ -31,7 +31,7 @@ Client Component ──► TanStack Query ──► app/api/<f>/route.ts ──�
 
 The backend commits `openapi.json` (its `pnpm openapi`). This repo generates TypeScript types from it, and checks the hand-written Zod schemas against them at compile time.
 
-- **`pnpm api:types`** regenerates `src/lib/api/schema.d.ts`. It reads `../backend-boilerplate/openapi.json` by default, or set `OPENAPI_SPEC` to a path or URL. The file is generated: never edit it.
+- **`pnpm api:types`** regenerates `src/lib/api/schema.d.ts`. It reads `../backend/openapi.json` by default, or set `OPENAPI_SPEC` to a path or URL. The file is generated: never edit it.
 - **Every schema that crosses the API has a check** in its feature's `contract.ts`. Request schemas are compared with the DTO, response schemas with the `_Output` shape:
 
   ```ts
@@ -42,12 +42,12 @@ The backend commits `openapi.json` (its `pnpm openapi`). This repo generates Typ
 
   A missing, extra or differently typed field fails `pnpm typecheck`.
 
-- **CI regenerates the types from backend `main`** and fails if the committed file is out of date. The backend repo is private, so CI reads it with the `BACKEND_CONTRACT_TOKEN` secret: a fine-grained token, scoped to `backend-boilerplate`, with read-only **Contents** access. Give it an expiry and rotate it.
-- **The flow for an API change:**
-  1. Merge the backend PR (with its new `openapi.json`).
+- **CI regenerates the types from `backend/openapi.json`** in the same commit and fails if the committed file is out of date.
+- **The flow for an API change** (one PR covers both apps):
+  1. In `backend/`, change the API and run `pnpm openapi`.
   2. Here, run `pnpm api:types`.
   3. Fix whatever `pnpm typecheck` reports.
-  4. Commit.
+  4. Commit both together.
 - **Zod stays in charge at runtime.** The generated types prove the schemas match the contract, and Zod still validates real responses.
 
 ## Examples

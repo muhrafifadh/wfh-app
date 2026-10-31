@@ -12,9 +12,9 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "prepare": "husky",
-    "api:types": "openapi-typescript \"${OPENAPI_SPEC:-../backend-boilerplate/openapi.json}\" -o src/lib/api/schema.d.ts",
-    "api:types:check": "openapi-typescript \"${OPENAPI_SPEC:-../backend-boilerplate/openapi.json}\" -o src/lib/api/schema.d.ts --check"
+    "prepare": "cd .. && husky",
+    "api:types": "openapi-typescript \"${OPENAPI_SPEC:-../backend/openapi.json}\" -o src/lib/api/schema.d.ts",
+    "api:types:check": "openapi-typescript \"${OPENAPI_SPEC:-../backend/openapi.json}\" -o src/lib/api/schema.d.ts --check"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

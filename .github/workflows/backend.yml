@@ -1,13 +1,15 @@
-# docs/16-tooling-and-git.md — every PR must pass all of these.
-name: CI
+# backend/docs/16-tooling-and-git.md — every PR must pass all of these.
+name: Backend
 
 on:
   pull_request:
+    paths: ["backend/**", ".github/workflows/backend.yml"]
   push:
     branches: [main]
+    paths: ["backend/**", ".github/workflows/backend.yml"]
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: backend-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -49,6 +51,10 @@ jobs:
           RUSTFS_ADDRESS: ":9000"
         ports: ["9000:9000"]
 
+    defaults:
+      run:
+        working-directory: backend
+
     env:
       # prisma.config.ts loads .env.test when NODE_ENV=test
       NODE_ENV: test
@@ -57,11 +63,14 @@ jobs:
       - uses: actions/checkout@v7
 
       - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: backend/package.json
 
       - uses: actions/setup-node@v7
         with:
-          node-version-file: .nvmrc
+          node-version-file: backend/.nvmrc
           cache: pnpm
+          cache-dependency-path: backend/pnpm-lock.yaml
 
       - name: Install
         run: pnpm install --frozen-lockfile

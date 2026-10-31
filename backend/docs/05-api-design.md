@@ -1,6 +1,6 @@
 # 05 · API Design
 
-This doc is the **contract with `frontend-boilerplate`**. Changing anything here is a breaking change for the frontend, unless the change only adds something.
+This doc is the **contract with `frontend/`**. Changing anything here is a breaking change for the frontend, unless the change only adds something.
 
 ## URLs & methods
 
@@ -93,7 +93,7 @@ The frontend uses `code` to decide what to do, and `message` to show the user. *
 - **After any API change, run `pnpm openapi` and commit the result.** CI regenerates the file and fails if it differs from the committed one.
 - **Document every response with `@ZodResponse({ status, type })`.** It filters the response, puts its shape in the spec, and type-checks the handler's return value. Don't use `@ZodSerializerDto`: it skips the spec.
 - **Every endpoint has `@ApiTags` and documented error responses** (`@ApiNotFoundResponse()`, …). The shared error body is the `ErrorResponse` schema.
-- If you change the contract, say so in the PR description and link the matching frontend PR.
+- If you change the contract, say so in the PR description and update the frontend in the same PR (`pnpm api:types` in `frontend/`).
 
 ## Don't
 

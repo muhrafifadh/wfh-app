@@ -9,7 +9,7 @@
 | **TypeScript**          | `strict`. `pnpm typecheck` must pass with zero errors.                                                                                                        |
 | **ESLint**              | `next/core-web-vitals`, `next/typescript`, `jsx-a11y`, import order, plus the project rules (no `any`, no `process.env`, no `console.log`, no `../` imports). |
 | **Prettier**            | Plus `prettier-plugin-tailwindcss`. Formatting is never discussed in reviews.                                                                                 |
-| **Husky + lint-staged** | Pre-commit runs ESLint and Prettier on staged files.                                                                                                          |
+| **Husky + lint-staged** | Pre-commit runs ESLint and Prettier on staged files. The hooks live in the repository root's `.husky/`.                                                       |
 | **commitlint**          | Checks every commit message against Conventional Commits.                                                                                                     |
 
 ## Scripts

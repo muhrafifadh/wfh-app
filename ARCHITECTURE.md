@@ -19,8 +19,8 @@ The workspace contains two separate applications:
 
 | Application            | Current stack                                                            | Relevant state                                                                                                                         |
 | ---------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `frontend-boilerplate` | Next.js 16.4.3 App Router, React 19, TypeScript, Tailwind, shadcn/ui, Zod, TanStack Query, Recharts | Login, session cookies, refresh token, user management, audit UI, files, placeholder dashboard, server actions, typed API client. |
-| `backend-boilerplate`  | NestJS, Prisma 7, PostgreSQL 17, Redis/BullMQ, JWT, Zod, OpenAPI         | Auth (with `REGISTRATION_ENABLED` flag), users/roles/permissions, sessions, audit log, uploads, mail, queues, health checks, layered modules. |
+| `frontend` | Next.js 16.4.3 App Router, React 19, TypeScript, Tailwind, shadcn/ui, Zod, TanStack Query, Recharts | Login, session cookies, refresh token, user management, audit UI, files, placeholder dashboard, server actions, typed API client. |
+| `backend`  | NestJS, Prisma 7, PostgreSQL 17, Redis/BullMQ, JWT, Zod, OpenAPI         | Auth (with `REGISTRATION_ENABLED` flag), users/roles/permissions, sessions, audit log, uploads, mail, queues, health checks, layered modules. |
 
 Employee, division, schedule, holiday, attendance, and correction domains do not exist in the schema yet. The sections below describe the target, not implemented features.
 
@@ -42,7 +42,7 @@ Employee, division, schedule, holiday, attendance, and correction domains do not
 ## 3. Architecture principles
 
 1. **The backend is the source of truth.** Time, permissions, domain rules, and state changes are validated in the backend.
-2. **OpenAPI is the contract between apps.** `backend-boilerplate/openapi.json` is generated from controllers/DTOs, and frontend types are generated from it.
+2. **OpenAPI is the contract between apps.** `backend/openapi.json` is generated from controllers/DTOs, and frontend types are generated from it.
 3. **Organization isolation in every query.** All domain access carries `organizationId` from the authenticated session, never from free client input.
 4. **Transactions for invariants.** Check-in, check-out, correction decisions, and close-day use transactions and database constraints.
 5. **Server Components by default.** The frontend queries server-side; interactivity is limited to the smallest client islands.
@@ -175,7 +175,7 @@ Follows the boilerplate convention: modules never write audit rows. After a succ
 ### Backend
 
 ```text
-backend-boilerplate/src/modules/
+backend/src/modules/
   auth/              # existing
   users/             # existing (roles, permissions)
   audit/             # existing
@@ -203,12 +203,12 @@ backend-boilerplate/src/modules/
   reports/
 ```
 
-New files follow the naming and layering already used by `users/` and `audit/`; check `backend-boilerplate/docs/03-modules-and-layers.md` before adding a module.
+New files follow the naming and layering already used by `users/` and `audit/`; check `backend/docs/03-modules-and-layers.md` before adding a module.
 
 ### Frontend
 
 ```text
-frontend-boilerplate/src/
+frontend/src/
   app/(app)/
     dashboard/              # existing route, role-aware Hadir.in dashboards
     attendance/
@@ -309,7 +309,7 @@ Team views use the caller's own active employee profile (`EMPLOYEE_PROFILE_REQUI
 | `GET`         | `/v1/work-calendar`          | `holiday:manage`    | Working days for a range (≤ 62 days) and why not.         |
 | `POST`        | `/v1/attendance/close-day`   | `policy:manage`     | Re-run close-day for a date (audited).                    |
 
-Existing `/v1/users`, `/v1/roles` (if present), and `/v1/audit-logs` endpoints are reused unchanged. Final naming, DTOs, error codes, pagination, and response statuses must be set in OpenAPI before the frontend depends on them, and must follow `backend-boilerplate/docs/05-api-design.md`.
+Existing `/v1/users`, `/v1/roles` (if present), and `/v1/audit-logs` endpoints are reused unchanged. Final naming, DTOs, error codes, pagination, and response statuses must be set in OpenAPI before the frontend depends on them, and must follow `backend/docs/05-api-design.md`.
 
 ## 9. Check-in flow
 
@@ -442,7 +442,7 @@ Own/team/all scope is checked in services using organization and reporting line,
 - Prisma migrations are forward-only; applied migrations are never edited.
 - Schema and backend changes ship backward-compatible before the frontend that uses them.
 - `openapi.json` is regenerated and committed whenever the contract changes; the frontend runs `pnpm api:types`.
-- Local infrastructure reuses `backend-boilerplate/docker-compose.yml`, with `name: hadirin` (containers `hadirin-*`) and databases `hadirin` (dev) and `hadirin_test` (e2e). CI uses `hadirin_test` too.
+- Local infrastructure reuses `backend/docker-compose.yml`, with `name: hadirin` (containers `hadirin-*`) and databases `hadirin` (dev) and `hadirin_test` (e2e). CI uses `hadirin_test` too.
 - Development seed provides the Hadir.in demo dataset (`DATA_MODEL.md` §16).
 - Staging is used only if already available; production is out of scope.
 - Rolling back the application must never require rolling back a destructive migration. Column changes follow expand–migrate–contract when needed.

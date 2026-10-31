@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-NestJS + TypeScript + PostgreSQL (Prisma) + JWT auth boilerplate. The client is [`frontend-boilerplate`](https://github.com/muhrafifadh/frontend-boilerplate) (Next.js).
+NestJS + TypeScript + PostgreSQL (Prisma) + JWT auth boilerplate. The client is [`../frontend`](../frontend) (Next.js), in the same repository.
 
 The rules live in [`docs/`](docs/README.md). **Before you write or review code, read [`docs/quick-reference.md`](docs/quick-reference.md), then the topic docs for the task:**
 

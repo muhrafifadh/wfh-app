@@ -162,7 +162,7 @@ All interfaces, navigation, forms, validation messages, notifications, statuses,
 | Database name          | `hadirin`  |
 | Docker project name    | `hadirin`  |
 
-Existing repository names (`backend-boilerplate`, `frontend-boilerplate`) and infrastructure identifiers are preserved unless renaming is necessary and safe.
+Existing repository names (`backend-boilerplate`, `frontend-boilerplate`) and infrastructure identifiers are preserved unless renaming is necessary and safe. (After Phase 5 the two apps moved into one repository, `hadir-in`, as `backend/` and `frontend/`; runtime identifiers such as the JWT issuer and audience defaults are unchanged.)
 
 ### 7.3 Branding
 

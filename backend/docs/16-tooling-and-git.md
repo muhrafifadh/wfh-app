@@ -10,7 +10,7 @@
 | **TypeScript**          | `strict`; `pnpm typecheck` must pass with zero errors.                                                                                                                                            |
 | **oxlint**              | Type-aware (`--type-aware`). Project rules in `.oxlintrc.json`: no `any`, no `!`, no `console`, `no-floating-promises`, no `process.env` outside `config/`, no `../` imports, no default exports. |
 | **Prettier**            | Plus `@ianvs/prettier-plugin-sort-imports`, which sorts imports. Formatting is never discussed in reviews.                                                                                        |
-| **Husky + lint-staged** | Pre-commit: oxlint + Prettier on staged files.                                                                                                                                                    |
+| **Husky + lint-staged** | Pre-commit: oxlint + Prettier on staged files. The hooks live in the repository root's `.husky/`.                                                                                                 |
 | **commitlint**          | Checks every commit message against Conventional Commits.                                                                                                                                         |
 
 The project is **ESM**: relative and `@/` imports end in `.js` (`@/config/env.js`). The `@/` alias is rewritten to relative paths by `nest build`, and resolved by Vite in tests (`resolve.tsconfigPaths`).
@@ -73,7 +73,7 @@ Every PR must pass all of these before it can be merged:
 
 ## Git workflow
 
-Same conventions as `frontend-boilerplate`:
+Same conventions as `frontend/`:
 
 - **Branches:** `<type>/<short-kebab-description>` from `main`: `feat/invoice-void`, `fix/refresh-token-reuse`.
 - **Commits:** [Conventional Commits](https://www.conventionalcommits.org/), e.g. `feat(invoices): add void endpoint`. Imperative mood, lowercase, no period, under 72 characters. Use `feat!:` or a `BREAKING CHANGE:` footer for API contract breaks.

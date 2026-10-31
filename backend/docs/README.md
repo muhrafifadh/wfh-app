@@ -4,7 +4,7 @@ Rules and conventions for this boilerplate: **NestJS · TypeScript · PostgreSQL
 
 New here? Read [quick-reference.md](quick-reference.md) first. When you work on something specific, open the topic file it needs.
 
-> Pair repo: [`frontend-boilerplate`](https://github.com/muhrafifadh/frontend-boilerplate) (Next.js). The [API contract](05-api-design.md) is what the two repos agree on. If you change it, update both repos.
+> The web app is [`frontend/`](../../frontend) (Next.js), in the same repository. The [API contract](05-api-design.md) is what the two apps agree on. If you change it, update both in the same PR.
 
 ## Topics
 
@@ -49,5 +49,5 @@ Each rule is written in exactly **one** doc. Other docs link to it instead of re
 
 1. Open a PR that edits the doc, with `docs:` in the commit message. Explain why the rule should change.
 2. In the same PR, update the code (and lint config) that the old rule affected, or open an issue to track it.
-3. If the change affects the API contract, open the matching PR in `frontend-boilerplate`.
+3. If the change affects the API contract, update `frontend/` in the same PR.
 4. If a rule can be enforced by a tool (oxlint, TypeScript, CI), enforce it there and link to that config from the doc.
