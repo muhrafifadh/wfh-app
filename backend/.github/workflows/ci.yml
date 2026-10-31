@@ -1,0 +1,104 @@
+# docs/16-tooling-and-git.md — every PR must pass all of these.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: hadirin_test
+        # Same port as .env.test, so tests and prisma use the committed test config
+        ports: ["5433:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      # Same ports as .env.test (the redis-test and storage containers in docker-compose.yml)
+      redis:
+        image: redis:7-alpine
+        ports: ["6380:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      storage:
+        image: rustfs/rustfs:1.0.0
+        env:
+          RUSTFS_ACCESS_KEY: devaccesskey
+          RUSTFS_SECRET_KEY: devsecretkey
+          RUSTFS_ADDRESS: ":9000"
+        ports: ["9000:9000"]
+
+    env:
+      # prisma.config.ts loads .env.test when NODE_ENV=test
+      NODE_ENV: test
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Format
+        run: pnpm format:check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Wait for storage
+        run: |
+          for i in $(seq 1 30); do
+            curl -s -o /dev/null http://localhost:9000/ && exit 0
+            sleep 1
+          done
+          echo "storage did not start" && exit 1
+
+      - name: E2E tests (applies migrations to the test database)
+        run: pnpm test:e2e
+
+      - name: Migrations match schema.prisma
+        run: pnpm exec prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code
+
+      - name: Build
+        run: pnpm build
+
+      - name: openapi.json matches the code (run `pnpm openapi` and commit if this fails)
+        run: |
+          node dist/scripts/export-openapi.js
+          git diff --exit-code openapi.json
+
+      - name: Audit production dependencies
+        run: pnpm audit --prod --audit-level high
