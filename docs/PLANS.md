@@ -6,7 +6,7 @@
 | Version       | 0.2                                                     |
 | Date          | 30 October 2026                                         |
 | Product owner | Developer                                               |
-| Repository    | `hadir-in`: `backend/`, `frontend/`, docs at the root   |
+| Repository    | `hadir-in`: `backend/`, `frontend/`, `docs/`             |
 
 ## 1. Purpose
 

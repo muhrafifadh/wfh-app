@@ -2,7 +2,7 @@
 
 The API for Hadir.in, a work-from-home attendance system: employees check in and out at server time, managers and Admin/HR review corrections, and Admin/HR run the organization's employees, schedule, holidays and reports.
 
-NestJS 12 (ESM) · TypeScript · PostgreSQL 17 · Prisma 7 · Redis + BullMQ · JWT auth with rotating refresh tokens. The web app is [`frontend/`](../frontend) (Next.js), in the same repository. Product documents (requirements, domain rules, UX flows) are at the repository root: `DOMAIN_RULES.md`, `ARCHITECTURE.md`, `UX_FLOWS.md`.
+NestJS 12 (ESM) · TypeScript · PostgreSQL 17 · Prisma 7 · Redis + BullMQ · JWT auth with rotating refresh tokens. The web app is [`frontend/`](../frontend) (Next.js), in the same repository. Product documents (requirements, domain rules, UX flows) are in [`docs/`](../docs): `DOMAIN_RULES.md`, `ARCHITECTURE.md`, `UX_FLOWS.md`.
 
 ## Quick start
 

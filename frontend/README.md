@@ -2,7 +2,7 @@
 
 The web app for Hadir.in, a work-from-home attendance system: check in and out, see your history and request corrections; managers follow their team and decide corrections; Admin/HR run employees, divisions, the schedule, holidays, dashboards and reports.
 
-Next.js 16 (App Router, Cache Components) · React 19 · TypeScript · Tailwind CSS v4 · shadcn/ui · TanStack Query · nuqs. Talks to [`backend/`](../backend) (NestJS), in the same repository, for data and auth. Product documents (requirements, domain rules, UX flows) are at the repository root: `UX_FLOWS.md`, `DOMAIN_RULES.md`.
+Next.js 16 (App Router, Cache Components) · React 19 · TypeScript · Tailwind CSS v4 · shadcn/ui · TanStack Query · nuqs. Talks to [`backend/`](../backend) (NestJS), in the same repository, for data and auth. Product documents (requirements, domain rules, UX flows) are in [`docs/`](../docs): `UX_FLOWS.md`, `DOMAIN_RULES.md`.
 
 ## Quick start
 
