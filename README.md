@@ -1,22 +1,46 @@
 # Hadir.in
 
-Hadir.in, a Work From Home attendance management system. One repository holds both apps and the product documentation:
+Hadir.in is a web-based attendance system for people who work from home. It replaces attendance tracked through chat, spreadsheets and ad-hoc forms with one consistent record, based on server time, that managers and HR can monitor, correct through a formal process, and report on.
 
-- [`backend/`](backend/) — NestJS API
-- [`frontend/`](frontend/) — Next.js web app
-- [`docs/`](docs/) — the product and design documents below
+## Who it's for
 
-Each app keeps its own `package.json`, lockfile and checks. CI runs per app ([`.github/workflows/`](.github/workflows/)); the Git hooks in [`.husky/`](.husky/) lint staged files in whichever app they belong to. The apps' earlier history (from `backend-boilerplate` and `frontend-boilerplate`) is merged in, so `git log -- backend` shows it.
+| Role         | What they do in Hadir.in                                                                                          |
+| ------------ | ----------------------------------------------------------------------------------------------------------------- |
+| **Employee** | Check in and out, see today's status and their history, and request a correction when something is wrong          |
+| **Manager**  | See who on their team has checked in or out, review team reports, and decide their direct reports' corrections    |
+| **Admin/HR** | Manage employees, divisions, schedules and holidays, monitor the organization, decide corrections, export reports |
 
-## Running Hadir.in locally
+## What it does
 
-1. In `backend/`: follow its README (Docker Compose project `hadirin`, `.env`, `pnpm db:migrate`, `pnpm db:seed`, `pnpm dev`). The API runs on http://localhost:8000, with Swagger at `/docs`.
-2. In `frontend/`: follow its README (`.env.local`, `pnpm dev`). Sign in with a demo account listed there.
+- **Daily attendance:** check-in and check-out use server time, so a device's clock can't affect the record. Each employee has at most one record per work date, and retries and double clicks don't create duplicates.
+- **Schedules and holidays:** the schedule is set for the whole organization and versioned. Each record keeps the schedule it was judged by, so later changes don't rewrite history. Check-ins on weekends and holidays are rejected.
+- **Absence:** a nightly job marks eligible employees without a record as absent.
+- **Corrections:** employees can request a change for up to seven days after the work date. Their direct manager or Admin/HR decides, the first decision is final, and nobody can decide their own request.
+- **Dashboards and reports:** team and organization views, attendance trends and CSV export.
+- **Notifications:** emails about corrections, check-in and check-out reminders, a notification centre in the app, and per-user email preferences.
+- **Audit log:** changes to attendance through corrections, and administrative changes, can be traced.
 
-Each README covers environment variables, demo accounts, the role and permission matrix, tests and known limitations. The attendance rules are [`DOMAIN_RULES.md`](docs/DOMAIN_RULES.md); the implementation status and review evidence per phase are in [`PLANS.md`](docs/PLANS.md).
+The default policy is Monday to Friday, 09:00–17:00 in `Asia/Jakarta`, with 15 minutes of late tolerance.
 
-## Commit rules
+Hadir.in deliberately doesn't calculate payroll or track activity, screens or productivity. It also has no location checks, selfies or biometrics today; those are planned only behind a privacy and legal review.
 
-- Write commit messages in Conventional Commits style, e.g. `docs(plans): mark phase 1 complete`.
-- Never credit Claude, Anthropic, or another AI tool as a co-author: no `Co-Authored-By: Claude …` trailer and no "Generated with Claude Code" line. The `commit-msg` hook enforces this with the commitlint rule `no-ai-co-author`.
-- Push only with explicit approval.
+## Status
+
+The core product and Phase 6A–6C notifications are built. The pilot walkthrough was signed off on 1 November 2026 with the developer acting as the HR reviewer, so it hasn't been tested with real HR users or employees, and legal review of retention is still needed before production.
+
+| Up next                                 | Where it stands                                    |
+| --------------------------------------- | -------------------------------------------------- |
+| Slack or Teams notifications (Phase 6D) | Waiting on a decision                              |
+| Location and selfie checks (Phase 7)    | Planning only, gated on a privacy and legal review |
+
+Current limits include one organization-wide schedule with no shifts or leave, and managers seeing direct reports only, one level deep. The full roadmap and evidence for each phase are in [`PLANS.md`](docs/PLANS.md).
+
+## How it's built
+
+| Part                     | Technology                                                                                |
+| ------------------------ | ----------------------------------------------------------------------------------------- |
+| [`backend/`](backend/)   | NestJS 12, TypeScript, PostgreSQL 17 with Prisma 7, Redis with BullMQ for background jobs |
+| [`frontend/`](frontend/) | Next.js 16, React 19, TypeScript, Tailwind CSS 4, shadcn/ui, TanStack Query               |
+| [`docs/`](docs/)         | Product and design documents                                                              |
+
+The web app talks to the API, and the API enforces all attendance rules and permissions. Timestamps are stored in UTC, while work dates and statuses are calculated in the organization's time zone. Each app's README covers its setup and structure.
