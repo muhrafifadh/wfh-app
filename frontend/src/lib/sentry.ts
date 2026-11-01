@@ -12,5 +12,5 @@ export const sentryOptions = {
   // Performance traces for 1 in 10 requests; errors are always sent
   tracesSampleRate: 0.1,
   // No IP addresses, cookies or request bodies. Add user ids explicitly if you need them.
-  sendDefaultPii: false,
+  dataCollection: { userInfo: false, cookies: false, httpBodies: [] },
 } satisfies BrowserOptions;
