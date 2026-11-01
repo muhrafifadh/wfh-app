@@ -180,13 +180,17 @@ const historyDates = (): string[] => {
   return dates;
 };
 
+const ORGANIZATION_NAME = "Hadir.in";
+
 async function main(): Promise<void> {
+  // Databases seeded before the rename still hold "Acme": update that row instead of adding a second organization.
   const organization =
-    (await prisma.organization.findFirst({ where: { name: "Acme" } })) ??
-    (await prisma.organization.create({ data: { name: "Acme" } }));
+    (await prisma.organization.findFirst({
+      where: { name: { in: [ORGANIZATION_NAME, "Acme"] } },
+    })) ?? (await prisma.organization.create({ data: { name: ORGANIZATION_NAME } }));
   await prisma.organization.update({
     where: { id: organization.id },
-    data: { timezone: "Asia/Jakarta", supportContact: "hr@example.com" },
+    data: { name: ORGANIZATION_NAME, timezone: "Asia/Jakarta", supportContact: "hr@example.com" },
   });
 
   const roles = {} as Record<DefaultRoleName, string>;
@@ -445,7 +449,7 @@ async function main(): Promise<void> {
   }
 
   console.warn(
-    `Seeded organization "Acme": owner ${email}, ${DIVISIONS.length} divisions, ` +
+    `Seeded organization "${ORGANIZATION_NAME}": owner ${email}, ${DIVISIONS.length} divisions, ` +
       `${EMPLOYEES.length} employees, the baseline schedule, ${HOLIDAYS.length} holidays and ` +
       `${records} attendance records for ${dates[0]}…${dates.at(-1)}, ` +
       `${corrections} new corrections ` +

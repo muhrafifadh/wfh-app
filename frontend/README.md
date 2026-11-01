@@ -18,7 +18,7 @@ Open http://localhost:3000 (`pnpm dev --port 3001` if 3000 is taken; then set `N
 
 ## Demo accounts
 
-From the backend seed (organization Acme, times in WIB). Demo accounts use the backend's `SEED_DEMO_PASSWORD` (or `SEED_ADMIN_PASSWORD` when unset):
+From the backend seed (organization Hadir.in, times in WIB). Demo accounts use the backend's `SEED_DEMO_PASSWORD` (or `SEED_ADMIN_PASSWORD` when unset):
 
 | Sign in as                       | To see                                                                  |
 | -------------------------------- | ----------------------------------------------------------------------- |

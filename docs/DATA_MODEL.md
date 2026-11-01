@@ -572,7 +572,7 @@ Every migration must apply to an empty database and to a database with existing 
 
 The existing `prisma/seed.ts` is extended (idempotent upserts, refuses production):
 
-- Organization `Acme`, timezone `Asia/Jakarta` (existing seed organization; display name may be updated for the demo).
+- Organization `Hadir.in`, timezone `Asia/Jakarta` (a database seeded under the old name `Acme` is renamed in place).
 - Roles `admin_hr`, `manager`, `employee` with the permissions in §4.2; existing `owner` and `member` kept.
 - Division **Engineering** plus one or two other divisions for filter demos.
 - Pilot: 10 fictional Engineering employees (`EMP-001`…`EMP-010`) with realistic names, one of them the Engineering Manager, all reporting to that manager.

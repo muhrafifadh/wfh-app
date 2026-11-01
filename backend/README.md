@@ -24,7 +24,7 @@ Every variable is listed, with a comment, in [`.env.example`](.env.example); the
 
 ## Demo data
 
-`pnpm db:seed` is idempotent and creates organization **Acme** (time zone `Asia/Jakarta`, support contact `hr@example.com`):
+`pnpm db:seed` is idempotent and creates organization **Hadir.in** (time zone `Asia/Jakarta`, support contact `hr@example.com`):
 
 | Account                                                 | Role     | Employee                                        |
 | ------------------------------------------------------- | -------- | ----------------------------------------------- |
