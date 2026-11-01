@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { Wordmark } from "@/components/shared/wordmark";
 import { routes } from "@/config/routes";
-import { siteConfig } from "@/config/site";
+import { AuthBrandPanel } from "@/features/auth/components/auth-brand-panel";
 
 /** shadcn "login-02" block: form on the left, brand panel on the right (lg+). */
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
@@ -24,17 +24,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <div className="w-full max-w-xs">{children}</div>
         </main>
       </div>
-      {/* Decorative: the block's photo slot, drawn with theme tokens instead of an image */}
-      <div
-        aria-hidden
-        className="relative hidden overflow-hidden bg-accent text-accent-foreground lg:block"
-      >
-        <div className="absolute inset-0 bg-[radial-gradient(var(--primary)_1px,transparent_1px)] [background-size:24px_24px] opacity-20" />
-        <div className="absolute inset-x-10 bottom-10 space-y-2">
-          <Wordmark className="text-3xl" />
-          <p className="max-w-sm">{siteConfig.description}</p>
-        </div>
-      </div>
+      <AuthBrandPanel />
     </div>
   );
 }
