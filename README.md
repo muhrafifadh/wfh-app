@@ -26,17 +26,6 @@ The default policy is Monday to Friday, 09:00–17:00 in `Asia/Jakarta`, with 15
 
 Hadir.in deliberately doesn't calculate payroll or track activity, screens or productivity. It also has no location checks, selfies or biometrics today; those are planned only behind a privacy and legal review.
 
-## Status
-
-The core product and Phase 6A–6C notifications are built. The pilot walkthrough was signed off on 1 November 2026 with the developer acting as the HR reviewer, so it hasn't been tested with real HR users or employees, and legal review of retention is still needed before production.
-
-| Up next                                 | Where it stands                                    |
-| --------------------------------------- | -------------------------------------------------- |
-| Slack or Teams notifications (Phase 6D) | Waiting on a decision                              |
-| Location and selfie checks (Phase 7)    | Planning only, gated on a privacy and legal review |
-
-Current limits include one organization-wide schedule with no shifts or leave, and managers seeing direct reports only, one level deep. The full roadmap and evidence for each phase are in [`PLANS.md`](docs/PLANS.md).
-
 ## How it's built
 
 | Part                     | Technology                                                                                |
