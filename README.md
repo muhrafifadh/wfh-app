@@ -2,6 +2,8 @@
 
 Hadir.in is a web-based attendance system for people who work from home. It replaces attendance tracked through chat, spreadsheets and ad-hoc forms with one consistent record, based on server time, that managers and HR can monitor, correct through a formal process, and report on.
 
+**Live site:** [hadir-in.armerta.biz.id](https://hadir-in.armerta.biz.id)
+
 ## Who it's for
 
 | Role         | What they do in Hadir.in                                                                                          |

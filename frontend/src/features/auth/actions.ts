@@ -5,9 +5,11 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { routes } from "@/config/routes";
+import { DEMO_PERSONAS } from "@/features/auth/constants";
 import {
   acceptInvitationSchema,
   forgotPasswordSchema,
+  type LoginInput,
   loginSchema,
   registerSchema,
   resetPasswordSchema,
@@ -20,6 +22,7 @@ import { ApiError } from "@/lib/api/errors";
 import { clearTokenCookies, setTokenCookies } from "@/lib/auth/cookies";
 import { safeRedirectPath } from "@/lib/auth/redirect";
 import { requireUser } from "@/lib/auth/session";
+import { env } from "@/lib/env";
 import { reportError } from "@/lib/logger";
 
 const FIX_FIELDS = "Please fix the highlighted fields.";
@@ -45,11 +48,26 @@ export async function loginAction(input: unknown, next: unknown): Promise<Action
   const parsed = loginSchema.safeParse(input);
   if (!parsed.success) return fail(FIX_FIELDS, z.flattenError(parsed.error).fieldErrors);
 
+  return signIn(parsed.data, next);
+}
+
+/** Signs in as a seeded account with the server-side DEMO_LOGIN_PASSWORD. Off when that isn't set. */
+export async function personaLoginAction(
+  email: unknown,
+  next: unknown,
+): Promise<ActionResult<never>> {
+  const persona = DEMO_PERSONAS.find((p) => p.email === email);
+  if (!env.DEMO_LOGIN_PASSWORD || !persona) return fail("This test persona isn't available.");
+
+  return signIn({ email: persona.email, password: env.DEMO_LOGIN_PASSWORD }, next);
+}
+
+async function signIn(credentials: LoginInput, next: unknown): Promise<ActionResult<never>> {
   let tokens;
   try {
     tokens = await apiFetch("/auth/login", {
       method: "POST",
-      body: parsed.data,
+      body: credentials,
       schema: tokenPairSchema,
       auth: false,
     });

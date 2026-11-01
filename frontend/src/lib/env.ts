@@ -12,6 +12,8 @@ export const env = createEnv({
       .enum(["true", "false"])
       .default("false")
       .transform((v) => v === "true"),
+    // Shows one-click test personas on the login page. Never set this where real people sign in.
+    DEMO_LOGIN_PASSWORD: z.string().min(1).optional(),
     // Sentry source map upload at build time (docs/13-error-handling.md#error-tracking). All optional.
     SENTRY_AUTH_TOKEN: z.string().min(1).optional(),
     SENTRY_ORG: z.string().min(1).optional(),
@@ -27,6 +29,7 @@ export const env = createEnv({
     SESSION_SECRET: process.env.SESSION_SECRET,
     NODE_ENV: process.env.NODE_ENV,
     REGISTRATION_ENABLED: process.env.REGISTRATION_ENABLED,
+    DEMO_LOGIN_PASSWORD: process.env.DEMO_LOGIN_PASSWORD,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     SENTRY_AUTH_TOKEN: process.env.SENTRY_AUTH_TOKEN,
     SENTRY_ORG: process.env.SENTRY_ORG,
