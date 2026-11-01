@@ -61,6 +61,14 @@ export type ScheduleVersion = SchedulePolicy & {
 /** Today in the organization: the work date and the version in force on it. */
 export type Today = { workDate: LocalDate; timezone: string; schedule: ScheduleVersion | null };
 
+/** DOMAIN_RULES.md §18.4 — each reminder: on/off and ms since local midnight. */
+export type ReminderSettings = {
+  checkIn: { enabled: boolean; at: number };
+  checkOut: { enabled: boolean; at: number };
+};
+
+const hhmm = (msOfDay: number) => formatTimeOfDay(msOfDay).slice(0, 5);
+
 const toVersion = (row: ScheduleRow): ScheduleVersion => ({
   id: row.id,
   name: row.name,
@@ -145,6 +153,10 @@ export class WorkSettingsService {
       timezone: today.timezone,
       supportContact: settings.supportContact,
       retentionYears: settings.retentionYears,
+      checkInReminderEnabled: settings.checkInReminderEnabled,
+      checkInReminderTime: hhmm(fromTimeColumn(settings.checkInReminderAt)),
+      checkOutReminderEnabled: settings.checkOutReminderEnabled,
+      checkOutReminderTime: hhmm(fromTimeColumn(settings.checkOutReminderAt)),
       workDate: today.workDate,
       earliestEffectiveFrom: addDays(today.workDate, 1),
       currentSchedule: today.schedule && toSchedule(today.schedule, today.workDate),
@@ -156,7 +168,16 @@ export class WorkSettingsService {
     input: UpdateWorkSettingsInput,
   ): Promise<WorkSettingsResponseBody> {
     const before = await this.repo.findSettings(user.organizationId);
-    await this.repo.updateSettings(user.organizationId, input);
+    const { checkInReminderTime, checkOutReminderTime, ...rest } = input;
+    await this.repo.updateSettings(user.organizationId, {
+      ...rest,
+      ...(checkInReminderTime !== undefined && {
+        checkInReminderAt: toTimeColumn(checkInReminderTime),
+      }),
+      ...(checkOutReminderTime !== undefined && {
+        checkOutReminderAt: toTimeColumn(checkOutReminderTime),
+      }),
+    });
     await this.events.emitAsync(
       "organization.settings_updated",
       new OrganizationSettingsEvent(user.organizationId, user.id, {
@@ -273,6 +294,21 @@ export class WorkSettingsService {
 
   organizationIds(): Promise<string[]> {
     return this.repo.organizationIds();
+  }
+
+  /** The organization's reminder settings (notifications, §18.4). */
+  async reminderSettingsOf(organizationId: string): Promise<ReminderSettings> {
+    const settings = await this.repo.findSettings(organizationId);
+    return {
+      checkIn: {
+        enabled: settings.checkInReminderEnabled,
+        at: fromTimeColumn(settings.checkInReminderAt),
+      },
+      checkOut: {
+        enabled: settings.checkOutReminderEnabled,
+        at: fromTimeColumn(settings.checkOutReminderAt),
+      },
+    };
   }
 
   async supportContactOf(organizationId: string): Promise<string | null> {

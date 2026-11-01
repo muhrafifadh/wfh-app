@@ -7,6 +7,7 @@ import { EditEmployeeForm, NewEmployeeForm } from "@/features/employees/componen
 import type { Employee } from "@/features/employees/schemas";
 import { HolidayFormDialog } from "@/features/holidays/components/holiday-form-dialog";
 import { OrganizationSettingsForm } from "@/features/work-settings/components/organization-settings-form";
+import { ReminderSettingsForm } from "@/features/work-settings/components/reminder-settings-form";
 import { ScheduleForm } from "@/features/work-settings/components/schedule-form";
 import type { WorkSettings } from "@/features/work-settings/schemas";
 
@@ -93,6 +94,10 @@ const settings: WorkSettings = {
   timezone: "Asia/Jakarta",
   supportContact: "hr@example.test",
   retentionYears: 5,
+  checkInReminderEnabled: true,
+  checkInReminderTime: "09:00",
+  checkOutReminderEnabled: false,
+  checkOutReminderTime: "18:00",
   workDate: "2026-11-02",
   earliestEffectiveFrom: "2026-11-03",
   currentSchedule: schedule,
@@ -148,6 +153,7 @@ describe("admin forms have no automatically detectable accessibility problems", 
     const { container } = render(
       <>
         <OrganizationSettingsForm settings={settings} />
+        <ReminderSettingsForm settings={settings} />
         <ScheduleForm settings={settings} upcoming={null} />
       </>,
     );

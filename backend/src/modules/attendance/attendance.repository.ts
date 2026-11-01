@@ -62,6 +62,19 @@ export class AttendanceRepository {
     });
   }
 
+  /** Check-in and check-out of these employees' records on one work date (reminders). */
+  findTimesOn(
+    organizationId: string,
+    workDate: LocalDate,
+    employeeIds: string[],
+    tx: Tx = this.prisma,
+  ) {
+    return tx.attendance.findMany({
+      where: { organizationId, workDate: toDateColumn(workDate), employeeId: { in: employeeIds } },
+      select: { employeeId: true, checkInAt: true, checkOutAt: true },
+    });
+  }
+
   /** A record of this employee, or null if missing or someone else's. */
   findOwn(
     organizationId: string,

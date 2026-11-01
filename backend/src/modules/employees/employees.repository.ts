@@ -192,6 +192,25 @@ export class EmployeesRepository {
   }
 
   /** Active, non-deleted direct reports of `managerId` (a manager's team, §12). */
+  /** Accounts linked to these employees (notifications). */
+  findAccounts(organizationId: string, ids: string[], tx: Tx = this.prisma) {
+    return tx.employee.findMany({
+      where: { organizationId, id: { in: ids }, userId: { not: null }, ...notDeleted },
+      select: { id: true, userId: true },
+    });
+  }
+
+  /** The employee's name and their manager's state and account (notifications). */
+  findReportingLine(organizationId: string, id: string, tx: Tx = this.prisma) {
+    return tx.employee.findFirst({
+      where: { id, organizationId, ...notDeleted },
+      select: {
+        fullName: true,
+        manager: { select: { userId: true, status: true, deletedAt: true } },
+      },
+    });
+  }
+
   async activeReportIds(
     organizationId: string,
     managerId: string,

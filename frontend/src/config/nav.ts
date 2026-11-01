@@ -1,4 +1,5 @@
 import {
+  BellIcon,
   BuildingIcon,
   CalendarOffIcon,
   ChartColumnIcon,
@@ -125,6 +126,7 @@ export const navSections: NavSection[] = [
 /** Everyone's own pages, reached from the user menu rather than the sidebar. */
 export const accountLinks: NavItem[] = [
   { title: "My profile", href: routes.profile(), icon: UserRoundIcon },
+  { title: "Notifications", href: routes.notifications(), icon: BellIcon },
 ];
 
 const allowed = (item: NavItem, access: NavAccess) =>

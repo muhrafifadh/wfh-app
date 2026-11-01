@@ -155,6 +155,28 @@ export class EmployeesService {
     };
   }
 
+  /** Employee id → linked user id, for those of the given employees that have an account. */
+  async accountsOf(organizationId: string, ids: string[]): Promise<Map<string, string>> {
+    if (ids.length === 0) return new Map();
+    const rows = await this.repo.findAccounts(organizationId, [...new Set(ids)]);
+    return new Map(rows.flatMap((row) => (row.userId ? [[row.id, row.userId] as const] : [])));
+  }
+
+  /**
+   * The employee's name and the account of their direct manager, when that manager's
+   * profile is active and linked to an account. Null if the employee isn't found.
+   */
+  async reportingLineOf(
+    organizationId: string,
+    employeeId: string,
+  ): Promise<{ fullName: string; managerUserId: string | null } | null> {
+    const row = await this.repo.findReportingLine(organizationId, employeeId);
+    if (!row) return null;
+    const { manager } = row;
+    const activeManager = manager && manager.status === "active" && manager.deletedAt === null;
+    return { fullName: row.fullName, managerUserId: activeManager ? manager.userId : null };
+  }
+
   /** Id → number, name, status and manager, for the given employees of the organization. */
   async summariesByIds(
     organizationId: string,

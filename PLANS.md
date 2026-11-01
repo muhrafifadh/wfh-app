@@ -2,7 +2,7 @@
 
 | Attribute     | Value                                                   |
 | ------------- | ------------------------------------------------------- |
-| Status        | Baseline plan; implementation not started               |
+| Status        | Phase 5 signed off; Phases 6–7 (future scope) in planning |
 | Version       | 0.2                                                     |
 | Date          | 30 October 2026                                         |
 | Product owner | Developer                                               |
@@ -123,7 +123,9 @@ Both app repositories started on `main` and clean. Phase 0.5 work is on local br
 |    4B | Frontend employees, divisions, settings, holidays               | In review   | 4A, 2A         |
 |    4C | Frontend attendance, history, employee dashboard                | In review   | 4A, 2B         |
 |    4D | Frontend corrections, team, manager/HR dashboards, reports      | In review   | 4C, 3, 3B      |
-|     5 | Verification, demo seed, documentation, pilot walkthrough       | In review   | All            |
+|     5 | Verification, demo seed, documentation, pilot walkthrough       | Done        | All            |
+|     6 | Notifications: corrections (6A), reminders (6B), in-app (6C), Slack/Teams (6D) | 6A–6C done; 6D awaiting decision N7 | 5 |
+|     7 | Attendance verification: privacy gate (7.0), location (7A), selfie (7B) | Planning; gated | 5, 7.0, 6 recommended |
 
 Phase numbers match PRD §15. Frontend sub-phases may start as soon as the backend contract they depend on is in `openapi.json`; they do not need to wait for all backend phases.
 
@@ -650,7 +652,7 @@ pnpm build
 
 ### Phase 5 — Verification, documentation, and pilot walkthrough
 
-**Status:** In review, awaiting the HR reviewer's sign-off — branch `feat/phase-5-verification` in both app repositories (stacked on the Phase 4D branches); evidence below.
+**Status:** Done — signed off on 1 November 2026 by the Developer as simulated HR reviewer. Built on branch `feat/phase-5-verification` in both app repositories (stacked on the Phase 4D branches); evidence below.
 
 **Objective:** prove the integrated application works locally and is documented.
 
@@ -713,6 +715,88 @@ pnpm build
 - **Clean setup:** both repositories cloned fresh and set up by following only their READMEs, using a separate Compose project and ports so the dev stack stayed untouched. This found one defect, `pnpm install` before `.env` (fixed in the README). After the fix: install, `docker compose up -d`, `pnpm db:migrate`, `pnpm db:seed`, the API on its own port, the web app, and signing in as the demo manager all worked; the new security headers were present. The clone and its volumes were removed afterwards.
 - **Documentation (PRODUCT_REQUIREMENTS.md §17):** overview and architecture, local setup and environment, migrations and seed, OpenAPI, the permission matrix, attendance rules (summary plus DOMAIN_RULES.md), testing, demo accounts and known limitations are in the two app READMEs; this repository's README says how to run both.
 - **Still open:** the HR reviewer's sign-off on this walkthrough, and a screen-reader pass (automated axe checks and keyboard use are done).
+- **Sign-off (1 November 2026):** the Developer, as simulated HR reviewer, signed off the walkthrough. The screen-reader pass is still open.
+
+### Phase 6 — Notifications
+
+**Status:** 6A, 6B and 6C done (approved 1–2 November 2026). 6D (Slack or Teams) not started: it waits on decision N7. Decisions N1–N7 approved on 1 November 2026 (PRD decision #25); rules in `DOMAIN_RULES.md` §18. Detailed plan: [`NOTIFICATIONS_PLAN.md`](NOTIFICATIONS_PLAN.md).
+
+**Objective:** tell employees and reviewers about attendance actions they would otherwise miss: corrections submitted and decided, and check-in, check-out and correction-window reminders.
+
+**Sub-phases:** 6A correction emails → 6B reminders → 6C in-app notification centre and preferences → 6D Slack or Teams (separate decision).
+
+**Approval gate:** the product owner decides N1–N7 and approves 6A before any code. (Done 1 November 2026.)
+
+**Phase 6A evidence (2026-11-01):**
+
+| Repo    | Commit    | Change                                                                                                   |
+| ------- | --------- | -------------------------------------------------------------------------------------------------------- |
+| backend | `b9593a4` | `notifications` module: `Notification` model and migration, correction event listener, recipient rules, `notification-emails` queue and processor, email text; lookups added to users, employees and corrections services. |
+| docs    | this commit | PRD decision #25, `DOMAIN_RULES.md` §18, `DATA_MODEL.md` §8.3, plan status.                            |
+
+- **Scope completed:** correction submitted → the direct manager, or every `correction:decide_all` account when the manager is missing, inactive, deactivated or can't decide; correction approved or rejected → the requester, with the decider and note. No API contract change (`openapi.json` unchanged); no frontend change.
+- **Migration:** `20261101150434_add_notifications` (new enums and table only), applied to the dev database on top of the existing state and by the e2e suite to `postgres-test`; the drift check passes.
+- **Tests added:** 11 unit tests (`notification-rules.spec.ts`: recipients, Scenario I, dedupe key, date format, email text) and 10 e2e tests (`notifications.e2e-spec.ts`): manager emailed once with link and without the reason; fallback to every decider; fallback when the manager can't decide or is deactivated; never the requester; a repeated event creates no second notification; a request decided before its email is skipped; approved and rejected emails with decider and note; a deactivated requester gets nothing; a mail failure leaves the correction intact, keeps the notification pending for retry, and after the last attempt marks it `failed` with `MAIL_DELIVERY_FAILED`, after which nothing more is sent.
+- **Commands run:** backend `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (129 passed, 15 files), `pnpm test:e2e` (205 passed, 16 files), `prisma migrate diff … --exit-code` (no drift), `pnpm build`, OpenAPI export (no diff).
+- **Manual check:** the dev API restarted with the module and `/health/ready` reports the database and Redis up; no errors in the log.
+- **Defect found while testing:** with wildcard events on, `@OnEvent([a, b])` listens to one dotted name, not two events; the decision listener uses one decorator per event.
+- **Security/privacy:** recipients only from active accounts in the same organization; job data holds the notification id only; emails carry the work date, names, decision note and a link, never the request reason or tokens; logs hold ids and types only.
+- **Known limitations:** at-least-once delivery (a crash between sending and recording could send one duplicate on retry); no retention cleanup yet (planned with 6B's jobs); no in-app view until 6C.
+- **Approved by:** the Developer (product owner), 1 November 2026.
+- **Recommended next phase:** 6B reminders.
+
+**Phase 6B evidence (2026-11-01):**
+
+| Repo     | Commit    | Change                                                                                                  |
+| -------- | --------- | ------------------------------------------------------------------------------------------------------- |
+| backend  | `b61e50d` | Reminder settings on the organization (`PATCH /v1/work-settings`), `notification-jobs` queue (5-minute reminder check, daily 90-day purge), reminder rules and emails, delivery re-check; attendance and employee lookups; test apps drop job schedulers. |
+| frontend | `6772a83` | Reminders card on Attendance settings; types regenerated; contract checks split per settings form.      |
+| docs     | this commit | `DOMAIN_RULES.md` §18.4–18.5, `DATA_MODEL.md` (settings columns, `workDate`/`expiresAt`), plan status. |
+
+- **Scope completed:** check-in reminder (default 09:00) to eligible employees without a record; check-out reminder (default 18:00) to those with an open record; working days only; within 2 hours of the reminder time and before check-in closes / the check-out deadline; one of each per employee per work date; re-checked before sending; Admin/HR set both on/off and times, audited; notifications older than 90 days deleted daily.
+- **API contract change:** `WorkSettingsResponse` gains `checkInReminderEnabled`, `checkInReminderTime`, `checkOutReminderEnabled`, `checkOutReminderTime`; `UpdateWorkSettingsDto` accepts them (times `HH:MM`). Additive; `openapi.json` and the frontend types regenerated together.
+- **Migration:** `20261101155057_add_reminders` (two enum values, two nullable notification columns, four organization columns with defaults). Applied to the dev and test databases and an empty throwaway database; drift check clean on dev and test. Found by the drift check: the schema had to spell the time defaults as Postgres stores them (`::time without time zone`).
+- **Tests added:** backend 12 unit (`reminder-rules.spec.ts`: due windows and their edges, opening-time rule, grace, deadline, who needs which reminder, key, zone names, email text) and 11 e2e (`reminders.e2e-spec.ts`: only employees without a record from 09:00, once; inactive, deactivated and unlinked left out; not more than 2 hours late; not on weekends or holidays; skipped after a check-in or after check-in closes; check-out reminder only for open records, skipped after check-out; settings change times, turn off, are audited, reject malformed times and other roles; 90-day purge). Frontend 3 action tests and the reminders form in the axe check.
+- **Commands run:** backend `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (141 passed), `pnpm test:e2e` (216 passed), migration drift (clean), `pnpm build`, OpenAPI export; frontend `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm api:types:check`, `pnpm test` (245 passed), `pnpm build`.
+- **Manual check:** on a throwaway database seeded with a generated password (dropped afterwards), signed in as the demo Admin/HR: the Reminders card showed the defaults and the schedule's windows; turning off the check-out reminder disabled its time; check-in moved to 09:30 and saved; both survived a reload; the audit log recorded the four fields; no console or server errors; no horizontal scroll at 375 px.
+- **Security/privacy:** settings need `policy:manage`; job data holds ids only; reminders go only to the employee's own active account and contain their own times; logs hold counts and ids.
+- **Known limitations:** employees can't turn reminders off yet (6C preferences); a reminder can arrive up to 5 minutes after its time; one schedule-wide setting, not per division.
+- **Approved by:** the Developer (product owner), 1 November 2026.
+- **Recommended next phase:** 6C in-app notification centre and preferences.
+
+**Phase 6C evidence (2026-11-01):**
+
+| Repo     | Commit    | Change                                                                                                  |
+| -------- | --------- | ------------------------------------------------------------------------------------------------------- |
+| backend  | `4153ef8` | In-app list, unread count, mark read / all read, email preferences (`/v1/notifications/*`); delivery writes a title and link, honours preferences, and keeps the in-app item when the email fails. |
+| frontend | `471cb64` | Header bell (unread count, latest 8, polled every minute), `/notifications` with an unread filter and pagination, email preferences on My profile. |
+| docs     | this commit | `DOMAIN_RULES.md` §18.6–18.7, `DATA_MODEL.md` §8.3–8.4, plan status.                                  |
+
+- **Scope completed:** every delivered notification shows in its recipient's list with a one-line title, time and link; opening one marks it read and goes to its page; mark all as read; unread filter; per-user email preferences for review requests, correction outcomes and the two reminders (all on by default), shown only where they apply; turning one off stops the email but not the in-app item (decision N4 now met).
+- **API contract change:** new `GET /v1/notifications/me`, `GET /v1/notifications/me/unread-count`, `POST /v1/notifications/me/read-all`, `POST /v1/notifications/{id}/read` (204), `GET`/`PUT /v1/notifications/preferences`, all `@Authenticated` and scoped to the caller. Additive; types regenerated with `contract.ts` checks.
+- **Migration:** `20261101164018_add_notification_centre` (three notification columns, a new list index replacing the old one, the preferences table; marks earlier delivered notifications as emailed). Applied to dev, test and an empty throwaway database; drift clean on dev and test.
+- **Tests added:** backend 8 e2e (`notification-centre.e2e-spec.ts`: own list with title and link; mark read idempotent, others' 404, bad id 400; unread filter and mark all read; skipped never listed; 401 signed out; default preferences; email off keeps the in-app item and doesn't touch others; all four required, nothing else) and the failure test updated (in-app kept, email failure recorded). Frontend 11 (`notifications.test.tsx`: unread in words, organization time, opening marks read and navigates, read ones aren't marked again, preferences shown by relevance, empty case, two axe checks; `actions.test.ts`: id validation, not-found copy, preference payload, incomplete set refused).
+- **Commands run:** backend `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (141 passed), `pnpm test:e2e` (224 passed, 18 files), drift (clean on dev and test), `pnpm build`, OpenAPI export; frontend `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm api:types:check`, `pnpm test` (256 passed, 33 files), `pnpm build`.
+- **Manual check:** throwaway database with a generated password (dropped afterwards). The demo employee submitted a correction through the API; signed in as the demo manager, the bell read "Notifications, 1 unread", the popover showed "Dewi Anggraini asked to correct Thu 29 Oct" in WIB, opening it went to the request and cleared the count; `/notifications` listed it, "Unread" showed "Nothing unread"; turning off check-in reminder emails on My profile saved and survived a reload; the popover fits at 375 px with no horizontal scroll.
+- **Defect found and fixed while testing:** `/notifications` fetched outside a Suspense boundary, so Next.js reported a blocking navigation; it now has `loading.tsx` and streams the list behind a keyed Suspense (no new report after a client-side navigation).
+- **Security/privacy:** every endpoint is the caller's own (others' notifications are 404, preferences are keyed by the signed-in user; strict DTO rejects extra fields like `userId`).
+- **Known limitations:** the bell polls (up to a minute's delay), no push; titles don't change if the data changes later (by design, §18.6); Slack/Teams not built (6D).
+- **Approved by:** the Developer (product owner), 2 November 2026.
+- **Recommended next phase:** 6D needs its own decision (decision N7); otherwise Phase 7.0, the privacy gate for location and selfie checks.
+
+---
+
+### Phase 7 — Attendance verification (location and selfie)
+
+**Status:** Planning — gated. Detailed plan, principles and decisions V1–V7: [`ATTENDANCE_VERIFICATION_PLAN.md`](ATTENDANCE_VERIFICATION_PLAN.md).
+
+**Objective:** optional, moment-only evidence at check-in and check-out (location, then a selfie), flagged for human review and never blocking attendance.
+
+**Sub-phases:** 7.0 privacy impact assessment and legal review (no code) → 7A location → 7B selfie. No face matching.
+
+**Approval gate:** PRD §13 requires a privacy impact assessment and legal review first. 7A does not start until 7.0 is approved and `DOMAIN_RULES.md` §15, `UX_FLOWS.md` §21 and PRD §4 are updated.
+
+---
 
 ## 7. Cross-cutting verification matrix
 

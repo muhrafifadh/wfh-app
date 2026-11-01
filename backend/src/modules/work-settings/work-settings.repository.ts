@@ -60,19 +60,35 @@ export class WorkSettingsRepository {
   findSettings(organizationId: string, tx: Tx = this.prisma) {
     return tx.organization.findUniqueOrThrow({
       where: { id: organizationId },
-      select: { name: true, timezone: true, supportContact: true, retentionYears: true },
+      select: {
+        name: true,
+        timezone: true,
+        supportContact: true,
+        retentionYears: true,
+        checkInReminderEnabled: true,
+        checkInReminderAt: true,
+        checkOutReminderEnabled: true,
+        checkOutReminderAt: true,
+      },
     });
   }
 
   updateSettings(
     organizationId: string,
-    data: { supportContact?: string | null; retentionYears?: number },
+    data: {
+      supportContact?: string | null;
+      retentionYears?: number;
+      checkInReminderEnabled?: boolean;
+      checkInReminderAt?: Date;
+      checkOutReminderEnabled?: boolean;
+      checkOutReminderAt?: Date;
+    },
     tx: Tx = this.prisma,
   ) {
     return tx.organization.update({
       where: { id: organizationId },
       data,
-      select: { timezone: true, supportContact: true, retentionYears: true },
+      select: { id: true },
     });
   }
 

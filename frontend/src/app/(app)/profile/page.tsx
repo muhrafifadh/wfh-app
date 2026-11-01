@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { roleLabel } from "@/config/roles";
+import { EmailPreferencesForm } from "@/features/notifications/components/email-preferences-form";
+import { getEmailPreferences } from "@/features/notifications/queries";
 import { EmployeeProfileCard } from "@/features/profile/components/employee-profile-card";
 import { SupportContact } from "@/features/profile/components/support-contact";
 import { getMeContext, getMyEmployee } from "@/features/profile/queries";
-import { requireUser } from "@/lib/auth/session";
+import { can, canAny, requireUser } from "@/lib/auth/session";
 import { timeZoneLabel } from "@/lib/time-zone";
 
 export const metadata: Metadata = { title: "My profile" };
@@ -13,7 +15,11 @@ export const metadata: Metadata = { title: "My profile" };
 // UX_FLOWS.md §4: any signed-in user may see their own profile.
 export default async function ProfilePage() {
   const user = await requireUser();
-  const [context, employee] = await Promise.all([getMeContext(), getMyEmployee()]);
+  const [context, employee, preferences] = await Promise.all([
+    getMeContext(),
+    getMyEmployee(),
+    getEmailPreferences(),
+  ]);
   const { organization } = context;
 
   return (
@@ -51,6 +57,24 @@ export default async function ProfilePage() {
           </CardContent>
         </Card>
         <EmployeeProfileCard employee={employee} supportContact={organization.supportContact} />
+        <Card>
+          <CardHeader>
+            <CardTitle>Email notifications</CardTitle>
+            <CardDescription>
+              What also comes by email. Everything still shows under Notifications in the app.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <EmailPreferencesForm
+              preferences={preferences}
+              shown={{
+                reviewRequests: canAny(user, ["correction:decide_team", "correction:decide_all"]),
+                correctionUpdates: can(user, "correction:submit"),
+                reminders: Boolean(context.employee) && can(user, "attendance:self"),
+              }}
+            />
+          </CardContent>
+        </Card>
       </div>
     </>
   );

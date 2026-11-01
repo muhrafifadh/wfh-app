@@ -80,6 +80,29 @@ export class UsersRepository {
     });
   }
 
+  /**
+   * Accounts that can receive email: accepted their invitation, not deactivated or
+   * deleted. Narrowed to some ids, or to a role permission (notifications).
+   */
+  findContacts(
+    organizationId: string,
+    filter: { ids: string[] } | { permission: string },
+    tx: Tx = this.prisma,
+  ) {
+    return tx.user.findMany({
+      where: {
+        organizationId,
+        ...statusFilter.active,
+        ...notDeleted,
+        ...("ids" in filter
+          ? { id: { in: filter.ids } }
+          : { role: { permissions: { has: filter.permission } } }),
+      },
+      select: { id: true, email: true, name: true, role: { select: { permissions: true } } },
+      orderBy: { id: "asc" },
+    });
+  }
+
   /** Names for display, deactivated and deleted users included. */
   findNames(organizationId: string, ids: string[], tx: Tx = this.prisma) {
     return tx.user.findMany({

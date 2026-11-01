@@ -10,6 +10,7 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/s
 import { Skeleton } from "@/components/ui/skeleton";
 import { CurrentUserProvider } from "@/features/auth/components/current-user-provider";
 import { VerifyEmailBanner } from "@/features/auth/components/verify-email-banner";
+import { NotificationBell } from "@/features/notifications/components/notification-bell";
 import { MeContextProvider } from "@/features/profile/components/me-context-provider";
 import { getMeContext } from "@/features/profile/queries";
 import { requireUser } from "@/lib/auth/session";
@@ -59,6 +60,7 @@ async function SignedInShell({ children }: { children: React.ReactNode }) {
                   Times in {timeZoneLabel(timezone)} <span className="sr-only">({timezone})</span>
                 </p>
                 <CommandMenu />
+                <NotificationBell />
               </div>
             </header>
             <div className="flex flex-1 flex-col gap-4 p-4 pt-0">

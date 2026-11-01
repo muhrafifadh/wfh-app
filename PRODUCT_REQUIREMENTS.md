@@ -452,6 +452,8 @@ Not approved for the current implementation. Each item requires a separate decis
 - Notifications (missing check-in/out, pending approvals) via email, Slack, or Teams.
 - SSO (Google/Microsoft), HRIS/payroll integration, public API and webhooks, scheduled reports.
 - Geolocation, selfies, device registration — only after a privacy impact assessment and legal review.
+
+Planning started on 1 November 2026, for discussion only: notifications in [`NOTIFICATIONS_PLAN.md`](NOTIFICATIONS_PLAN.md) and geolocation and selfies in [`ATTENDANCE_VERIFICATION_PLAN.md`](ATTENDANCE_VERIFICATION_PLAN.md). Neither is approved; the decisions each plan lists come back here as decision rows.
 - Anomaly detection, advanced analytics, PWA or native mobile apps.
 
 ## 14. Development workflow
@@ -463,6 +465,7 @@ Not approved for the current implementation. Each item requires a separate decis
 | 22  | Git authorization           | AI may edit, test, and create local commits on a branch (never directly on `main`). No push, merge, pull request, or deployment without explicit approval. Commits and PRs never credit Claude/Anthropic or another AI tool as co-author; commitlint rule `no-ai-co-author` enforces this in both app repos. |
 | 23  | Implementation start        | Phase 01 (backend divisions and employees), conditional on the Phase 0 assessment confirming what already exists.                                                    |
 | 24  | Environments                | Local required; staging if available; production not required.                                                                                                      |
+| 25  | Notifications (Phase 6)     | Approved 1 November 2026, with the recommendations in `NOTIFICATIONS_PLAN.md` §8: pilot types are correction emails and the check-in/check-out reminders (N1); reminders at 09:00 and 18:00 (N2); a new correction goes to the direct manager, Admin/HR only when there is none (N3); outcome emails can't be turned off until the in-app centre exists (N4); no absence or lateness alerts to managers (N5); notifications kept 90 days (N6); Slack or Teams decided after 6C (N7). Rules: `DOMAIN_RULES.md` §18. |
 
 ### 14.1 Named owners
 

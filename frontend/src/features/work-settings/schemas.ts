@@ -34,6 +34,11 @@ export const workSettingsSchema = z.object({
   timezone: z.string(),
   supportContact: z.string().nullable(),
   retentionYears: z.int(),
+  /** DOMAIN_RULES.md §18.4 — "HH:MM" in the schedule's zone. */
+  checkInReminderEnabled: z.boolean(),
+  checkInReminderTime: z.string(),
+  checkOutReminderEnabled: z.boolean(),
+  checkOutReminderTime: z.string(),
   /** Today in the organization. */
   workDate: z.iso.date(),
   /** The earliest date a new schedule may start (DOMAIN_RULES.md §6.2). */
@@ -79,6 +84,15 @@ export type OrganizationSettingsInput = z.input<typeof organizationSettingsSchem
 export type OrganizationSettings = z.output<typeof organizationSettingsSchema>;
 
 const timeOfDay = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Enter a time");
+
+/** DOMAIN_RULES.md §18.4 — the two reminder emails: on or off, and when. */
+export const reminderSettingsSchema = z.object({
+  checkInReminderEnabled: z.boolean(),
+  checkInReminderTime: timeOfDay,
+  checkOutReminderEnabled: z.boolean(),
+  checkOutReminderTime: timeOfDay,
+});
+export type ReminderSettings = z.infer<typeof reminderSettingsSchema>;
 /** The form's "23:59", or the "23:59:59.999" it becomes (re-validated by the Server Action). */
 const deadline = z
   .string()

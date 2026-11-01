@@ -13,7 +13,11 @@ import type { Today } from "@/features/attendance/schemas";
 import { countMyPendingCorrections } from "@/features/corrections/queries";
 import { SupportContact } from "@/features/profile/components/support-contact";
 
-/** UX_FLOWS.md §6.1 — today's card, this month, my corrections and recent days. */
+/**
+ * UX_FLOWS.md §6.1 — today's card, this month, my corrections and recent days. Phones
+ * stack them in that order; wide screens put this month and my corrections in a side
+ * column next to today's card and recent days.
+ */
 export function EmployeeSection({
   today,
   workDate,
@@ -27,12 +31,14 @@ export function EmployeeSection({
 }) {
   const month = monthOf(workDate);
   return (
-    <section aria-label="My attendance" className="flex flex-col gap-4">
-      <TodayCard
-        initialToday={today}
-        supportContact={<SupportContact contact={supportContact} />}
-      />
-      <div className="grid max-w-2xl gap-4 md:grid-cols-2">
+    <section aria-label="My attendance" className="grid items-start gap-4 lg:grid-cols-3">
+      <div className="lg:col-span-2">
+        <TodayCard
+          initialToday={today}
+          supportContact={<SupportContact contact={supportContact} />}
+        />
+      </div>
+      <div className="grid gap-4 md:grid-cols-2 lg:row-span-2 lg:grid-cols-1">
         <Card>
           <CardHeader>
             <CardTitle>
@@ -66,7 +72,7 @@ export function EmployeeSection({
           </Card>
         )}
       </div>
-      <div className="flex max-w-2xl flex-col gap-3">
+      <div className="flex flex-col gap-3 lg:col-span-2">
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-lg font-semibold">Recent attendance</h2>
           <Link

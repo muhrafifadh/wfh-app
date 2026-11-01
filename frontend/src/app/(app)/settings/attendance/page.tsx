@@ -4,6 +4,7 @@ import { NoAccess } from "@/app/(app)/_components/no-access";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { OrganizationSettingsForm } from "@/features/work-settings/components/organization-settings-form";
+import { ReminderSettingsForm } from "@/features/work-settings/components/reminder-settings-form";
 import { ScheduleForm } from "@/features/work-settings/components/schedule-form";
 import { ScheduleHistory } from "@/features/work-settings/components/schedule-history";
 import { ScheduleSummary } from "@/features/work-settings/components/schedule-summary";
@@ -40,15 +41,28 @@ export default async function AttendanceSettingsPage() {
             {upcoming && <ScheduleSummary schedule={upcoming} />}
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Organization</CardTitle>
-            <CardDescription>Apply immediately.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <OrganizationSettingsForm settings={settings} />
-          </CardContent>
-        </Card>
+        <div className="grid gap-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Organization</CardTitle>
+              <CardDescription>Apply immediately.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <OrganizationSettingsForm settings={settings} />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Reminders</CardTitle>
+              <CardDescription>
+                Emails to employees, at most one of each a day. Changes apply within 5 minutes.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ReminderSettingsForm settings={settings} />
+            </CardContent>
+          </Card>
+        </div>
       </div>
       <Card>
         <CardHeader>

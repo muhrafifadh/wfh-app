@@ -214,7 +214,7 @@ export function TodayCard({ initialToday, supportContact }: TodayCardProps) {
   const loadFailed = query.isError && !working;
 
   return (
-    <Card aria-labelledby="today-status" className="w-full max-w-2xl">
+    <Card aria-labelledby="today-status" className="w-full">
       <CardHeader className="gap-1">
         <p className="text-sm font-medium">{formatLongDate(today.workDate)}</p>
         <p className="text-sm text-muted-foreground">

@@ -40,6 +40,7 @@ From the backend seed (organization Acme, times in WIB). Demo accounts use the b
 | `/reports`                                                      | managers, Admin/HR   | Filters, summary, daily trend, records, CSV (Admin/HR)        |
 | `/employees`, `/divisions`, `/holidays`, `/settings/attendance` | Admin/HR             | Administration                                                |
 | `/users`, `/audit-log`, `/profile`                              | as permitted         | From the boilerplate; My profile for everyone                 |
+| `/notifications`                                                | everyone             | Own notifications; email preferences are on My profile        |
 
 Navigation shows only what the user's permissions allow; the backend enforces every permission and scope.
 
@@ -48,6 +49,7 @@ Navigation shows only what the user's permissions allow; the backend enforces ev
 - **Server time is official.** "Today" comes from the server (`/me/context`, `/attendance/today`); the on-screen clock is an estimate seeded from the server, and times are shown in the organization's zone whatever the device's zone.
 - **No optimistic success for attendance.** Check-in/out show success only after the backend confirms. Each attempt has an `Idempotency-Key` reused for its retries; if a response is lost, the card re-checks today's state before offering anything new.
 - **Filters live in the URL** (history, lists, team, reports), so views can be shared and reloaded.
+- **Notifications:** the bell in the header shows the unread count (polled every minute) and the latest few; `/notifications` lists them all. Each person picks which ones also come by email under My profile. Admin/HR set the check-in and check-out reminders under Attendance settings → Reminders.
 - **Dashboards** refresh every minute while visible, show "Last updated", and every number with a list behind it links to that list.
 
 ## Scripts

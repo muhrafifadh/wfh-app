@@ -1,6 +1,7 @@
 import {
   createScheduleAction,
   updateOrganizationSettingsAction,
+  updateReminderSettingsAction,
 } from "@/features/work-settings/actions";
 import { organizationSettingsSchema, scheduleFormSchema } from "@/features/work-settings/schemas";
 import { apiFetch } from "@/lib/api/client";
@@ -119,6 +120,42 @@ describe("updateOrganizationSettingsAction", () => {
       retentionYears: "11",
     });
     expect(result.ok || Object.keys(result.fieldErrors ?? {})).toEqual(["retentionYears"]);
+    expect(apiFetch).not.toHaveBeenCalled();
+  });
+});
+
+describe("updateReminderSettingsAction", () => {
+  const reminders = {
+    checkInReminderEnabled: true,
+    checkInReminderTime: "09:30",
+    checkOutReminderEnabled: false,
+    checkOutReminderTime: "18:00",
+  };
+
+  it("sends all four reminder fields", async () => {
+    signedInWith(["policy:manage"]);
+    vi.mocked(apiFetch).mockResolvedValue({});
+    await updateReminderSettingsAction(reminders);
+    expect(apiFetch).toHaveBeenCalledWith(
+      "/work-settings",
+      expect.objectContaining({ method: "PATCH", body: reminders }),
+    );
+  });
+
+  it("rejects a malformed time before calling the backend", async () => {
+    signedInWith(["policy:manage"]);
+    const result = await updateReminderSettingsAction({
+      ...reminders,
+      checkInReminderTime: "9:30",
+    });
+    expect(result.ok || Object.keys(result.fieldErrors ?? {})).toEqual(["checkInReminderTime"]);
+    expect(apiFetch).not.toHaveBeenCalled();
+  });
+
+  it("needs policy:manage", async () => {
+    signedInWith(["attendance:self"]);
+    const result = await updateReminderSettingsAction(reminders);
+    expect(result.ok).toBe(false);
     expect(apiFetch).not.toHaveBeenCalled();
   });
 });

@@ -23,28 +23,31 @@ export default async function AttendancePage() {
   return (
     <>
       <h1 className="text-2xl font-semibold tracking-tight">Today&apos;s attendance</h1>
-      <TodayCard
-        initialToday={today}
-        supportContact={<SupportContact contact={context.organization.supportContact} />}
-      />
-      {context.employee && (
-        <section aria-labelledby="recent-heading" className="flex max-w-2xl flex-col gap-3">
-          <div className="flex items-center justify-between gap-2">
-            <h2 id="recent-heading" className="text-lg font-semibold">
-              Recent days
-            </h2>
-            <Link
-              href={routes.attendanceHistory()}
-              className="text-sm text-primary underline-offset-4 hover:underline"
-            >
-              View history
-            </Link>
-          </div>
-          <Suspense fallback={<Skeleton className="h-40 rounded-lg" />}>
-            <RecentAttendance count={3} today={context.organization.workDate} />
-          </Suspense>
-        </section>
-      )}
+      {/* Side by side on wide screens, stacked on phones */}
+      <div className="grid items-start gap-6 lg:grid-cols-2">
+        <TodayCard
+          initialToday={today}
+          supportContact={<SupportContact contact={context.organization.supportContact} />}
+        />
+        {context.employee && (
+          <section aria-labelledby="recent-heading" className="flex flex-col gap-3">
+            <div className="flex items-center justify-between gap-2">
+              <h2 id="recent-heading" className="text-lg font-semibold">
+                Recent days
+              </h2>
+              <Link
+                href={routes.attendanceHistory()}
+                className="text-sm text-primary underline-offset-4 hover:underline"
+              >
+                View history
+              </Link>
+            </div>
+            <Suspense fallback={<Skeleton className="h-40 rounded-lg" />}>
+              <RecentAttendance count={3} today={context.organization.workDate} />
+            </Suspense>
+          </section>
+        )}
+      </div>
     </>
   );
 }

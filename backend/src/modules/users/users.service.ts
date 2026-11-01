@@ -57,6 +57,21 @@ export type ActiveUser = {
   permissions: Permission[];
 };
 
+/** An active account that can receive email, with what its role allows. */
+export type Contact = { id: string; email: string; name: string; permissions: Permission[] };
+
+const toContact = (row: {
+  id: string;
+  email: string;
+  name: string;
+  role: { permissions: string[] };
+}): Contact => ({
+  id: row.id,
+  email: row.email,
+  name: row.name,
+  permissions: row.role.permissions.filter(isPermission),
+});
+
 /** Prisma row → response body (docs/06-validation-and-dtos.md: dates become ISO strings here). */
 const toUser = (row: UserRow): UserResponseBody => ({
   id: row.id,
@@ -129,6 +144,19 @@ export class UsersService {
     if (ids.length === 0) return new Map();
     const rows = await this.repo.findNames(organizationId, [...new Set(ids)]);
     return new Map(rows.map((row) => [row.id, row.name]));
+  }
+
+  /** The given users of the organization that are active accounts (for notifications). */
+  async contactsByIds(organizationId: string, ids: string[]): Promise<Contact[]> {
+    if (ids.length === 0) return [];
+    const rows = await this.repo.findContacts(organizationId, { ids: [...new Set(ids)] });
+    return rows.map(toContact);
+  }
+
+  /** Every active account of the organization whose role has this permission. */
+  async contactsWithPermission(organizationId: string, permission: Permission): Promise<Contact[]> {
+    const rows = await this.repo.findContacts(organizationId, { permission });
+    return rows.map(toContact);
   }
 
   // Managing users (user:read / user:manage)

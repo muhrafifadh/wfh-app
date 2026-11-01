@@ -12,17 +12,22 @@ datasource db {
 }
 
 model Organization {
-  id             String    @id @default(uuid(7)) @db.Uuid
-  name           String
+  id                      String    @id @default(uuid(7)) @db.Uuid
+  name                    String
   /// IANA zone for work dates and schedule times (validated by the service that edits it).
-  timezone       String    @default("Asia/Jakarta") @db.VarChar(64)
+  timezone                String    @default("Asia/Jakarta") @db.VarChar(64)
   /// Shown in the UI as who to contact for help.
-  supportContact String?   @map("support_contact") @db.VarChar(255)
+  supportContact          String?   @map("support_contact") @db.VarChar(255)
   /// How long attendance, corrections and audit entries are kept (1–10, check constraint).
-  retentionYears Int       @default(5) @map("retention_years") @db.SmallInt
-  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
-  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz(3)
+  retentionYears          Int       @default(5) @map("retention_years") @db.SmallInt
+  /// DOMAIN_RULES.md §18.4 — reminder times are local times in the schedule's zone.
+  checkInReminderEnabled  Boolean   @default(true) @map("check_in_reminder_enabled")
+  checkInReminderAt       DateTime  @default(dbgenerated("'09:00:00'::time without time zone")) @map("check_in_reminder_at") @db.Time(0)
+  checkOutReminderEnabled Boolean   @default(true) @map("check_out_reminder_enabled")
+  checkOutReminderAt      DateTime  @default(dbgenerated("'18:00:00'::time without time zone")) @map("check_out_reminder_at") @db.Time(0)
+  createdAt               DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt               DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt               DateTime? @map("deleted_at") @db.Timestamptz(3)
 
   users              User[]
   roles              Role[]
@@ -35,6 +40,7 @@ model Organization {
   attendances        Attendance[]
   idempotencyRecords IdempotencyRecord[]
   corrections        CorrectionRequest[]
+  notifications      Notification[]
 
   @@map("organizations")
 }
@@ -72,8 +78,8 @@ model User {
   updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
   deletedAt       DateTime? @map("deleted_at") @db.Timestamptz(3)
 
-  organization         Organization         @relation(fields: [organizationId], references: [id])
-  role                 Role                 @relation(fields: [roleId], references: [id])
+  organization         Organization            @relation(fields: [organizationId], references: [id])
+  role                 Role                    @relation(fields: [roleId], references: [id])
   sessions             Session[]
   passwordResetTokens  PasswordResetToken[]
   tokens               UserToken[]
@@ -84,8 +90,10 @@ model User {
   workSchedules        WorkSchedule[]
   holidays             Holiday[]
   idempotencyRecords   IdempotencyRecord[]
-  correctionsRequested CorrectionRequest[]  @relation("CorrectionRequester")
-  correctionsDecided   CorrectionRequest[]  @relation("CorrectionDecider")
+  correctionsRequested CorrectionRequest[]     @relation("CorrectionRequester")
+  correctionsDecided   CorrectionRequest[]     @relation("CorrectionDecider")
+  notifications        Notification[]
+  notificationPrefs    NotificationPreference?
 
   @@index([organizationId])
   @@index([roleId])
@@ -529,4 +537,75 @@ model CorrectionSnapshot {
   correctionRequest CorrectionRequest @relation(fields: [correctionRequestId], references: [id], onDelete: Restrict)
 
   @@map("correction_snapshots")
+}
+
+enum NotificationType {
+  correction_submitted
+  correction_approved
+  correction_rejected
+  reminder_check_in
+  reminder_check_out
+}
+
+enum NotificationStatus {
+  pending
+  sent
+  /// Not sent because it no longer applied when its turn came (e.g. already decided).
+  skipped
+  failed
+}
+
+/// One message to one recipient about one subject (DOMAIN_RULES.md §18).
+/// No message body: the email is built from current data when it is sent.
+model Notification {
+  id             String             @id @default(uuid(7)) @db.Uuid
+  organizationId String             @map("organization_id") @db.Uuid
+  recipientId    String             @map("recipient_id") @db.Uuid
+  type           NotificationType
+  /// What it is about: the correction request, or the employee for reminders. No
+  /// foreign key, because types refer to different tables.
+  subjectId      String             @map("subject_id") @db.Uuid
+  /// Reminders: the work date they are for.
+  workDate       DateTime?          @map("work_date") @db.Date
+  /// Reminders: never sent at or after this (check-in close, check-out deadline).
+  expiresAt      DateTime?          @map("expires_at") @db.Timestamptz(3)
+  /// Corrections "{type}:{subjectId}:{recipientId}", reminders "{type}:{employeeId}:{workDate}":
+  /// retries and re-runs never create a second one.
+  dedupeKey      String             @unique @map("dedupe_key") @db.VarChar(200)
+  status         NotificationStatus @default(pending)
+  /// Safe code when failed, never a stack trace.
+  failureCode    String?            @map("failure_code") @db.VarChar(80)
+  createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  /// When it was delivered (status sent): shown in the app from then on.
+  sentAt         DateTime?          @map("sent_at") @db.Timestamptz(3)
+  /// When the email went out; null when the recipient turned that email off (§18.7).
+  emailedAt      DateTime?          @map("emailed_at") @db.Timestamptz(3)
+  /// One line for the in-app list, written at delivery (§18.6).
+  title          String?            @db.VarChar(200)
+  /// App path it is about, e.g. "/corrections/{id}".
+  link           String?            @db.VarChar(300)
+  /// For the in-app notification centre (Phase 6C).
+  readAt         DateTime?          @map("read_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  recipient    User         @relation(fields: [recipientId], references: [id], onDelete: Restrict)
+
+  /// The recipient's in-app list and unread count (§18.6)
+  @@index([recipientId, status, sentAt(sort: Desc)])
+  @@index([organizationId, createdAt])
+  @@map("notifications")
+}
+
+/// Which notifications a user also gets by email (DOMAIN_RULES.md §18.7). No row: all on.
+model NotificationPreference {
+  userId                 String   @id @map("user_id") @db.Uuid
+  reviewRequestsEmail    Boolean  @default(true) @map("review_requests_email")
+  correctionUpdatesEmail Boolean  @default(true) @map("correction_updates_email")
+  checkInReminderEmail   Boolean  @default(true) @map("check_in_reminder_email")
+  checkOutReminderEmail  Boolean  @default(true) @map("check_out_reminder_email")
+  updatedAt              DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
 }

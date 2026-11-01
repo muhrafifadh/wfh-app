@@ -79,6 +79,10 @@ describe("WorkSettingsService", () => {
       timezone: "Asia/Jakarta",
       supportContact: null,
       retentionYears: 5,
+      checkInReminderEnabled: true,
+      checkInReminderAt: new Date(9 * 3600_000),
+      checkOutReminderEnabled: true,
+      checkOutReminderAt: new Date(18 * 3600_000),
     });
     service = new WorkSettingsService(repo, prisma, clock, mock<EventEmitter2>());
   });

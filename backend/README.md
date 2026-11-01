@@ -47,22 +47,22 @@ The seed also adds three divisions (Engineering, People, Finance), the baseline 
 
 Each route requires a permission; roles are sets of permissions (`src/common/types/auth.ts`). Team scope means the caller's active direct reports.
 
-| Permission                  | What it allows                                | Owner | Admin/HR | Manager | Employee |
-| --------------------------- | --------------------------------------------- | :---: | :------: | :-----: | :------: |
-| `attendance:self`           | Own check-in/out, today, history              |   ✓   |    ✓     |    ✓    |    ✓     |
-| `correction:submit`         | Request corrections to own records            |   ✓   |    ✓     |    ✓    |    ✓     |
-| `attendance:read_team`      | Team day and history                          |   ✓   |          |    ✓    |          |
-| `correction:decide_team`    | Decide direct reports' corrections            |   ✓   |          |    ✓    |          |
-| `report:read_team`          | Team reports                                  |   ✓   |          |    ✓    |          |
-| `attendance:read_all`       | Organization dashboard                        |   ✓   |    ✓     |         |          |
-| `correction:decide_all`     | Decide any correction (never your own)        |   ✓   |    ✓     |         |          |
-| `report:read_all`           | Organization reports and CSV export           |   ✓   |    ✓     |         |          |
-| `employee:manage`           | Employees and their accounts                  |   ✓   |    ✓     |         |          |
-| `division:manage`           | Divisions                                     |   ✓   |    ✓     |         |          |
-| `policy:manage`             | Schedule versions, settings, close-day re-run |   ✓   |    ✓     |         |          |
-| `holiday:manage`            | Holidays                                      |   ✓   |    ✓     |         |          |
-| `user:read` / `user:manage` | Users and invitations                         |   ✓   |    ✓     |         |          |
-| `audit:read`                | Audit log                                     |   ✓   |    ✓     |         |          |
+| Permission                  | What it allows                                              | Owner | Admin/HR | Manager | Employee |
+| --------------------------- | ----------------------------------------------------------- | :---: | :------: | :-----: | :------: |
+| `attendance:self`           | Own check-in/out, today, history                            |   ✓   |    ✓     |    ✓    |    ✓     |
+| `correction:submit`         | Request corrections to own records                          |   ✓   |    ✓     |    ✓    |    ✓     |
+| `attendance:read_team`      | Team day and history                                        |   ✓   |          |    ✓    |          |
+| `correction:decide_team`    | Decide direct reports' corrections                          |   ✓   |          |    ✓    |          |
+| `report:read_team`          | Team reports                                                |   ✓   |          |    ✓    |          |
+| `attendance:read_all`       | Organization dashboard                                      |   ✓   |    ✓     |         |          |
+| `correction:decide_all`     | Decide any correction (never your own)                      |   ✓   |    ✓     |         |          |
+| `report:read_all`           | Organization reports and CSV export                         |   ✓   |    ✓     |         |          |
+| `employee:manage`           | Employees and their accounts                                |   ✓   |    ✓     |         |          |
+| `division:manage`           | Divisions                                                   |   ✓   |    ✓     |         |          |
+| `policy:manage`             | Schedule versions, settings and reminders, close-day re-run |   ✓   |    ✓     |         |          |
+| `holiday:manage`            | Holidays                                                    |   ✓   |    ✓     |         |          |
+| `user:read` / `user:manage` | Users and invitations                                       |   ✓   |    ✓     |         |          |
+| `audit:read`                | Audit log                                                   |   ✓   |    ✓     |         |          |
 
 The `member` role has `user:read` only. Every record loaded by ID is checked against the caller's organization and scope (404 otherwise).
 
@@ -76,6 +76,7 @@ The full, normative rules are DOMAIN_RULES.md; the code cites its sections.
 - **Schedules are versioned** and take effect from tomorrow at the earliest; each record keeps a snapshot of the schedule it was judged by.
 - **Close-day** runs at 00:05 Jakarta time and marks eligible employees without a record Absent (never on weekends or holidays). Admin/HR can re-run it for a past date.
 - **Corrections:** up to the end of the seventh day after the work date; one pending request per record; the requester can never decide their own; the first decision wins; approval recalculates status, lateness and duration from the snapshot.
+- **Notifications:** a new correction emails the direct manager (Admin/HR when there's none who can decide it); a decision emails the requester. Each is sent at most once and never to the requester about their own request. Reminders (default 09:00 check-in, 18:00 check-out, set by Admin/HR) go on working days to employees who still need to act, at most once each per day, checked every 5 minutes. Locally, emails print to the API log (`MAIL_TRANSPORT=console`).
 
 ## Scripts
 
@@ -101,6 +102,7 @@ Before calling a change done: `pnpm lint && pnpm typecheck && pnpm test && pnpm 
   - `attendance`: today, check-in/out with idempotency, own history, close-day
   - `corrections`: requests, preview, review and decisions
   - `reports`: team day and history, the organization dashboard, reports, trends and the CSV export
+  - `notifications`: emails about corrections (submitted → the reviewer, decided → the requester) and check-in/check-out reminders, through job queues; the caller's notification list and email preferences (`/v1/notifications`); daily retention cleanup
 - `src/common`: decorators, errors, the global exception filter, throttling, time helpers, events.
 - `src/infra`: Prisma, mail, BullMQ queues (emails, close-day, cleanups), storage, the clock, health checks.
 - `src/configure-app.ts`: the HTTP setup shared by `main.ts` and the e2e tests.
@@ -111,7 +113,8 @@ Before calling a change done: `pnpm lint && pnpm typecheck && pnpm test && pnpm 
 - Managers see active direct reports only, one level deep.
 - Pickers load one page of 100 options (employees, divisions, users), enough for the pilot.
 - The CSV export is organization-wide (Admin/HR); managers read team reports on screen.
-- No notifications, SSO, location, photo or device checks (PRODUCT_REQUIREMENTS.md §13).
+- Notifications are in the app and by email; Slack or Teams delivery isn't built (Phase 6D, needs a decision).
+- No SSO, location, photo or device checks (PRODUCT_REQUIREMENTS.md §13).
 - Background jobs (emails, close-day, cleanups) run on BullMQ inside the API process, so Redis must be up for close-day to mark absences.
 
 ## Docs

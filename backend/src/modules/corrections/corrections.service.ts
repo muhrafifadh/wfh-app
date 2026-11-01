@@ -11,7 +11,10 @@ import {
   ATTENDANCE_SNAPSHOT_VERSION,
   AttendanceService,
 } from "@/modules/attendance/attendance.service.js";
-import type { CorrectionChange } from "@/modules/corrections/corrections.constants.js";
+import type {
+  CorrectionChange,
+  CorrectionStatus,
+} from "@/modules/corrections/corrections.constants.js";
 import {
   CorrectionAlreadyDecidedError,
   CorrectionAlreadyPendingError,
@@ -63,6 +66,18 @@ import { UsersService } from "@/modules/users/users.service.js";
  * their active direct reports (correction:decide_team), or nobody. Never themselves.
  */
 type ReviewScope = { kind: "all" } | { kind: "team"; employeeIds: Set<string> } | { kind: "none" };
+
+/** A request as notifications see it: ids, the work date and the decision. */
+export type CorrectionNotice = {
+  id: string;
+  employeeId: string;
+  /** YYYY-MM-DD */
+  workDate: string;
+  status: CorrectionStatus;
+  requestedById: string;
+  decidedById: string | null;
+  decisionNote: string | null;
+};
 
 const inScope = (scope: ReviewScope, employeeId: string): boolean =>
   scope.kind === "all" || (scope.kind === "team" && scope.employeeIds.has(employeeId));
@@ -233,6 +248,25 @@ export class CorrectionsService {
   async findOne(user: AuthUser, id: string): Promise<CorrectionResponseBody> {
     const { row, scope } = await this.loadVisible(user, id);
     return (await this.toResponses(user, [row], scope))[0] as CorrectionResponseBody;
+  }
+
+  /**
+   * What a notification about this request needs (DOMAIN_RULES.md §18), read fresh
+   * when it is created and again when it is sent. Null if not in the organization.
+   */
+  async findForNotification(organizationId: string, id: string): Promise<CorrectionNotice | null> {
+    const row = await this.repo.findInOrganization(organizationId, id);
+    return (
+      row && {
+        id: row.id,
+        employeeId: row.employeeId,
+        workDate: fromDateColumn(row.workDate),
+        status: row.status,
+        requestedById: row.requestedById,
+        decidedById: row.decidedById,
+        decisionNote: row.decisionNote,
+      }
+    );
   }
 
   // Deciding (§11.4–11.5)

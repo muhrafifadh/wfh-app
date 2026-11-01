@@ -74,6 +74,8 @@ Add:
 | `timezone`       | varchar(64)  | Required, default `Asia/Jakarta`. Default zone before any schedule exists; afterwards the work date follows the zone of the schedule in force. |
 | `supportContact` | varchar(255) | Nullable; shown in the UI as the support contact.         |
 | `retentionYears` | smallint     | Required, default 5, range 1–10.                          |
+| `checkInReminderEnabled` / `checkOutReminderEnabled` | boolean | Default true (Phase 6B, DOMAIN_RULES.md §18.4). |
+| `checkInReminderAt` / `checkOutReminderAt` | time(0) | Default 09:00 / 18:00, in the schedule's zone. |
 
 New relations: divisions, employees, work schedules, holidays, attendance, correction requests, and idempotency records.
 
@@ -395,6 +397,44 @@ Constraints and indexes:
 
 Snapshots are immutable and store only the needed domain fields, never full Prisma rows or secrets. Schema version 1: `status`, `completion`, `checkInAt`, `checkOutAt`, `lateMinutes`, `workedMinutes`, `version`, `correctedAt`.
 
+### 8.3 `Notification` (Phase 6)
+
+One message to one recipient about one subject (DOMAIN_RULES.md §18). Phase 6A sends them by email; Phase 6C shows the same rows in the app.
+
+| Field            | Type         | Null | Notes                                                                 |
+| ---------------- | ------------ | :--: | --------------------------------------------------------------------- |
+| `id`             | UUIDv7       |  No  | Primary key.                                                          |
+| `organizationId` | UUID         |  No  | Tenant owner.                                                         |
+| `recipientId`    | UUID         |  No  | The user it is for.                                                   |
+| `type`           | enum         |  No  | `correction_submitted`, `correction_approved`, `correction_rejected`, `reminder_check_in`, `reminder_check_out`. |
+| `subjectId`      | UUID         |  No  | What it is about: the correction request, or the employee for reminders. No foreign key: types refer to different tables. |
+| `workDate`       | date         | Yes  | Reminders: the work date they are for.                                |
+| `expiresAt`      | timestamptz  | Yes  | Reminders: not sent at or after this (check-in close, check-out deadline). |
+| `dedupeKey`      | varchar(200) |  No  | Unique. Corrections `{type}:{subjectId}:{recipientId}`; reminders `{type}:{employeeId}:{workDate}`. |
+| `status`         | enum         |  No  | `pending`, `sent`, `skipped`, `failed`.                               |
+| `failureCode`    | varchar(80)  | Yes  | Safe code when failed.                                                |
+| `createdAt`      | timestamptz  |  No  | Server timestamp.                                                     |
+| `sentAt`         | timestamptz  | Yes  | When it was delivered (shown in the app from then on).                |
+| `emailedAt`      | timestamptz  | Yes  | When the email went out; null when the recipient turned it off.       |
+| `title`          | varchar(200) | Yes  | One line for the in-app list, written at delivery.                    |
+| `link`           | varchar(300) | Yes  | App path it is about.                                                 |
+| `readAt`         | timestamptz  | Yes  | When the recipient opened it or marked it read.                       |
+
+Indexes: unique `dedupeKey`; `(recipientId, status, sentAt desc)` for the recipient's list and unread count; `(organizationId, createdAt)` for retention. No email body is stored: the email is built from current data when it is sent.
+
+### 8.4 `NotificationPreference` (Phase 6C)
+
+Which notifications a user also gets by email (DOMAIN_RULES.md §18.7). No row means everything is on.
+
+| Field                    | Type        | Null | Notes                                  |
+| ------------------------ | ----------- | :--: | -------------------------------------- |
+| `userId`                 | UUID        |  No  | Primary key; deleted with the user.    |
+| `reviewRequestsEmail`    | boolean     |  No  | Default true.                          |
+| `correctionUpdatesEmail` | boolean     |  No  | Default true.                          |
+| `checkInReminderEmail`   | boolean     |  No  | Default true.                          |
+| `checkOutReminderEmail`  | boolean     |  No  | Default true.                          |
+| `updatedAt`              | timestamptz |  No  | Server timestamp.                      |
+
 ## 9. Reporting entities
 
 ### 9.1 `ReportExport` (Should)
@@ -483,6 +523,7 @@ Status, completion, late minutes, and worked minutes are calculated by one share
 | Report export file           |           24 hours | File expires automatically; minimal metadata kept for audit.    |
 | Inactive employee/user       |       Per history  | Soft delete/pseudonymize only after legal review.               |
 | Idempotency record           |         ≥ 24 hours | Cleanup job on `expiresAt`.                                     |
+| Notification                 |            90 days | Daily cleanup job; no message bodies stored.                    |
 
 Purges must be policy-based, audited, testable as a dry run, and must not leave orphaned foreign keys. Automated purge is not required for the initial implementation.
 

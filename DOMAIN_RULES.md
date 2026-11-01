@@ -382,6 +382,7 @@ Audit stores actor, organization, action, target, timestamp, request ID, and non
 
 - Attendance, corrections, and audit: five years from `workDate`/event, configurable, subject to legal review before production.
 - Export artifacts: deleted automatically after 24 hours.
+- Notifications: 90 days (§18.5).
 - Inactive user/employee data is retained or pseudonymized per legal requirements without breaking historical references.
 - No precise location, photos, biometrics, or device identifiers are collected.
 
@@ -464,3 +465,70 @@ An Admin/HR user with an employee profile submits a correction. They cannot deci
 ### Scenario J — UTC/Jakarta boundary
 
 At 2026-11-02 23:30 UTC (2026-11-03 06:30 Jakarta), the work date is `2026-11-03`, and check-in is rejected as `CHECK_IN_TOO_EARLY`.
+
+## 18. Notifications
+
+Approved for Phase 6 (PRD decision #25; plan in [`NOTIFICATIONS_PLAN.md`](NOTIFICATIONS_PLAN.md)). Phase 6A implements §18.1–18.3, Phase 6B §18.4–18.5, Phase 6C §18.6–18.7.
+
+### 18.1 General rules
+
+- A notification never changes attendance or corrections, and its failure never fails the action that caused it. It is created after that action commits.
+- Each notification has a deduplication key, unique per type, subject and recipient. Retries and re-runs never send the same notification twice.
+- Recipients are active accounts only: the user exists, isn't deactivated or deleted, and has accepted their invitation.
+- Messages contain the minimum needed and a link to the page in Hadir.in. No tokens in links, no other employees' data, no request reason text.
+- Delivery is retried with backoff (`backend/docs/15-background-jobs.md`). A notification that still fails is marked failed with a safe code, never a stack trace.
+
+### 18.2 Correction submitted
+
+- **Recipient:** the employee's direct manager, when the manager's employee profile is active, their account is active, and they may decide team corrections (`correction:decide_team` or `correction:decide_all`).
+- **Fallback:** when there is no such manager, every active account with `correction:decide_all` in the organization.
+- The requester is never a recipient, whatever their role (Scenario I).
+- **Re-check before sending:** if the request is no longer pending, the notification is skipped, not sent.
+- **Content:** who asked, for which work date, and a link to `/corrections/{id}`.
+
+### 18.3 Correction decided
+
+- **Recipient:** the requester, if their account is active.
+- **Content:** approved or rejected, by whom, for which work date, the decision note when there is one, and a link to `/corrections/{id}`.
+- Employees can't turn this off while email is the only channel (decision N4).
+
+### 18.4 Reminders
+
+**Settings.** Each organization has a check-in reminder and a check-out reminder, each on or off with a time of day in the schedule's zone. Defaults: both on, check-in at 09:00, check-out at 18:00 (decision N2). Admin/HR change them (`policy:manage`); changes are audited and apply from the next check.
+
+**When a reminder is due.** A server job checks every 5 minutes. For today's work date in the organization's zone (§5.2), a reminder is due when all of these hold:
+
+- the reminder is on, and today is a working day (a schedule is in force, the weekday is scheduled, no holiday);
+- the current time is at or after the reminder time, and less than 2 hours after it (so a server that was down doesn't send stale reminders hours later);
+- for check-in: check-in has opened, and the current time is before check-in closes. A reminder time before check-in opens counts from the moment it opens;
+- for check-out: the current time is before the check-out deadline.
+
+**Who gets it.**
+
+- Check-in: every employee eligible on the work date (active, within employment dates — the same set close-day uses, §10) with no attendance record for that date.
+- Check-out: every eligible employee whose record for that date has a check-in and no check-out.
+- Only employees linked to an active account (§18.1).
+
+**At most once.** The deduplication key is `{type}:{employeeId}:{workDate}`: one check-in and one check-out reminder per employee per work date, whatever the number of runs or retries.
+
+**Re-check before sending.** Just before the email goes out, the reminder is skipped if the action is no longer possible (check-in has closed, or the check-out deadline has passed) or no longer needed (the employee checked in, or checked out).
+
+**Content.** Check-in: the work date, when check-in closes, and a link to `/attendance`. Check-out: the work date, the check-in time, when check-out closes, that a forgotten check-out needs a correction, and the same link.
+
+### 18.5 Retention
+
+Notification records are kept for 90 days from creation, then deleted by a daily job (decision N6). They hold identifiers, delivery state and the one-line title shown in the app, not email bodies.
+
+### 18.6 In-app notifications
+
+- Every notification that is delivered (§18.1–18.4, re-checks passed) appears in the recipient's notification list, whether or not an email went out. Skipped ones never appear.
+- A user sees only their own notifications; anyone else's is not found (404).
+- Each item has a one-line title written when it is delivered, the time it was delivered, and a link to the page it is about. The title doesn't change afterwards, even if the data does.
+- Unread until the user opens it or marks it read; marking read is idempotent. "Mark all as read" marks every one of the user's unread items.
+- The unread count is the number of the user's delivered, unread notifications.
+
+### 18.7 Email preferences
+
+- Each user chooses, per kind, whether to also get it by email: review requests (§18.2), correction outcomes (§18.3), check-in reminders and check-out reminders (§18.4). All are on by default.
+- Turning one off stops the email only; the in-app item still appears (so decision N4 is met: outcomes can be turned off now that the app shows them).
+- The preference is read when the notification is delivered, so a change applies to everything not yet delivered.

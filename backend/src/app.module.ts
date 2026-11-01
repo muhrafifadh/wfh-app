@@ -28,6 +28,7 @@ import { CorrectionsModule } from "@/modules/corrections/corrections.module.js";
 import { DivisionsModule } from "@/modules/divisions/divisions.module.js";
 import { EmployeesModule } from "@/modules/employees/employees.module.js";
 import { HolidaysModule } from "@/modules/holidays/holidays.module.js";
+import { NotificationsModule } from "@/modules/notifications/notifications.module.js";
 import { ReportsModule } from "@/modules/reports/reports.module.js";
 import { UploadsModule } from "@/modules/uploads/uploads.module.js";
 import { UsersModule } from "@/modules/users/users.module.js";
@@ -105,6 +106,7 @@ import { WorkSettingsModule } from "@/modules/work-settings/work-settings.module
     AttendanceModule,
     CorrectionsModule,
     ReportsModule,
+    NotificationsModule,
   ],
   providers: [
     // Global guards run in this order (docs/09-authorization.md)

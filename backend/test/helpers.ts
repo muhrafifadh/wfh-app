@@ -19,6 +19,8 @@ import { Clock, FixedClock } from "@/infra/clock/clock.js";
 import { PrismaService } from "@/infra/prisma/prisma.service.js";
 import { ATTENDANCE_JOBS_QUEUE } from "@/modules/attendance/jobs/attendance-jobs.queue.js";
 import { PASSWORD_RESET_QUEUE } from "@/modules/auth/jobs/password-reset.queue.js";
+import { NOTIFICATION_EMAILS_QUEUE } from "@/modules/notifications/jobs/notification-emails.queue.js";
+import { NOTIFICATION_JOBS_QUEUE } from "@/modules/notifications/jobs/notification-jobs.queue.js";
 import { UPLOADS_CLEANUP_QUEUE } from "@/modules/uploads/jobs/uploads-cleanup.queue.js";
 import { USER_EMAILS_QUEUE } from "@/modules/users/jobs/user-emails.queue.js";
 
@@ -27,6 +29,8 @@ const QUEUES = [
   PASSWORD_RESET_QUEUE,
   UPLOADS_CLEANUP_QUEUE,
   ATTENDANCE_JOBS_QUEUE,
+  NOTIFICATION_EMAILS_QUEUE,
+  NOTIFICATION_JOBS_QUEUE,
 ];
 
 /** AppConfig with some values replaced, for tests of config-dependent behavior. */
@@ -69,6 +73,14 @@ export async function createTestApp(
     }),
   );
   await app.init();
+  // Scheduled runs (reminders every 5 minutes, close-day, cleanups) use the fixed clock
+  // and would fire whenever a test crosses their minute; tests run the work directly.
+  for (const name of QUEUES) {
+    const q = queue(app, name);
+    for (const scheduler of await q.getJobSchedulers()) {
+      if (scheduler.key) await q.removeJobScheduler(scheduler.key);
+    }
+  }
   return app;
 }
 

@@ -7,6 +7,7 @@ import { z } from "zod";
 import { routes } from "@/config/routes";
 import {
   organizationSettingsSchema,
+  reminderSettingsSchema,
   scheduleFormSchema,
   schedulePreviewSchema,
   workScheduleSchema,
@@ -33,6 +34,29 @@ async function authorize(): Promise<ActionResult<never> | null> {
   return can(user, "policy:manage")
     ? null
     : fail("You don't have permission to change attendance settings.");
+}
+
+/** DOMAIN_RULES.md §18.4 — the reminder emails; they apply from the next check. */
+export async function updateReminderSettingsAction(
+  input: unknown,
+): Promise<ActionResult<WorkSettings>> {
+  const denied = await authorize();
+  if (denied) return denied;
+  const parsed = reminderSettingsSchema.safeParse(input);
+  if (!parsed.success) return fail(FIX_FIELDS, z.flattenError(parsed.error).fieldErrors);
+
+  let settings: WorkSettings;
+  try {
+    settings = await apiFetch("/work-settings", {
+      method: "PATCH",
+      body: parsed.data,
+      schema: workSettingsSchema,
+    });
+  } catch (error) {
+    return expectedFailure(error, MESSAGES);
+  }
+  revalidatePath(routes.attendanceSettings());
+  return ok(settings);
 }
 
 export async function updateOrganizationSettingsAction(

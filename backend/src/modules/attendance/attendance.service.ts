@@ -136,6 +136,20 @@ export class AttendanceService {
     private readonly events: EventEmitter2,
   ) {}
 
+  /**
+   * Employee id → check-in and check-out on a work date, for those with a record
+   * (notifications re-check reminders with this, DOMAIN_RULES.md §18.4).
+   */
+  async timesOn(
+    organizationId: string,
+    workDate: LocalDate,
+    employeeIds: string[],
+  ): Promise<Map<string, { checkInAt: Date | null; checkOutAt: Date | null }>> {
+    if (employeeIds.length === 0) return new Map();
+    const rows = await this.repo.findTimesOn(organizationId, workDate, [...new Set(employeeIds)]);
+    return new Map(rows.map(({ employeeId, ...times }) => [employeeId, times]));
+  }
+
   // Today (UX_FLOWS.md §7.2)
 
   async today(user: AuthUser): Promise<TodayResponseBody> {
