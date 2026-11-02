@@ -3359,7 +3359,7 @@
             }
           },
           "409": {
-            "description": "ATTENDANCE_ALREADY_CHECKED_IN, IDEMPOTENCY_KEY_REUSED",
+            "description": "ATTENDANCE_ALREADY_CHECKED_IN, IDEMPOTENCY_KEY_REUSED, VERIFICATION_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -3445,7 +3445,7 @@
             }
           },
           "409": {
-            "description": "ATTENDANCE_NOT_CHECKED_IN, ATTENDANCE_ALREADY_CHECKED_OUT, IDEMPOTENCY_KEY_REUSED",
+            "description": "ATTENDANCE_NOT_CHECKED_IN, ATTENDANCE_ALREADY_CHECKED_OUT, IDEMPOTENCY_KEY_REUSED, VERIFICATION_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -3978,72 +3978,16 @@
         ]
       }
     },
-    "/v1/attendance-verification/location": {
+    "/v1/attendance-verification/photo-upload": {
       "post": {
-        "operationId": "AttendanceVerificationController_submitLocation",
+        "operationId": "AttendanceVerificationController_createPhotoUpload",
         "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SubmitLocationDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MyVerificationResponse_Output"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "FORBIDDEN",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "VERIFICATION_DISABLED, VERIFICATION_NOTICE_REQUIRED, ATTENDANCE_NOT_CHECKED_IN, VERIFICATION_ALREADY_RECORDED, VERIFICATION_WINDOW_CLOSED",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "attendance-verification"
-        ]
-      }
-    },
-    "/v1/attendance-verification/selfie": {
-      "post": {
-        "operationId": "AttendanceVerificationController_createSelfieUpload",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateSelfieUploadDto"
+                "$ref": "#/components/schemas/CreatePhotoUploadDto"
               }
             }
           }
@@ -4054,7 +3998,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SelfieUploadResponse_Output"
+                  "$ref": "#/components/schemas/PhotoUploadResponse_Output"
                 }
               }
             }
@@ -4070,7 +4014,7 @@
             }
           },
           "409": {
-            "description": "VERIFICATION_DISABLED, VERIFICATION_NOTICE_REQUIRED, ATTENDANCE_NOT_CHECKED_IN, VERIFICATION_ALREADY_RECORDED, VERIFICATION_WINDOW_CLOSED",
+            "description": "VERIFICATION_DISABLED, VERIFICATION_NOTICE_REQUIRED",
             "content": {
               "application/json": {
                 "schema": {
@@ -4090,17 +4034,37 @@
         ]
       }
     },
-    "/v1/attendance-verification/selfie/complete": {
+    "/v1/attendance-verification/check-in": {
       "post": {
-        "operationId": "AttendanceVerificationController_completeSelfie",
-        "parameters": [],
+        "operationId": "AttendanceVerificationController_checkIn",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "Unique per attempt (e.g. a UUID). Reuse it to retry the same attempt safely.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordWithEvidenceDto"
+              }
+            }
+          }
+        },
         "responses": {
-          "200": {
+          "201": {
             "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MyVerificationResponse_Output"
+                  "$ref": "#/components/schemas/AttendanceResponse_Output"
                 }
               }
             }
@@ -4116,7 +4080,7 @@
             }
           },
           "409": {
-            "description": "VERIFICATION_DISABLED, VERIFICATION_NOTICE_REQUIRED, ATTENDANCE_NOT_CHECKED_IN, VERIFICATION_ALREADY_RECORDED, VERIFICATION_WINDOW_CLOSED, UPLOAD_NOT_RECEIVED",
+            "description": "VERIFICATION_DISABLED, VERIFICATION_NOTICE_REQUIRED, VERIFICATION_PHOTO_REQUIRED, VERIFICATION_LOCATION_REQUIRED, UPLOAD_NOT_RECEIVED, IDEMPOTENCY_KEY_REUSED, ATTENDANCE_ALREADY_CHECKED_IN",
             "content": {
               "application/json": {
                 "schema": {
@@ -4126,7 +4090,83 @@
             }
           },
           "422": {
-            "description": "UPLOAD_MISMATCH",
+            "description": "UPLOAD_MISMATCH, EMPLOYEE_PROFILE_REQUIRED, EMPLOYEE_INACTIVE, ATTENDANCE_NOT_WORKDAY, CHECK_IN_TOO_EARLY, CHECK_IN_WINDOW_CLOSED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "attendance-verification"
+        ]
+      }
+    },
+    "/v1/attendance-verification/check-out": {
+      "post": {
+        "operationId": "AttendanceVerificationController_checkOut",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "Unique per attempt (e.g. a UUID). Reuse it to retry the same attempt safely.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordWithEvidenceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttendanceResponse_Output"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "VERIFICATION_DISABLED, VERIFICATION_NOTICE_REQUIRED, VERIFICATION_PHOTO_REQUIRED, VERIFICATION_LOCATION_REQUIRED, UPLOAD_NOT_RECEIVED, IDEMPOTENCY_KEY_REUSED, ATTENDANCE_NOT_CHECKED_IN, ATTENDANCE_ALREADY_CHECKED_OUT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "UPLOAD_MISMATCH, EMPLOYEE_PROFILE_REQUIRED, EMPLOYEE_INACTIVE, CHECK_OUT_WINDOW_CLOSED",
             "content": {
               "application/json": {
                 "schema": {
@@ -9484,28 +9524,10 @@
             "properties": {
               "enabled": {
                 "type": "boolean"
-              },
-              "result": {
-                "type": "string",
-                "enum": [
-                  "verified",
-                  "outside_approved_area",
-                  "low_accuracy",
-                  "not_shared",
-                  "no_approved_area",
-                  "captured",
-                  null
-                ],
-                "nullable": true
-              },
-              "canSubmit": {
-                "type": "boolean"
               }
             },
             "required": [
-              "enabled",
-              "result",
-              "canSubmit"
+              "enabled"
             ],
             "additionalProperties": false
           },
@@ -9514,30 +9536,51 @@
             "properties": {
               "enabled": {
                 "type": "boolean"
-              },
-              "result": {
-                "type": "string",
-                "enum": [
-                  "verified",
-                  "outside_approved_area",
-                  "low_accuracy",
-                  "not_shared",
-                  "no_approved_area",
-                  "captured",
-                  null
-                ],
-                "nullable": true
-              },
-              "canSubmit": {
-                "type": "boolean"
               }
             },
             "required": [
-              "enabled",
-              "result",
-              "canSubmit"
+              "enabled"
             ],
             "additionalProperties": false
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "moment": {
+                  "type": "string",
+                  "enum": [
+                    "check_in",
+                    "check_out"
+                  ]
+                },
+                "method": {
+                  "type": "string",
+                  "enum": [
+                    "location",
+                    "selfie"
+                  ]
+                },
+                "result": {
+                  "type": "string",
+                  "enum": [
+                    "verified",
+                    "outside_approved_area",
+                    "low_accuracy",
+                    "not_shared",
+                    "no_approved_area",
+                    "captured"
+                  ]
+                }
+              },
+              "required": [
+                "moment",
+                "method",
+                "result"
+              ],
+              "additionalProperties": false
+            }
           },
           "notice": {
             "type": "object",
@@ -9603,6 +9646,7 @@
         "required": [
           "location",
           "selfie",
+          "results",
           "notice",
           "workLocation"
         ],
@@ -9625,6 +9669,13 @@
                   "type": "string",
                   "format": "date",
                   "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                },
+                "moment": {
+                  "type": "string",
+                  "enum": [
+                    "check_in",
+                    "check_out"
+                  ]
                 },
                 "method": {
                   "type": "string",
@@ -9661,6 +9712,7 @@
               "required": [
                 "id",
                 "workDate",
+                "moment",
                 "method",
                 "result",
                 "photoAvailable",
@@ -9675,35 +9727,16 @@
         ],
         "additionalProperties": false
       },
-      "SubmitLocationDto": {
+      "CreatePhotoUploadDto": {
         "type": "object",
         "properties": {
-          "latitude": {
-            "type": "number",
-            "minimum": -90,
-            "maximum": 90
+          "moment": {
+            "type": "string",
+            "enum": [
+              "check_in",
+              "check_out"
+            ]
           },
-          "longitude": {
-            "type": "number",
-            "minimum": -180,
-            "maximum": 180
-          },
-          "accuracyMeters": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 1000000
-          }
-        },
-        "required": [
-          "latitude",
-          "longitude",
-          "accuracyMeters"
-        ],
-        "additionalProperties": false
-      },
-      "CreateSelfieUploadDto": {
-        "type": "object",
-        "properties": {
           "contentType": {
             "type": "string",
             "enum": [
@@ -9718,12 +9751,13 @@
           }
         },
         "required": [
+          "moment",
           "contentType",
           "size"
         ],
         "additionalProperties": false
       },
-      "SelfieUploadResponse_Output": {
+      "PhotoUploadResponse_Output": {
         "type": "object",
         "properties": {
           "uploadUrl": {
@@ -9747,6 +9781,38 @@
           "uploadHeaders",
           "expiresAt"
         ],
+        "additionalProperties": false
+      },
+      "RecordWithEvidenceDto": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "object",
+            "properties": {
+              "latitude": {
+                "type": "number",
+                "minimum": -90,
+                "maximum": 90
+              },
+              "longitude": {
+                "type": "number",
+                "minimum": -180,
+                "maximum": 180
+              },
+              "accuracyMeters": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1000000
+              }
+            },
+            "required": [
+              "latitude",
+              "longitude",
+              "accuracyMeters"
+            ],
+            "additionalProperties": false
+          }
+        },
         "additionalProperties": false
       },
       "RequestWorkLocationDto": {
@@ -10152,6 +10218,13 @@
                   "format": "date",
                   "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
                 },
+                "moment": {
+                  "type": "string",
+                  "enum": [
+                    "check_in",
+                    "check_out"
+                  ]
+                },
                 "method": {
                   "type": "string",
                   "enum": [
@@ -10235,6 +10308,7 @@
                 "id",
                 "attendanceId",
                 "workDate",
+                "moment",
                 "method",
                 "result",
                 "flagged",
@@ -10287,6 +10361,13 @@
             "type": "string",
             "format": "date",
             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+          },
+          "moment": {
+            "type": "string",
+            "enum": [
+              "check_in",
+              "check_out"
+            ]
           },
           "method": {
             "type": "string",
@@ -10369,6 +10450,7 @@
           "id",
           "attendanceId",
           "workDate",
+          "moment",
           "method",
           "result",
           "flagged",

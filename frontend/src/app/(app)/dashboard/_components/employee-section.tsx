@@ -10,7 +10,7 @@ import { TodayCard } from "@/features/attendance/components/today-card";
 import { firstDayOf, lastDayOf, monthOf } from "@/features/attendance/dates";
 import { formatMonthYear } from "@/features/attendance/format";
 import type { Today } from "@/features/attendance/schemas";
-import { VerificationPanelLoader } from "@/features/attendance-verification/components/verification-panel-loader";
+import type { MyVerification } from "@/features/attendance-verification/schemas";
 import { countMyPendingCorrections } from "@/features/corrections/queries";
 import { SupportContact } from "@/features/profile/components/support-contact";
 
@@ -21,11 +21,13 @@ import { SupportContact } from "@/features/profile/components/support-contact";
  */
 export function EmployeeSection({
   today,
+  checks,
   workDate,
   supportContact,
   canRequestCorrections,
 }: {
   today: Today | null;
+  checks: MyVerification | null;
   workDate: string;
   supportContact: string | null;
   canRequestCorrections: boolean;
@@ -36,11 +38,9 @@ export function EmployeeSection({
       <div className="grid gap-4 lg:col-span-2">
         <TodayCard
           initialToday={today}
+          initialChecks={checks}
           supportContact={<SupportContact contact={supportContact} />}
         />
-        <Suspense fallback={null}>
-          <VerificationPanelLoader />
-        </Suspense>
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:row-span-2 lg:grid-cols-1">
         <Card>

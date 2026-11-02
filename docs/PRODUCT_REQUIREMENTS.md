@@ -63,7 +63,7 @@ The following are not part of the current scope:
 
 - Payroll calculation or automatic payroll deductions.
 - Activity, productivity, screen, or computer-usage tracking.
-- Continuous location tracking, face recognition, or biometric matching. Approved-area location and check-in selfies are built but off by default, and stay off in production until decision 26's deferred requirements are met.
+- Continuous location tracking, face recognition, or biometric matching. Approved-area location and selfies at check-in and check-out are built but off by default, are required for attendance while on, and stay off in production until decision 26's deferred requirements are met.
 - Native mobile applications.
 - Shifts that cross midnight, per-division or per-employee schedules, flexible hours.
 - Leave, sick, and time-off requests; multi-level approval.
@@ -466,7 +466,7 @@ Geolocation and selfies are planned in [`ATTENDANCE_VERIFICATION_PLAN.md`](ATTEN
 | 23  | Implementation start        | Phase 01 (backend divisions and employees), conditional on the Phase 0 assessment confirming what already exists.                                                    |
 | 24  | Environments                | Local required; staging if available; production not required.                                                                                                      |
 | 25  | Notifications (Phase 6)     | Approved 1 November 2026, with the recommendations in `NOTIFICATIONS_PLAN.md` §8: pilot types are correction emails and the check-in/check-out reminders (N1); reminders at 09:00 and 18:00 (N2); a new correction goes to the direct manager, Admin/HR only when there is none (N3); outcome emails can't be turned off until the in-app centre exists (N4); no absence or lateness alerts to managers (N5); notifications kept 90 days (N6); Slack or Teams decided after 6C (N7). Rules: `DOMAIN_RULES.md` §18. |
-| 26  | Attendance verification (Phase 7) | Product decisions final 2 November 2026, in `ATTENDANCE_VERIFICATION_PLAN.md` §8 (V1–V12). Built with both methods off by default, configured per organization; turning one on needs a recorded reason. External legal review deferred: compliance status "Not independently reviewed". Production stays off (`VERIFICATION_ENABLED`) until the legal requirements are reassessed and the hosting inventory is complete (plan §4.1). Never blocks attendance. No tracking or biometric matching. |
+| 26  | Attendance verification (Phase 7) | Product decisions final 2 November 2026, in `ATTENDANCE_VERIFICATION_PLAN.md` §8 (V1–V12). Built with both methods off by default, configured per organization, and required for check-in and check-out while on (changed 2 November 2026); turning one on needs a recorded reason. External legal review deferred: compliance status "Not independently reviewed". Production stays off (`VERIFICATION_ENABLED`) until the legal requirements are reassessed and the hosting inventory is complete (plan §4.1). Never blocks attendance. No tracking or biometric matching. |
 
 ### 14.1 Named owners
 

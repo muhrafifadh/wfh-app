@@ -10,7 +10,8 @@
         "dev"
       ],
       "env": {
-        "REGISTRATION_ENABLED": "false"
+        "REGISTRATION_ENABLED": "false",
+        "CORS_ORIGINS": "http://localhost:3000,http://localhost:3001"
       },
       "port": 8000
     },

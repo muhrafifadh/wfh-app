@@ -119,7 +119,7 @@ export const navSections: NavSection[] = [
         anyOf: ["policy:manage"],
       },
       {
-        title: "Check-in checks",
+        title: "Attendance checks",
         href: routes.verificationSettings(),
         icon: ScanFaceIcon,
         detailsUnder: routes.verificationReview(),

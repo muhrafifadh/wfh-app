@@ -385,12 +385,16 @@ Audit stores actor, organization, action, target, timestamp, request ID, and non
 - Notifications: 90 days (§18.5).
 - Inactive user/employee data is retained or pseudonymized per legal requirements without breaking historical references.
 - No precise location, photos, biometrics, or device identifiers are collected unless an organization turns on a verification method, which production allows only once PRD decision 26's deferred requirements are met. Even then, raw coordinates are never persisted, and no biometric matching or device identifiers are used.
-- Verification evidence (`ATTENDANCE_VERIFICATION_PLAN.md`): stored apart from attendance; selfies deleted after 30 days and results after 90 days; rejected or replaced areas and decided photo requests after 90 days; areas of inactive employees at the next cleanup. A failed or declined check never blocks attendance or changes its status. Only `outside_approved_area` is flagged for review; `low_accuracy` ("Couldn't confirm") and `not_shared` are neutral.
+- While an organization has a verification method on, a check-in or check-out isn't recorded without its photo and location. The location is read when the photo is taken. Once recorded, the result never changes the attendance record.
+- Verification evidence (`ATTENDANCE_VERIFICATION_PLAN.md`): stored apart from attendance; selfies deleted after 30 days and results after 90 days; rejected or replaced areas and decided photo requests after 90 days; areas of inactive employees at the next cleanup. A recorded result never changes attendance or its status. Only `outside_approved_area` is flagged for review; `low_accuracy` ("Couldn't confirm"), `no_approved_area` and `not_shared` (results from before evidence was required) are neutral.
 
 ## 16. Stable domain error codes
 
 | Code                                 | HTTP | Condition                                         |
 | ------------------------------------ | ---: | ------------------------------------------------- |
+| `VERIFICATION_REQUIRED`              |  409 | Attendance needs evidence; use the verification endpoints. |
+| `VERIFICATION_PHOTO_REQUIRED`        |  409 | No photo uploaded for this check-in or check-out. |
+| `VERIFICATION_LOCATION_REQUIRED`     |  409 | No location sent with this check-in or check-out. |
 | `EMPLOYEE_PROFILE_REQUIRED`          |  422 | User has no employee profile.                     |
 | `EMPLOYEE_INACTIVE`                  |  422 | Profile is not active on the work date.           |
 | `ATTENDANCE_NOT_WORKDAY`             |  422 | Date is a weekend, holiday, or non-working day.   |

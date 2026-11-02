@@ -2,7 +2,6 @@ import { BullModule } from "@nestjs/bullmq";
 import { Module } from "@nestjs/common";
 
 import { AttendanceVerificationController } from "@/modules/attendance-verification/attendance-verification.controller.js";
-import { AttendanceVerificationListener } from "@/modules/attendance-verification/attendance-verification.listener.js";
 import { AttendanceVerificationRepository } from "@/modules/attendance-verification/attendance-verification.repository.js";
 import { AttendanceVerificationService } from "@/modules/attendance-verification/attendance-verification.service.js";
 import { VerificationCleanupProcessor } from "@/modules/attendance-verification/jobs/verification-cleanup.processor.js";
@@ -20,7 +19,6 @@ import { EmployeesModule } from "@/modules/employees/employees.module.js";
   providers: [
     AttendanceVerificationService,
     AttendanceVerificationRepository,
-    AttendanceVerificationListener,
     VerificationCleanupProcessor,
   ],
 })

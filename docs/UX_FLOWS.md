@@ -16,7 +16,7 @@
 - Managers see their team's day and clear pending corrections quickly.
 - Admin/HR completes setup without editing the database.
 - Empty, loading, error, and access-denied states are designed as carefully as the happy path.
-- The UI never implies productivity, location, or device tracking, because none is done.
+- The UI never implies productivity or device tracking, because none is done. It mentions location only where an organization has turned on attendance checks (§21).
 - The interface feels like a natural extension of the frontend boilerplate, with Hadir.in branding.
 
 ## 2. Interaction principles
@@ -552,11 +552,11 @@ Messages are never built from raw error strings. The frontend maps stable API er
 On an info/help page, briefly explain:
 
 - Hadir.in uses server time.
-- No location, photos, or device activity are collected.
+- No device activity is collected, and no location or photos unless the organization has turned on attendance checks (below).
 - Duration is the time between check-in and check-out, not a productivity measure.
 - Corrections are recorded for audit.
 
-Never request geolocation, camera, or device fingerprint permissions. The one planned exception: once legal has approved it and an organization has enabled it (PRD decision 26), location and camera may be requested at check-in, after the employee has seen the notice in `ATTENDANCE_VERIFICATION_PIA.md` §9. That organization's copy above is rewritten to match at the same time. Device fingerprinting stays prohibited.
+Never request geolocation, camera, or device fingerprint permissions. The one planned exception: once legal has approved it and an organization has enabled it (PRD decision 26), location and camera are required at check-in and check-out, after the employee has seen the notice in `ATTENDANCE_VERIFICATION_PIA.md` §9. That organization's employees are then told that attendance isn't recorded without them, and the attendance card says so. Device fingerprinting stays prohibited.
 
 ## 22. UX acceptance criteria
 

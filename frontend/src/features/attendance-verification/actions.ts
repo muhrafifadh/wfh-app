@@ -9,11 +9,10 @@ import {
   discloseFormSchema,
   idSchema,
   justificationIsLongEnough,
-  locationReadingSchema,
   myVerificationSchema,
   photoRequestSchema,
-  selfieUploadInputSchema,
-  selfieUploadSchema,
+  photoUploadInputSchema,
+  photoUploadSchema,
   settingsFormSchema,
   signedPhotoSchema,
   verificationItemSchema,
@@ -30,19 +29,13 @@ import { apiFetch } from "@/lib/api/client";
 import { can, requireUser } from "@/lib/auth/session";
 import type { Permission } from "@/types/auth";
 
-/** Backend attendance-verification.errors.ts codes, in plain words. Attendance is never affected. */
+/** Backend attendance-verification.errors.ts codes, in plain words. */
 const MESSAGES = {
   VERIFICATION_NOT_AVAILABLE:
     "Attendance checks aren't available on this deployment yet, so they can't be turned on.",
   VERIFICATION_JUSTIFICATION_REQUIRED: "Record why this check is needed before turning it on.",
   VERIFICATION_DISABLED: "This check isn't turned on for your organization.",
   VERIFICATION_NOTICE_REQUIRED: "Read the attendance checks notice first.",
-  VERIFICATION_ALREADY_RECORDED: "This check has already been recorded. You're still checked in.",
-  VERIFICATION_WINDOW_CLOSED:
-    "This check is only taken right after you check in. You're still checked in.",
-  ATTENDANCE_NOT_CHECKED_IN: "Check in first.",
-  UPLOAD_NOT_RECEIVED: "The photo didn't reach storage. Try again.",
-  UPLOAD_MISMATCH: "The photo couldn't be read. Take it again.",
   WORK_LOCATION_ALREADY_DECIDED: "This location request has already been decided.",
   PHOTO_REQUEST_ALREADY_DECIDED: "This photo request has already been decided.",
   PHOTO_NOT_AVAILABLE: "This photo has already been deleted (photos are kept for 30 days).",
@@ -77,25 +70,6 @@ export async function acknowledgeNoticeAction(): Promise<ActionResult> {
   return ok(undefined);
 }
 
-/** One reading; the backend compares it with the approved area and keeps only the result. */
-export async function submitLocationAction(input: unknown): Promise<ActionResult<MyVerification>> {
-  const denied = await authorize("attendance:self");
-  if (denied) return denied;
-  const parsed = locationReadingSchema.safeParse(input);
-  if (!parsed.success) return fail("Your browser sent an unusable location. Try again.");
-  try {
-    return ok(
-      await apiFetch("/attendance-verification/location", {
-        method: "POST",
-        body: parsed.data,
-        schema: myVerificationSchema,
-      }),
-    );
-  } catch (error) {
-    return expectedFailure(error, MESSAGES);
-  }
-}
-
 export async function requestWorkLocationAction(
   input: unknown,
 ): Promise<ActionResult<MyVerification>> {
@@ -116,36 +90,21 @@ export async function requestWorkLocationAction(
   }
 }
 
-/** Step 1 of the photo: a signed URL the browser PUTs to, straight to storage. */
-export async function startSelfieAction(
+/** A signed URL the browser PUTs the photo to, straight to storage, before recording. */
+export async function startPhotoUploadAction(
   input: unknown,
 ): Promise<ActionResult<{ uploadUrl: string; uploadHeaders: Record<string, string> }>> {
   const denied = await authorize("attendance:self");
   if (denied) return denied;
-  const parsed = selfieUploadInputSchema.safeParse(input);
+  const parsed = photoUploadInputSchema.safeParse(input);
   if (!parsed.success) return fail("The photo is too large. Take it again.");
   try {
-    const started = await apiFetch("/attendance-verification/selfie", {
+    const started = await apiFetch("/attendance-verification/photo-upload", {
       method: "POST",
       body: parsed.data,
-      schema: selfieUploadSchema,
+      schema: photoUploadSchema,
     });
     return ok({ uploadUrl: started.uploadUrl, uploadHeaders: started.uploadHeaders });
-  } catch (error) {
-    return expectedFailure(error, MESSAGES);
-  }
-}
-
-export async function completeSelfieAction(): Promise<ActionResult<MyVerification>> {
-  const denied = await authorize("attendance:self");
-  if (denied) return denied;
-  try {
-    return ok(
-      await apiFetch("/attendance-verification/selfie/complete", {
-        method: "POST",
-        schema: myVerificationSchema,
-      }),
-    );
   } catch (error) {
     return expectedFailure(error, MESSAGES);
   }

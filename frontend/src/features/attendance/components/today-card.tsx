@@ -24,6 +24,12 @@ import { formatClock, formatLongDate, scheduleLine } from "@/features/attendance
 import { attendanceKeys } from "@/features/attendance/query-keys";
 import { todaySchema, type Today } from "@/features/attendance/schemas";
 import { describeToday, nextBoundary } from "@/features/attendance/today-view";
+import { CaptureDialog } from "@/features/attendance-verification/components/capture-dialog";
+import { NoticeDialog } from "@/features/attendance-verification/components/notice-dialog";
+import { VerificationSection } from "@/features/attendance-verification/components/verification-section";
+import { verificationKeys } from "@/features/attendance-verification/query-keys";
+import type { Evidence, MyVerification } from "@/features/attendance-verification/schemas";
+import { useMyVerification } from "@/features/attendance-verification/use-my-verification";
 import { fetchJson } from "@/lib/api/fetch-json";
 
 type Kind = "check_in" | "check_out";
@@ -44,6 +50,8 @@ type Notice = { tone: "error" | "info"; text: string; requestId?: string | null 
 type TodayCardProps = {
   /** From the page's server render; null when that read failed (state K). */
   initialToday: Today | null;
+  /** What this employee's organization needs for attendance; null when there's nothing to ask. */
+  initialChecks?: MyVerification | null;
   /** The organization's support contact, for the "Contact Admin/HR" state. */
   supportContact: React.ReactNode;
 };
@@ -52,9 +60,10 @@ type TodayCardProps = {
  * UX_FLOWS.md §7 — today's status and the one action that fits it. The server decides
  * the state; success shows only once the backend confirms (no optimistic UI). Every
  * intent has one Idempotency-Key, reused for its retries, so double clicks and retries
- * after a lost response can never record twice.
+ * after a lost response can never record twice. While the organization has a check on,
+ * both actions go through the camera and location first, and nothing is recorded without them.
  */
-export function TodayCard({ initialToday, supportContact }: TodayCardProps) {
+export function TodayCard({ initialToday, initialChecks = null, supportContact }: TodayCardProps) {
   const queryClient = useQueryClient();
   const query = useQuery({
     queryKey: attendanceKeys.today(),
@@ -65,6 +74,8 @@ export function TodayCard({ initialToday, supportContact }: TodayCardProps) {
     refetchInterval: TODAY_POLL_MS,
   });
   const today = newest(query.data, initialToday);
+  const checks = useMyVerification(initialChecks);
+  const needsEvidence = Boolean(checks?.location.enabled || checks?.selfie.enabled);
   const { refetch, dataUpdatedAt } = query;
 
   const [isPending, startTransition] = useTransition();
@@ -73,6 +84,8 @@ export function TodayCard({ initialToday, supportContact }: TodayCardProps) {
   /** After an unconfirmed result: re-check the state before offering any new action. */
   const [mustRecheck, setMustRecheck] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  /** The action waiting for its evidence, and the step it's on. */
+  const [capture, setCapture] = useState<{ kind: Kind; step: "notice" | "camera" } | null>(null);
   const [announcement, setAnnouncement] = useState("");
   const intent = useRef<{ kind: Kind; workDate: string; key: string } | null>(null);
   const busy = useRef(false);
@@ -133,6 +146,7 @@ export function TodayCard({ initialToday, supportContact }: TodayCardProps) {
     if (outcome.kind === "recorded") {
       if (outcome.today) queryClient.setQueryData(attendanceKeys.today(), outcome.today);
       else void refetch();
+      void queryClient.invalidateQueries({ queryKey: verificationKeys.mine() });
       return confirmed(kind, outcome.at, outcome.timezone);
     }
     if (outcome.kind === "rejected") {
@@ -147,7 +161,7 @@ export function TodayCard({ initialToday, supportContact }: TodayCardProps) {
     await recheck(kind, outcome.requestId);
   };
 
-  const run = (kind: Kind) => {
+  const run = (kind: Kind, evidence?: Evidence) => {
     if (busy.current || !today) return;
     busy.current = true;
     const previous = intent.current;
@@ -164,7 +178,7 @@ export function TodayCard({ initialToday, supportContact }: TodayCardProps) {
         const action = kind === "check_in" ? checkInAction : checkOutAction;
         let outcome: AttendanceOutcome;
         try {
-          const result = await action(key);
+          const result = await (evidence ? action(key, evidence) : action(key));
           if (!result.ok) {
             intent.current = null;
             setNotice({ tone: "error", text: result.error });
@@ -185,6 +199,16 @@ export function TodayCard({ initialToday, supportContact }: TodayCardProps) {
         setPendingKind(null);
       }
     });
+  };
+
+  const begin = (kind: Kind) => {
+    if (needsEvidence) {
+      setCapture({ kind, step: checks?.notice.acknowledged ? "camera" : "notice" });
+    } else if (kind === "check_in") {
+      run(kind);
+    } else {
+      setConfirmOpen(true);
+    }
   };
 
   if (!today) {
@@ -276,8 +300,8 @@ export function TodayCard({ initialToday, supportContact }: TodayCardProps) {
           pendingKind={pendingKind}
           isFetching={query.isFetching}
           supportContact={supportContact}
-          onCheckIn={() => run("check_in")}
-          onCheckOut={() => setConfirmOpen(true)}
+          onCheckIn={() => begin("check_in")}
+          onCheckOut={() => begin("check_out")}
           onRecheck={() =>
             loadFailed
               ? void refetch()
@@ -287,9 +311,12 @@ export function TodayCard({ initialToday, supportContact }: TodayCardProps) {
         <p role="status" aria-live="polite" className="sr-only">
           {announcement}
         </p>
+        {checks && needsEvidence && <VerificationSection mine={checks} />}
       </CardContent>
       <CardFooter className="text-xs text-muted-foreground">
-        Server time is the official time. Hadir.in records only your check-in and check-out.
+        {needsEvidence
+          ? "Server time is the official time."
+          : "Server time is the official time. Hadir.in records only your check-in and check-out."}
       </CardFooter>
 
       <ConfirmDialog
@@ -306,6 +333,25 @@ export function TodayCard({ initialToday, supportContact }: TodayCardProps) {
         confirmLabel="Yes, check out"
         onConfirm={async () => run("check_out")}
       />
+      {capture && checks && (
+        <>
+          <NoticeDialog
+            open={capture.step === "notice"}
+            onOpenChange={(open) => !open && setCapture(null)}
+            location={checks.location.enabled}
+            selfie={checks.selfie.enabled}
+            onAcknowledged={() => setCapture({ kind: capture.kind, step: "camera" })}
+          />
+          <CaptureDialog
+            open={capture.step === "camera"}
+            onOpenChange={(open) => !open && setCapture(null)}
+            moment={capture.kind}
+            photo={checks.selfie.enabled}
+            location={checks.location.enabled}
+            onCaptured={(evidence) => run(capture.kind, evidence)}
+          />
+        </>
+      )}
     </Card>
   );
 }

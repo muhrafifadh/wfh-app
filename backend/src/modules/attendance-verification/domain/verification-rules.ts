@@ -1,7 +1,4 @@
-import {
-  ACCURACY_THRESHOLD_METERS,
-  CAPTURE_WINDOW_MS,
-} from "@/modules/attendance-verification/attendance-verification.constants.js";
+import { ACCURACY_THRESHOLD_METERS } from "@/modules/attendance-verification/attendance-verification.constants.js";
 
 export type Coordinates = { latitude: number; longitude: number };
 export type Area = Coordinates & { radiusMeters: number };
@@ -44,21 +41,6 @@ export function locationOutcome(reading: LocationReading, area: Area): LocationO
 
 /** Decisions V4, V10, V11: only being outside the area asks for a person's review. */
 export const isFlagged = (result: string): boolean => result === "outside_approved_area";
-
-export const withinCaptureWindow = (checkInAt: Date, now: Date): boolean =>
-  now.getTime() - checkInAt.getTime() <= CAPTURE_WINDOW_MS;
-
-/** Whether a new location reading may replace this result, and why not. */
-export function locationSubmission(
-  result: string,
-  checkInAt: Date,
-  now: Date,
-): "allowed" | "already_recorded" | "window_closed" {
-  // Retrying after low accuracy is the employee's choice, any time that work date (V11)
-  if (result === "low_accuracy") return "allowed";
-  if (result !== "not_shared" && result !== "no_approved_area") return "already_recorded";
-  return withinCaptureWindow(checkInAt, now) ? "allowed" : "window_closed";
-}
 
 export const roundCoordinate = (value: number, decimals: number): number =>
   Number(value.toFixed(decimals));

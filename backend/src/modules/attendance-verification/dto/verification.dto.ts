@@ -7,6 +7,7 @@ import {
   MAX_RADIUS_METERS,
   MIN_RADIUS_METERS,
   PHOTO_CONTENT_TYPES,
+  VERIFICATION_MOMENTS,
 } from "@/modules/attendance-verification/attendance-verification.constants.js";
 
 const latitude = z.number().min(-90).max(90);
@@ -21,21 +22,23 @@ export const updateVerificationSettingsSchema = z.strictObject({
 export type UpdateVerificationSettingsInput = z.infer<typeof updateVerificationSettingsSchema>;
 export class UpdateVerificationSettingsDto extends createZodDto(updateVerificationSettingsSchema) {}
 
-/** Read once and discarded after the comparison (decision V3). */
-export const submitLocationSchema = z.strictObject({
-  latitude,
-  longitude,
-  accuracyMeters: z.number().min(0).max(1_000_000),
+/** The evidence a check-in or check-out carries. The photo is the one already uploaded for it. */
+export const recordWithEvidenceSchema = z.strictObject({
+  /** Read when the photo is taken, and discarded after the comparison (decision V3). */
+  location: z
+    .strictObject({ latitude, longitude, accuracyMeters: z.number().min(0).max(1_000_000) })
+    .optional(),
 });
-export type SubmitLocationInput = z.infer<typeof submitLocationSchema>;
-export class SubmitLocationDto extends createZodDto(submitLocationSchema) {}
+export type RecordWithEvidenceInput = z.infer<typeof recordWithEvidenceSchema>;
+export class RecordWithEvidenceDto extends createZodDto(recordWithEvidenceSchema) {}
 
-export const createSelfieUploadSchema = z.strictObject({
+export const createPhotoUploadSchema = z.strictObject({
+  moment: z.enum(VERIFICATION_MOMENTS),
   contentType: z.enum(PHOTO_CONTENT_TYPES),
   size: z.int().min(1).max(MAX_PHOTO_BYTES),
 });
-export type CreateSelfieUploadInput = z.infer<typeof createSelfieUploadSchema>;
-export class CreateSelfieUploadDto extends createZodDto(createSelfieUploadSchema) {}
+export type CreatePhotoUploadInput = z.infer<typeof createPhotoUploadSchema>;
+export class CreatePhotoUploadDto extends createZodDto(createPhotoUploadSchema) {}
 
 export const requestWorkLocationSchema = z.strictObject({
   label: z.string().trim().min(1, "Name this location").max(120),

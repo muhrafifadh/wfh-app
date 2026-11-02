@@ -3,13 +3,10 @@ import {
   distanceMeters,
   isFlagged,
   locationOutcome,
-  locationSubmission,
   roundCoordinate,
 } from "@/modules/attendance-verification/domain/verification-rules.js";
 
 const area = { latitude: -6.2, longitude: 106.8, radiusMeters: 1000 };
-const checkInAt = new Date("2026-11-02T02:00:00.000Z");
-const after = (minutes: number) => new Date(checkInAt.getTime() + minutes * 60_000);
 
 describe("distanceMeters", () => {
   it("is zero for the same point", () => {
@@ -77,24 +74,6 @@ describe("isFlagged", () => {
     ]) {
       expect(isFlagged(result)).toBe(false);
     }
-  });
-});
-
-describe("locationSubmission", () => {
-  it("allows the first reading within the capture window only", () => {
-    expect(locationSubmission("not_shared", checkInAt, after(5))).toBe("allowed");
-    expect(locationSubmission("not_shared", checkInAt, after(6))).toBe("window_closed");
-  });
-
-  it("allows a retry after low accuracy later that day", () => {
-    expect(locationSubmission("low_accuracy", checkInAt, after(240))).toBe("allowed");
-  });
-
-  it("refuses a retry after any other result", () => {
-    expect(locationSubmission("verified", checkInAt, after(1))).toBe("already_recorded");
-    expect(locationSubmission("outside_approved_area", checkInAt, after(1))).toBe(
-      "already_recorded",
-    );
   });
 });
 

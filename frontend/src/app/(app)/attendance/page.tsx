@@ -2,13 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 
-import { loadToday } from "@/app/(app)/_components/load-today";
+import { loadMyChecks, loadToday } from "@/app/(app)/_components/load-today";
 import { NoAccess } from "@/app/(app)/_components/no-access";
 import { Skeleton } from "@/components/ui/skeleton";
 import { routes } from "@/config/routes";
 import { RecentAttendance } from "@/features/attendance/components/recent-attendance";
 import { TodayCard } from "@/features/attendance/components/today-card";
-import { VerificationPanelLoader } from "@/features/attendance-verification/components/verification-panel-loader";
 import { SupportContact } from "@/features/profile/components/support-contact";
 import { getMeContext } from "@/features/profile/queries";
 import { can, requireUser } from "@/lib/auth/session";
@@ -20,6 +19,7 @@ export default async function AttendancePage() {
   const user = await requireUser();
   if (!can(user, "attendance:self")) return <NoAccess title="Today's attendance" />;
   const [today, context] = await Promise.all([loadToday(), getMeContext()]);
+  const checks = context.employee ? await loadMyChecks() : null;
 
   return (
     <>
@@ -29,13 +29,9 @@ export default async function AttendancePage() {
         <div className="grid gap-6">
           <TodayCard
             initialToday={today}
+            initialChecks={checks}
             supportContact={<SupportContact contact={context.organization.supportContact} />}
           />
-          {context.employee && (
-            <Suspense fallback={null}>
-              <VerificationPanelLoader />
-            </Suspense>
-          )}
         </div>
         {context.employee && (
           <section aria-labelledby="recent-heading" className="flex flex-col gap-3">

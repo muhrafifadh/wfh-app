@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Headers,
   HttpCode,
   HttpStatus,
   Param,
@@ -9,17 +10,20 @@ import {
   Patch,
   Post,
   Query,
+  Res,
 } from "@nestjs/common";
 import {
   ApiBearerAuth,
   ApiConflictResponse,
   ApiForbiddenResponse,
+  ApiHeader,
   ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiTags,
   ApiUnprocessableEntityResponse,
 } from "@nestjs/swagger";
 
+import type { Response } from "express";
 import { ZodResponse } from "nestjs-zod";
 
 import { Authenticated } from "@/common/decorators/authenticated.decorator.js";
@@ -30,12 +34,12 @@ import type { AuthUser } from "@/common/types/auth.js";
 import { AttendanceVerificationService } from "@/modules/attendance-verification/attendance-verification.service.js";
 import {
   ApproveWorkLocationDto,
-  CreateSelfieUploadDto,
+  CreatePhotoUploadDto,
   DisclosePhotoDto,
   ListVerificationsQuery,
+  RecordWithEvidenceDto,
   RequestPhotoDto,
   RequestWorkLocationDto,
-  SubmitLocationDto,
   UpdateVerificationSettingsDto,
 } from "@/modules/attendance-verification/dto/verification.dto.js";
 import {
@@ -43,7 +47,7 @@ import {
   MyVerificationResponse,
   PhotoRequestListResponse,
   PhotoRequestResponse,
-  SelfieUploadResponse,
+  PhotoUploadResponse,
   SignedPhotoResponse,
   VerificationItemResponse,
   VerificationListResponse,
@@ -51,11 +55,13 @@ import {
   WorkLocationRequestListResponse,
   WorkLocationRequestResponse,
 } from "@/modules/attendance-verification/dto/verification.response.js";
+import { IDEMPOTENCY_HEADER, markReplay } from "@/modules/attendance/attendance.controller.js";
+import { AttendanceResponse } from "@/modules/attendance/dto/attendance.response.js";
 
-const CAPTURE_ERRORS =
-  "VERIFICATION_DISABLED, VERIFICATION_NOTICE_REQUIRED, ATTENDANCE_NOT_CHECKED_IN, VERIFICATION_ALREADY_RECORDED, VERIFICATION_WINDOW_CLOSED";
+const EVIDENCE_ERRORS =
+  "VERIFICATION_DISABLED, VERIFICATION_NOTICE_REQUIRED, VERIFICATION_PHOTO_REQUIRED, VERIFICATION_LOCATION_REQUIRED, UPLOAD_NOT_RECEIVED, IDEMPOTENCY_KEY_REUSED";
 
-/** ATTENDANCE_VERIFICATION_PLAN.md — optional evidence at check-in. Off by default. */
+/** ATTENDANCE_VERIFICATION_PLAN.md — the evidence attendance needs while a method is on. Off by default. */
 @ApiTags("attendance-verification")
 @ApiBearerAuth()
 @ApiForbiddenResponse({ type: ErrorResponse, description: "FORBIDDEN" })
@@ -107,36 +113,63 @@ export class AttendanceVerificationController {
     await this.verification.acknowledgeNotice(user);
   }
 
-  /** One reading after check-in, or a retry after low accuracy. Never stored; never blocks attendance. */
-  @Post("location")
+  /** A URL to PUT the photo to, before recording. Not the uploads module: colleagues can never read these. */
+  @Post("photo-upload")
   @RequirePermissions("attendance:self")
-  @HttpCode(HttpStatus.OK)
-  @ZodResponse({ status: 200, type: MyVerificationResponse })
-  @ApiConflictResponse({ type: ErrorResponse, description: CAPTURE_ERRORS })
-  submitLocation(@CurrentUser() user: AuthUser, @Body() dto: SubmitLocationDto) {
-    return this.verification.submitLocation(user, dto);
-  }
-
-  /** A URL to PUT the check-in photo to. Not the uploads module: these are never readable by colleagues. */
-  @Post("selfie")
-  @RequirePermissions("attendance:self")
-  @ZodResponse({ status: 201, type: SelfieUploadResponse })
-  @ApiConflictResponse({ type: ErrorResponse, description: CAPTURE_ERRORS })
-  createSelfieUpload(@CurrentUser() user: AuthUser, @Body() dto: CreateSelfieUploadDto) {
-    return this.verification.createSelfieUpload(user, dto);
-  }
-
-  @Post("selfie/complete")
-  @RequirePermissions("attendance:self")
-  @HttpCode(HttpStatus.OK)
-  @ZodResponse({ status: 200, type: MyVerificationResponse })
+  @ZodResponse({ status: 201, type: PhotoUploadResponse })
   @ApiConflictResponse({
     type: ErrorResponse,
-    description: `${CAPTURE_ERRORS}, UPLOAD_NOT_RECEIVED`,
+    description: "VERIFICATION_DISABLED, VERIFICATION_NOTICE_REQUIRED",
   })
-  @ApiUnprocessableEntityResponse({ type: ErrorResponse, description: "UPLOAD_MISMATCH" })
-  completeSelfie(@CurrentUser() user: AuthUser) {
-    return this.verification.completeSelfie(user);
+  createPhotoUpload(@CurrentUser() user: AuthUser, @Body() dto: CreatePhotoUploadDto) {
+    return this.verification.createPhotoUpload(user, dto);
+  }
+
+  /** Records a check-in with its evidence. Nothing is recorded if the evidence is missing. */
+  @Post("check-in")
+  @RequirePermissions("attendance:self")
+  @ApiHeader(IDEMPOTENCY_HEADER)
+  @ZodResponse({ status: 201, type: AttendanceResponse })
+  @ApiConflictResponse({
+    type: ErrorResponse,
+    description: `${EVIDENCE_ERRORS}, ATTENDANCE_ALREADY_CHECKED_IN`,
+  })
+  @ApiUnprocessableEntityResponse({
+    type: ErrorResponse,
+    description:
+      "UPLOAD_MISMATCH, EMPLOYEE_PROFILE_REQUIRED, EMPLOYEE_INACTIVE, ATTENDANCE_NOT_WORKDAY, CHECK_IN_TOO_EARLY, CHECK_IN_WINDOW_CLOSED",
+  })
+  async checkIn(
+    @CurrentUser() user: AuthUser,
+    @Headers("idempotency-key") key: string | undefined,
+    @Body() dto: RecordWithEvidenceDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return markReplay(res, await this.verification.checkIn(user, key, dto));
+  }
+
+  /** Records a check-out with its evidence. Nothing is recorded if the evidence is missing. */
+  @Post("check-out")
+  @RequirePermissions("attendance:self")
+  @HttpCode(HttpStatus.OK)
+  @ApiHeader(IDEMPOTENCY_HEADER)
+  @ZodResponse({ status: 200, type: AttendanceResponse })
+  @ApiConflictResponse({
+    type: ErrorResponse,
+    description: `${EVIDENCE_ERRORS}, ATTENDANCE_NOT_CHECKED_IN, ATTENDANCE_ALREADY_CHECKED_OUT`,
+  })
+  @ApiUnprocessableEntityResponse({
+    type: ErrorResponse,
+    description:
+      "UPLOAD_MISMATCH, EMPLOYEE_PROFILE_REQUIRED, EMPLOYEE_INACTIVE, CHECK_OUT_WINDOW_CLOSED",
+  })
+  async checkOut(
+    @CurrentUser() user: AuthUser,
+    @Headers("idempotency-key") key: string | undefined,
+    @Body() dto: RecordWithEvidenceDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return markReplay(res, await this.verification.checkOut(user, key, dto));
   }
 
   /** Declares a work-from-home area. It becomes active only once Admin/HR approves it. */

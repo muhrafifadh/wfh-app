@@ -114,3 +114,13 @@ export class IdempotencyKeyReusedError extends AppError {
     super("This Idempotency-Key was already used for a different request. Use a new key.");
   }
 }
+
+/** The organization requires a photo or location: use POST /attendance-verification/check-in or check-out. */
+export class VerificationRequiredError extends AppError {
+  readonly status = 409;
+  readonly code = "VERIFICATION_REQUIRED";
+
+  constructor() {
+    super("Your organization needs a photo and location to record attendance.");
+  }
+}

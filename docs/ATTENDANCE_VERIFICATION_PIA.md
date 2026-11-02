@@ -25,7 +25,7 @@ What the reviewer should look at first:
 
 1. **A selfie may legally be biometric data.** The plan excludes face matching, but secondary sources quote the law's elucidation as giving "gambar wajah" (facial images) as an example of biometric data, which is specific personal data. Selfies are treated as specific personal data unless legal says otherwise.
 2. **PP 33/2026 applies to this work.** The implementing regulation was promulgated on 16 July 2026 and takes effect on 16 January 2027. It reportedly requires an impact assessment to be finished before high-risk processing begins.
-3. **Declining must be free of consequence for consent to work.** Decision V10 makes declining neutral, but Admin/HR can still review it, and the final handling depends on Q3.
+3. **Declining is no longer possible while a method is on.** Since 2 November 2026 a check-in or check-out isn't recorded without its evidence. Consent can't be the legal basis for that, so legitimate interest or contract needs confirming (Q3 and plan §4.1 D5).
 4. **Necessity is not yet evidenced.** The purpose is decided (V1), but no incidents are recorded (§3). Decision V7 requires necessity to be shown before each step.
 
 ## 2. Scope and roles
@@ -124,12 +124,12 @@ Likelihood and impact are preliminary judgements, before mitigation.
 | A selfie captures a child or other household member      | Medium     | High   | Tell the employee to frame only themselves; short retention; narrow access             |
 | A selfie reveals health, religion or home circumstances  | Medium     | Medium | Narrow access, no reuse, no other processing                                           |
 | A flag leads to unfair treatment despite "human review"  | Medium     | High   | Neutral wording, no effect on status, a way to respond (decision V4)                   |
-| Employees feel unable to refuse                          | High       | Medium | Declining shows a neutral "Not shared" (decision V10), clear notice                    |
+| Employees are unable to refuse                           | High       | High   | Clear notice; Admin/HR handles anyone who can't comply; off until an organization documents the need (V7). Not fully mitigated |
 | Felt as surveillance; loss of trust                      | High       | Medium | Moment-only capture, notice first, publish what managers can see                       |
 | A manager misuses access to look at someone's photos     | Low        | High   | Managers can't open photos; least-privilege permission, audited views (V9)             |
 | Scope creep into tracking or face matching               | Low        | High   | Principles in domain rules; any extension needs a new assessment                       |
 | Faked data wrongly clears or wrongly flags someone       | Medium     | Medium | Say plainly that results are not proof; no automatic consequence                       |
-| Employee without a camera or precise location is flagged | Medium     | Low    | Neutral "Not shared" or "Couldn't confirm"; no flag for low accuracy; retry (V10, V11) |
+| Employee without a camera or location can't record attendance | Medium | High  | Admin/HR handles it through a correction; low accuracy still records and isn't flagged (V11) |
 
 ## 8. Employee rights
 
@@ -149,19 +149,19 @@ The notice is shown before the first collection. Square brackets are filled in p
 
 > **Attendance checks at [Organization]**
 >
-> From [date], [Organization] will ask for [your location / a photo] when you check in, to help confirm that attendance is recorded by the right person from your approved work location. Nothing is collected when you check out.
+> From [date], [Organization] needs [your location / a photo] each time you check in and check out, to help confirm that attendance is recorded by the right person from your approved work location.
 >
-> **What is collected.** Location: your position once, when you press the button. It is compared with [your approved area], then discarded. We keep the result and a rough distance. If the reading isn't accurate enough, you'll see "Couldn't confirm". That isn't a failed check and doesn't affect your attendance, and you can try again if you want to. Photo: one photo, taken when you press the button. Please frame only yourself, and keep other people out of it.
+> **What is collected.** Location: your position once each time, when you take the photo. It is compared with [your approved area], then discarded. We keep the result and a rough distance. If the reading isn't accurate enough, you'll see "Couldn't confirm". That isn't a failed check and doesn't affect your attendance. Photo: one photo each time, taken when you press the button. Please frame only yourself, and keep other people out of it.
 >
-> **What is not collected.** We never track you between check-ins, and we don't use face recognition.
+> **What is not collected.** We never track you between check-in and check-out, and we don't use face recognition.
 >
 > **Who can see it.** Your direct manager sees only the status and any review flag. Authorized Admin/HR staff can open a photo, and every view is recorded. You can't view photos in the app. To get your own photo, ask [support contact]; we'll confirm your identity before sharing it, and record the request.
 >
 > **How long it is kept.** Photos: 30 days. Results: 90 days. We keep them longer only if a documented legal or investigation requirement applies.
 >
-> **How it is used.** Only to verify attendance. It isn't used for productivity or performance scoring, and it doesn't change your attendance status automatically. These checks can be wrong, so a person reviews any flag and you can respond.
+> **How it is used.** Only to verify attendance. It isn't used for productivity or performance scoring, and the result doesn't change your attendance status automatically. These checks can be wrong, so a person reviews any flag and you can respond.
 >
-> **If you can't or don't want to share.** You can still check in, and your attendance is recorded normally. Your record shows "Not shared", which isn't treated as a failed check. [Final wording subject to legal review.]
+> **If you can't or don't want to share.** Your check-in or check-out isn't recorded without them. If your device can't do this, contact [support contact] or request a correction. [Final wording subject to legal review.]
 >
 > **Your rights.** You can ask to see or correct this data, or object to it, by contacting [support contact]. [Legal basis and full privacy notice link.]
 

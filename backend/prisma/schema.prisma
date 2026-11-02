@@ -40,6 +40,7 @@ model Organization {
   workLocations                      WorkLocation[]
   verificationNoticeAcknowledgements VerificationNoticeAcknowledgement[]
   verificationPhotoRequests          VerificationPhotoRequest[]
+  verificationPendingPhotos          VerificationPendingPhoto[]
   divisions                          Division[]
   employees                          Employee[]
   workSchedules                      WorkSchedule[]
@@ -298,6 +299,7 @@ model Employee {
   workLocations                      WorkLocation[]
   verificationNoticeAcknowledgements VerificationNoticeAcknowledgement[]
   verificationPhotoRequests          VerificationPhotoRequest[]
+  verificationPendingPhotos          VerificationPendingPhoto[]
 
   @@unique([organizationId, employeeNumber])
   @@index([organizationId, status, divisionId])
@@ -627,6 +629,11 @@ enum VerificationMethod {
   selfie
 }
 
+enum VerificationMoment {
+  check_in
+  check_out
+}
+
 /// ATTENDANCE_VERIFICATION_PLAN.md §8 (V10, V11). Only outside_approved_area is flagged for review.
 enum VerificationResult {
   verified
@@ -643,46 +650,62 @@ enum VerificationDistanceBand {
   over_10km
 }
 
-/// Evidence for one check-in, apart from the attendance record: deleting it never changes attendance.
+/// Evidence for one check-in or check-out, apart from the attendance record: deleting it never changes attendance.
 /// Raw coordinates are never stored here (decision V3).
 model AttendanceVerification {
-  id                      String                    @id @default(uuid(7)) @db.Uuid
-  organizationId          String                    @map("organization_id") @db.Uuid
-  attendanceId            String                    @map("attendance_id") @db.Uuid
-  employeeId              String                    @map("employee_id") @db.Uuid
-  workDate                DateTime                  @map("work_date") @db.Date
-  method                  VerificationMethod
-  result                  VerificationResult
-  accuracyMeters          Int?                      @map("accuracy_meters")
-  distanceBand            VerificationDistanceBand? @map("distance_band")
-  capturedAt              DateTime?                 @map("captured_at") @db.Timestamptz(3)
+  id               String                    @id @default(uuid(7)) @db.Uuid
+  organizationId   String                    @map("organization_id") @db.Uuid
+  attendanceId     String                    @map("attendance_id") @db.Uuid
+  employeeId       String                    @map("employee_id") @db.Uuid
+  workDate         DateTime                  @map("work_date") @db.Date
+  moment           VerificationMoment
+  method           VerificationMethod
+  result           VerificationResult
+  accuracyMeters   Int?                      @map("accuracy_meters")
+  distanceBand     VerificationDistanceBand? @map("distance_band")
+  capturedAt       DateTime?                 @map("captured_at") @db.Timestamptz(3)
   /// Object key of the selfie. Never in the uploads table, which anyone in the organization can read.
-  photoKey                String?                   @map("photo_key")
-  photoDeleteAfter        DateTime?                 @map("photo_delete_after") @db.Timestamptz(3)
-  /// A selfie upload in progress: replaced by a retake, removed if it never completes.
-  pendingPhotoKey         String?                   @map("pending_photo_key")
-  pendingPhotoContentType String?                   @map("pending_photo_content_type") @db.VarChar(32)
-  pendingPhotoSize        Int?                      @map("pending_photo_size")
-  pendingPhotoExpiresAt   DateTime?                 @map("pending_photo_expires_at") @db.Timestamptz(3)
-  reviewedAt              DateTime?                 @map("reviewed_at") @db.Timestamptz(3)
+  photoKey         String?                   @map("photo_key")
+  photoDeleteAfter DateTime?                 @map("photo_delete_after") @db.Timestamptz(3)
+  reviewedAt       DateTime?                 @map("reviewed_at") @db.Timestamptz(3)
   /// Decision V8: results are deleted after 90 days, whatever happens to the attendance record.
-  deleteAfter             DateTime                  @map("delete_after") @db.Timestamptz(3)
-  createdAt               DateTime                  @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt               DateTime                  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deleteAfter      DateTime                  @map("delete_after") @db.Timestamptz(3)
+  createdAt        DateTime                  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime                  @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   organization  Organization               @relation(fields: [organizationId], references: [id])
   attendance    Attendance                 @relation(fields: [attendanceId], references: [id])
   employee      Employee                   @relation(fields: [employeeId], references: [id])
   photoRequests VerificationPhotoRequest[]
 
-  @@unique([attendanceId, method])
+  @@unique([attendanceId, moment, method])
   @@index([organizationId, workDate(sort: Desc)])
   @@index([organizationId, result, reviewedAt])
   @@index([employeeId, workDate(sort: Desc)])
   @@index([deleteAfter])
   @@index([photoDeleteAfter])
-  @@index([pendingPhotoExpiresAt])
   @@map("attendance_verifications")
+}
+
+/// A photo uploaded for a check-in or check-out that isn't recorded yet. One per employee and
+/// moment: a retake replaces it, and the cleanup job removes it if it's never used.
+model VerificationPendingPhoto {
+  id             String             @id @default(uuid(7)) @db.Uuid
+  organizationId String             @map("organization_id") @db.Uuid
+  employeeId     String             @map("employee_id") @db.Uuid
+  moment         VerificationMoment
+  key            String
+  contentType    String             @map("content_type") @db.VarChar(32)
+  size           Int
+  expiresAt      DateTime           @map("expires_at") @db.Timestamptz(3)
+  createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  employee     Employee     @relation(fields: [employeeId], references: [id])
+
+  @@unique([employeeId, moment])
+  @@index([expiresAt])
+  @@map("verification_pending_photos")
 }
 
 enum WorkLocationStatus {

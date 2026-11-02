@@ -12,7 +12,7 @@ export const env = createEnv({
       .enum(["true", "false"])
       .default("false")
       .transform((v) => v === "true"),
-    // Lets the app ask for location and camera at check-in (ATTENDANCE_VERIFICATION_PLAN.md).
+    // Lets the app ask for location and camera at check-in and check-out (ATTENDANCE_VERIFICATION_PLAN.md).
     // Keep in sync with the backend's VERIFICATION_ENABLED; off until legal and hosting are cleared.
     VERIFICATION_ENABLED: z
       .enum(["true", "false"])

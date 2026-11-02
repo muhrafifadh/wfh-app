@@ -8,6 +8,7 @@ import type { Paginated } from "@/common/dto/pagination.js";
 import { NotFoundError } from "@/common/errors/app-error.js";
 import { addDays, fromDateColumn, toDateColumn, type LocalDate } from "@/common/time/zoned-time.js";
 import type { AuthUser } from "@/common/types/auth.js";
+import { AppConfig } from "@/config/config.module.js";
 import type { IdempotencyAction, Prisma } from "@/generated/prisma/client.js";
 import { Clock } from "@/infra/clock/clock.js";
 import { PrismaService } from "@/infra/prisma/prisma.service.js";
@@ -27,6 +28,7 @@ import {
   IdempotencyKeyReusedError,
   NotCheckedInError,
   NotWorkdayError,
+  VerificationRequiredError,
 } from "@/modules/attendance/attendance.errors.js";
 import {
   ATTENDANCE_EVENTS,
@@ -134,6 +136,7 @@ export class AttendanceService {
     private readonly holidays: HolidaysService,
     private readonly clock: Clock,
     private readonly events: EventEmitter2,
+    private readonly config: AppConfig,
   ) {}
 
   /**
@@ -209,6 +212,25 @@ export class AttendanceService {
   // Check-in and check-out (§7, §8). Time, employee and status come from the server.
 
   async checkIn(user: AuthUser, idempotencyKey: string | undefined): Promise<ActionResult> {
+    await this.refuseIfEvidenceRequired(user);
+    return this.recordCheckIn(user, idempotencyKey);
+  }
+
+  async checkOut(user: AuthUser, idempotencyKey: string | undefined): Promise<ActionResult> {
+    await this.refuseIfEvidenceRequired(user);
+    return this.recordCheckOut(user, idempotencyKey);
+  }
+
+  /** ATTENDANCE_VERIFICATION_PLAN.md §3: with a method on, attendance needs its evidence. */
+  private async refuseIfEvidenceRequired(user: AuthUser): Promise<void> {
+    if (!this.config.get("VERIFICATION_ENABLED")) return;
+    if (await this.repo.organizationRequiresEvidence(user.organizationId)) {
+      throw new VerificationRequiredError();
+    }
+  }
+
+  /** Records with no check on evidence; the verification module calls this once it has it. */
+  async recordCheckIn(user: AuthUser, idempotencyKey: string | undefined): Promise<ActionResult> {
     const key = this.parseKey(idempotencyKey);
     const now = this.clock.now();
     const { employee, workDate } = await this.eligibleToday(user, now);
@@ -267,7 +289,8 @@ export class AttendanceService {
     return result;
   }
 
-  async checkOut(user: AuthUser, idempotencyKey: string | undefined): Promise<ActionResult> {
+  /** As recordCheckIn. */
+  async recordCheckOut(user: AuthUser, idempotencyKey: string | undefined): Promise<ActionResult> {
     const key = this.parseKey(idempotencyKey);
     const now = this.clock.now();
     const { employee, workDate } = await this.eligibleToday(user, now);

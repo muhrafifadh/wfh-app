@@ -6,6 +6,7 @@ import { routes } from "@/config/routes";
 import { formatMinute } from "@/features/attendance/format";
 import { getToday } from "@/features/attendance/queries";
 import { attendanceSchema, idempotencyKeySchema, type Today } from "@/features/attendance/schemas";
+import { evidenceSchema } from "@/features/attendance-verification/schemas";
 import { fail, ok, type ActionResult } from "@/lib/actions";
 import { apiFetch } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/errors";
@@ -51,6 +52,19 @@ function rejectionMessage(error: ApiError, timeZone: string | null): string | nu
       return "Your employee profile is inactive. Contact Admin/HR.";
     case "EMPLOYEE_PROFILE_REQUIRED":
       return "Your account doesn't have an active employee profile. Contact Admin/HR.";
+    case "VERIFICATION_REQUIRED":
+      return "Your organization needs a photo and location for attendance. Refresh the page and try again.";
+    case "VERIFICATION_DISABLED":
+      return "Your organization's attendance checks have changed. Refresh the page and try again.";
+    case "VERIFICATION_NOTICE_REQUIRED":
+      return "Read the attendance checks notice first. Refresh the page and try again.";
+    case "VERIFICATION_PHOTO_REQUIRED":
+    case "UPLOAD_NOT_RECEIVED":
+      return "Your photo didn't arrive, so nothing was recorded. Take it again.";
+    case "UPLOAD_MISMATCH":
+      return "Your photo couldn't be read, so nothing was recorded. Take it again.";
+    case "VERIFICATION_LOCATION_REQUIRED":
+      return "Your location didn't arrive, so nothing was recorded. Try again.";
     case "IDEMPOTENCY_KEY_REUSED":
       return "That attempt was already used. Check your status and try again.";
     default:
@@ -69,22 +83,31 @@ async function todayOrNull(): Promise<Today | null> {
 }
 
 async function record(
-  path: "/attendance/check-in" | "/attendance/check-out",
+  action: "check-in" | "check-out",
   key: unknown,
+  evidence: unknown,
 ): Promise<ActionResult<AttendanceOutcome>> {
   const user = await requireUser();
   if (!can(user, "attendance:self")) return fail("You don't have permission to record attendance.");
   const parsedKey = idempotencyKeySchema.safeParse(key);
   if (!parsedKey.success) return fail("Something went wrong. Refresh the page and try again.");
 
+  const parsedEvidence = evidence === undefined ? null : evidenceSchema.safeParse(evidence);
+  if (parsedEvidence && !parsedEvidence.success)
+    return fail("Your browser sent unusable evidence. Try again.");
+
   let recorded;
   try {
-    // No body: time, employee and status all come from the server (PRD ATT-03)
-    recorded = await apiFetch(path, {
-      method: "POST",
-      headers: { "Idempotency-Key": parsedKey.data },
-      schema: attendanceSchema,
-    });
+    // Time, employee and status all come from the server (PRD ATT-03)
+    recorded = await apiFetch(
+      parsedEvidence ? `/attendance-verification/${action}` : `/attendance/${action}`,
+      {
+        method: "POST",
+        headers: { "Idempotency-Key": parsedKey.data },
+        schema: attendanceSchema,
+        ...(parsedEvidence && { body: parsedEvidence.data }),
+      },
+    );
   } catch (error) {
     if (error instanceof ApiError && error.status < 500) {
       const today = await todayOrNull();
@@ -102,7 +125,8 @@ async function record(
 
   revalidatePath(routes.dashboard());
   revalidatePath(routes.attendanceHistory());
-  const at = path === "/attendance/check-in" ? recorded.checkInAt : recorded.checkOutAt;
+  revalidatePath(routes.myVerification());
+  const at = action === "check-in" ? recorded.checkInAt : recorded.checkOutAt;
   return ok({
     kind: "recorded",
     at: at ?? recorded.updatedAt,
@@ -111,12 +135,15 @@ async function record(
   });
 }
 
-/** Records a check-in at server time. Reuse `idempotencyKey` to retry the same intent. */
-export async function checkInAction(idempotencyKey: unknown) {
-  return record("/attendance/check-in", idempotencyKey);
+/**
+ * Records a check-in at server time. Reuse `idempotencyKey` to retry the same intent.
+ * `evidence` is required while the organization has a check on.
+ */
+export async function checkInAction(idempotencyKey: unknown, evidence?: unknown) {
+  return record("check-in", idempotencyKey, evidence);
 }
 
 /** Records today's check-out at server time. Reuse `idempotencyKey` to retry. */
-export async function checkOutAction(idempotencyKey: unknown) {
-  return record("/attendance/check-out", idempotencyKey);
+export async function checkOutAction(idempotencyKey: unknown, evidence?: unknown) {
+  return record("check-out", idempotencyKey, evidence);
 }

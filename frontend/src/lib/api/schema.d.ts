@@ -836,7 +836,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/attendance-verification/location": {
+    "/v1/attendance-verification/photo-upload": {
         parameters: {
             query?: never;
             header?: never;
@@ -845,14 +845,14 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["AttendanceVerificationController_submitLocation"];
+        post: operations["AttendanceVerificationController_createPhotoUpload"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/v1/attendance-verification/selfie": {
+    "/v1/attendance-verification/check-in": {
         parameters: {
             query?: never;
             header?: never;
@@ -861,14 +861,14 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["AttendanceVerificationController_createSelfieUpload"];
+        post: operations["AttendanceVerificationController_checkIn"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/v1/attendance-verification/selfie/complete": {
+    "/v1/attendance-verification/check-out": {
         parameters: {
             query?: never;
             header?: never;
@@ -877,7 +877,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["AttendanceVerificationController_completeSelfie"];
+        post: operations["AttendanceVerificationController_checkOut"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2155,16 +2155,18 @@ export interface components {
         MyVerificationResponse_Output: {
             location: {
                 enabled: boolean;
-                /** @enum {string|null} */
-                result: "verified" | "outside_approved_area" | "low_accuracy" | "not_shared" | "no_approved_area" | "captured" | null;
-                canSubmit: boolean;
             };
             selfie: {
                 enabled: boolean;
-                /** @enum {string|null} */
-                result: "verified" | "outside_approved_area" | "low_accuracy" | "not_shared" | "no_approved_area" | "captured" | null;
-                canSubmit: boolean;
             };
+            results: {
+                /** @enum {string} */
+                moment: "check_in" | "check_out";
+                /** @enum {string} */
+                method: "location" | "selfie";
+                /** @enum {string} */
+                result: "verified" | "outside_approved_area" | "low_accuracy" | "not_shared" | "no_approved_area" | "captured";
+            }[];
             notice: {
                 version: number;
                 acknowledged: boolean;
@@ -2186,6 +2188,8 @@ export interface components {
                 /** Format: date */
                 workDate: string;
                 /** @enum {string} */
+                moment: "check_in" | "check_out";
+                /** @enum {string} */
                 method: "location" | "selfie";
                 /** @enum {string} */
                 result: "verified" | "outside_approved_area" | "low_accuracy" | "not_shared" | "no_approved_area" | "captured";
@@ -2194,17 +2198,14 @@ export interface components {
                 photoRequest: "open" | "disclosed" | "declined" | null;
             }[];
         };
-        SubmitLocationDto: {
-            latitude: number;
-            longitude: number;
-            accuracyMeters: number;
-        };
-        CreateSelfieUploadDto: {
+        CreatePhotoUploadDto: {
+            /** @enum {string} */
+            moment: "check_in" | "check_out";
             /** @enum {string} */
             contentType: "image/jpeg" | "image/webp";
             size: number;
         };
-        SelfieUploadResponse_Output: {
+        PhotoUploadResponse_Output: {
             /** Format: uri */
             uploadUrl: string;
             uploadHeaders: {
@@ -2212,6 +2213,13 @@ export interface components {
             };
             /** Format: date-time */
             expiresAt: string;
+        };
+        RecordWithEvidenceDto: {
+            location?: {
+                latitude: number;
+                longitude: number;
+                accuracyMeters: number;
+            };
         };
         RequestWorkLocationDto: {
             label: string;
@@ -2319,6 +2327,8 @@ export interface components {
                 /** Format: date */
                 workDate: string;
                 /** @enum {string} */
+                moment: "check_in" | "check_out";
+                /** @enum {string} */
                 method: "location" | "selfie";
                 /** @enum {string} */
                 result: "verified" | "outside_approved_area" | "low_accuracy" | "not_shared" | "no_approved_area" | "captured";
@@ -2348,6 +2358,8 @@ export interface components {
             attendanceId: string;
             /** Format: date */
             workDate: string;
+            /** @enum {string} */
+            moment: "check_in" | "check_out";
             /** @enum {string} */
             method: "location" | "selfie";
             /** @enum {string} */
@@ -5086,7 +5098,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description ATTENDANCE_ALREADY_CHECKED_IN, IDEMPOTENCY_KEY_REUSED */
+            /** @description ATTENDANCE_ALREADY_CHECKED_IN, IDEMPOTENCY_KEY_REUSED, VERIFICATION_REQUIRED */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -5148,7 +5160,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description ATTENDANCE_NOT_CHECKED_IN, ATTENDANCE_ALREADY_CHECKED_OUT, IDEMPOTENCY_KEY_REUSED */
+            /** @description ATTENDANCE_NOT_CHECKED_IN, ATTENDANCE_ALREADY_CHECKED_OUT, IDEMPOTENCY_KEY_REUSED, VERIFICATION_REQUIRED */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -5493,7 +5505,7 @@ export interface operations {
             };
         };
     };
-    AttendanceVerificationController_submitLocation: {
+    AttendanceVerificationController_createPhotoUpload: {
         parameters: {
             query?: never;
             header?: never;
@@ -5502,48 +5514,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["SubmitLocationDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MyVerificationResponse_Output"];
-                };
-            };
-            /** @description FORBIDDEN */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description VERIFICATION_DISABLED, VERIFICATION_NOTICE_REQUIRED, ATTENDANCE_NOT_CHECKED_IN, VERIFICATION_ALREADY_RECORDED, VERIFICATION_WINDOW_CLOSED */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    AttendanceVerificationController_createSelfieUpload: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateSelfieUploadDto"];
+                "application/json": components["schemas"]["CreatePhotoUploadDto"];
             };
         };
         responses: {
@@ -5552,7 +5523,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SelfieUploadResponse_Output"];
+                    "application/json": components["schemas"]["PhotoUploadResponse_Output"];
                 };
             };
             /** @description FORBIDDEN */
@@ -5564,7 +5535,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description VERIFICATION_DISABLED, VERIFICATION_NOTICE_REQUIRED, ATTENDANCE_NOT_CHECKED_IN, VERIFICATION_ALREADY_RECORDED, VERIFICATION_WINDOW_CLOSED */
+            /** @description VERIFICATION_DISABLED, VERIFICATION_NOTICE_REQUIRED */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -5575,21 +5546,28 @@ export interface operations {
             };
         };
     };
-    AttendanceVerificationController_completeSelfie: {
+    AttendanceVerificationController_checkIn: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description Unique per attempt (e.g. a UUID). Reuse it to retry the same attempt safely. */
+                "Idempotency-Key": string;
+            };
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordWithEvidenceDto"];
+            };
+        };
         responses: {
-            200: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["MyVerificationResponse_Output"];
+                    "application/json": components["schemas"]["AttendanceResponse_Output"];
                 };
             };
             /** @description FORBIDDEN */
@@ -5601,7 +5579,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description VERIFICATION_DISABLED, VERIFICATION_NOTICE_REQUIRED, ATTENDANCE_NOT_CHECKED_IN, VERIFICATION_ALREADY_RECORDED, VERIFICATION_WINDOW_CLOSED, UPLOAD_NOT_RECEIVED */
+            /** @description VERIFICATION_DISABLED, VERIFICATION_NOTICE_REQUIRED, VERIFICATION_PHOTO_REQUIRED, VERIFICATION_LOCATION_REQUIRED, UPLOAD_NOT_RECEIVED, IDEMPOTENCY_KEY_REUSED, ATTENDANCE_ALREADY_CHECKED_IN */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -5610,7 +5588,60 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description UPLOAD_MISMATCH */
+            /** @description UPLOAD_MISMATCH, EMPLOYEE_PROFILE_REQUIRED, EMPLOYEE_INACTIVE, ATTENDANCE_NOT_WORKDAY, CHECK_IN_TOO_EARLY, CHECK_IN_WINDOW_CLOSED */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AttendanceVerificationController_checkOut: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unique per attempt (e.g. a UUID). Reuse it to retry the same attempt safely. */
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordWithEvidenceDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VERIFICATION_DISABLED, VERIFICATION_NOTICE_REQUIRED, VERIFICATION_PHOTO_REQUIRED, VERIFICATION_LOCATION_REQUIRED, UPLOAD_NOT_RECEIVED, IDEMPOTENCY_KEY_REUSED, ATTENDANCE_NOT_CHECKED_IN, ATTENDANCE_ALREADY_CHECKED_OUT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description UPLOAD_MISMATCH, EMPLOYEE_PROFILE_REQUIRED, EMPLOYEE_INACTIVE, CHECK_OUT_WINDOW_CLOSED */
             422: {
                 headers: {
                     [name: string]: unknown;

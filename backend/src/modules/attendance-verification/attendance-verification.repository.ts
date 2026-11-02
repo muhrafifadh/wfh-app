@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 
 import { pageWindow } from "@/common/dto/pagination.js";
 import { toDateColumn, type LocalDate } from "@/common/time/zoned-time.js";
-import { Prisma, type VerificationMethod } from "@/generated/prisma/client.js";
+import { Prisma, type VerificationMoment } from "@/generated/prisma/client.js";
 import { PrismaService } from "@/infra/prisma/prisma.service.js";
 import type { Tx } from "@/infra/prisma/prisma.types.js";
 
@@ -13,14 +13,12 @@ const verificationRow = {
   attendanceId: true,
   employeeId: true,
   workDate: true,
+  moment: true,
   method: true,
   result: true,
   accuracyMeters: true,
   distanceBand: true,
   photoKey: true,
-  pendingPhotoKey: true,
-  pendingPhotoContentType: true,
-  pendingPhotoSize: true,
   reviewedAt: true,
   employee: employeeSummary,
 } satisfies Prisma.AttendanceVerificationSelect;
@@ -51,7 +49,7 @@ const photoRequestRow = {
   status: true,
   createdAt: true,
   employee: employeeSummary,
-  verification: { select: { photoKey: true } },
+  verification: { select: { photoKey: true, moment: true } },
 } satisfies Prisma.VerificationPhotoRequestSelect;
 
 export type PhotoRequestRow = Prisma.VerificationPhotoRequestGetPayload<{
@@ -107,7 +105,7 @@ export class AttendanceVerificationRepository {
 
   // Verification results
 
-  /** One row per method for a check-in; an existing row is left alone. */
+  /** One row per method for a moment; a row already there, from a retry, is left alone. */
   async createResults(
     rows: Prisma.AttendanceVerificationCreateManyInput[],
     tx: Tx = this.prisma,
@@ -118,13 +116,6 @@ export class AttendanceVerificationRepository {
   findForAttendance(attendanceId: string, tx: Tx = this.prisma): Promise<VerificationRow[]> {
     return tx.attendanceVerification.findMany({
       where: { attendanceId },
-      select: verificationRow,
-    });
-  }
-
-  findResult(attendanceId: string, method: VerificationMethod, tx: Tx = this.prisma) {
-    return tx.attendanceVerification.findUnique({
-      where: { attendanceId_method: { attendanceId, method } },
       select: verificationRow,
     });
   }
@@ -186,6 +177,7 @@ export class AttendanceVerificationRepository {
       select: {
         id: true,
         workDate: true,
+        moment: true,
         method: true,
         result: true,
         photoKey: true,
@@ -198,6 +190,29 @@ export class AttendanceVerificationRepository {
       orderBy: [{ workDate: "desc" }, { id: "desc" }],
       take,
     });
+  }
+
+  // Photos waiting for their check-in or check-out
+
+  findPendingPhoto(employeeId: string, moment: VerificationMoment, tx: Tx = this.prisma) {
+    return tx.verificationPendingPhoto.findUnique({
+      where: { employeeId_moment: { employeeId, moment } },
+    });
+  }
+
+  async savePendingPhoto(
+    data: Prisma.VerificationPendingPhotoUncheckedCreateInput & { moment: VerificationMoment },
+    tx: Tx = this.prisma,
+  ): Promise<void> {
+    await tx.verificationPendingPhoto.upsert({
+      where: { employeeId_moment: { employeeId: data.employeeId, moment: data.moment } },
+      create: data,
+      update: data,
+    });
+  }
+
+  async deletePendingPhoto(id: string, tx: Tx = this.prisma): Promise<void> {
+    await tx.verificationPendingPhoto.deleteMany({ where: { id } });
   }
 
   // Work locations
@@ -318,9 +333,9 @@ export class AttendanceVerificationRepository {
   }
 
   findExpiredPendingPhotos(now: Date, take: number, tx: Tx = this.prisma) {
-    return tx.attendanceVerification.findMany({
-      where: { pendingPhotoExpiresAt: { lt: now } },
-      select: { id: true, pendingPhotoKey: true },
+    return tx.verificationPendingPhoto.findMany({
+      where: { expiresAt: { lt: now } },
+      select: { id: true, key: true },
       orderBy: { id: "asc" },
       take,
     });
@@ -329,7 +344,7 @@ export class AttendanceVerificationRepository {
   /** Results past retention whose photo, if any, is already gone. */
   async deleteExpiredResults(now: Date, tx: Tx = this.prisma): Promise<number> {
     const { count } = await tx.attendanceVerification.deleteMany({
-      where: { deleteAfter: { lt: now }, photoKey: null, pendingPhotoKey: null },
+      where: { deleteAfter: { lt: now }, photoKey: null },
     });
     return count;
   }

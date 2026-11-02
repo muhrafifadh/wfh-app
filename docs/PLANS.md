@@ -125,7 +125,7 @@ Both app repositories started on `main` and clean. Phase 0.5 work is on local br
 |    4D | Frontend corrections, team, manager/HR dashboards, reports      | In review   | 4C, 3, 3B      |
 |     5 | Verification, demo seed, documentation, pilot walkthrough       | Done        | All            |
 |     6 | Notifications: corrections (6A), reminders (6B), in-app (6C), Slack/Teams (6D) | 6A–6C done; 6D awaiting decision N7 | 5 |
-|     7 | Attendance verification: privacy gate (7.0), location (7A), selfie (7B) | Built, off by default; production gated (deferred legal and hosting) | 5, 7.0, 6 recommended |
+|     7 | Attendance verification: privacy gate (7.0), location (7A), selfie (7B) | Built, off by default, required for attendance when on; production gated (deferred legal and hosting) | 5, 7.0, 6 recommended |
 
 Phase numbers match PRD §15. Frontend sub-phases may start as soon as the backend contract they depend on is in `openapi.json`; they do not need to wait for all backend phases.
 
@@ -790,7 +790,7 @@ pnpm build
 
 **Status:** 7.0 closed on final product decisions, 2 November 2026. 7A and 7B built and tested, off by default. Legal compliance: not independently reviewed. Deferred requirements are tracked in the plan's §4.1, apart from implementation: [`ATTENDANCE_VERIFICATION_PIA.md`](ATTENDANCE_VERIFICATION_PIA.md). Detailed plan, principles and decisions V1–V12: [`ATTENDANCE_VERIFICATION_PLAN.md`](ATTENDANCE_VERIFICATION_PLAN.md).
 
-**Objective:** optional, moment-only evidence at check-in (approved-area location, then a selfie if still needed), flagged for human review and never blocking attendance.
+**Objective:** moment-only evidence at check-in and check-out (a photo, and an approved-area location read with it). While a method is on, attendance isn't recorded without it (changed 2 November 2026); results are flagged for human review and never change a recorded attendance.
 
 **Sub-phases:** 7.0 product decisions and draft assessment (no code) → 7A approved-area location → 7B selfie. Both are optional infrastructure; turning one on for an organization needs documented justification (decision V7). No face matching.
 

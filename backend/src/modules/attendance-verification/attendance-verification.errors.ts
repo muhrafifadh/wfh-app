@@ -34,16 +34,16 @@ export class VerificationJustificationRequiredError extends AppError {
   }
 }
 
-/** A result is final, except a retry after low accuracy (decision V11). */
-export class VerificationAlreadyRecordedError extends ConflictError {
+/** The photo or location that this check-in or check-out needs is missing. */
+export class VerificationPhotoRequiredError extends ConflictError {
   constructor() {
-    super("This check can't be taken again.", "VERIFICATION_ALREADY_RECORDED");
+    super("Take a photo to record your attendance.", "VERIFICATION_PHOTO_REQUIRED");
   }
 }
 
-export class VerificationWindowClosedError extends ConflictError {
+export class VerificationLocationRequiredError extends ConflictError {
   constructor() {
-    super("This check is only taken right after you check in.", "VERIFICATION_WINDOW_CLOSED");
+    super("Share your location to record your attendance.", "VERIFICATION_LOCATION_REQUIRED");
   }
 }
 

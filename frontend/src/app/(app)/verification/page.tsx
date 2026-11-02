@@ -18,7 +18,11 @@ import {
   MarkReviewedButton,
   ViewPhotoButton,
 } from "@/features/attendance-verification/components/review-actions";
-import { DISTANCE_BAND_LABELS, METHOD_LABELS } from "@/features/attendance-verification/constants";
+import {
+  DISTANCE_BAND_LABELS,
+  METHOD_LABELS,
+  MOMENT_LABELS,
+} from "@/features/attendance-verification/constants";
 import { listVerifications } from "@/features/attendance-verification/queries";
 import {
   loadVerificationSearchParams,
@@ -80,6 +84,7 @@ export default async function VerificationReviewPage({ searchParams }: PageProps
               <TableRow>
                 <TableHead>Date</TableHead>
                 <TableHead>Employee</TableHead>
+                <TableHead>When</TableHead>
                 <TableHead>Check</TableHead>
                 <TableHead>Result</TableHead>
                 {canReview && <TableHead>Details</TableHead>}
@@ -96,6 +101,7 @@ export default async function VerificationReviewPage({ searchParams }: PageProps
                     {item.employee.fullName}{" "}
                     <span className="text-muted-foreground">({item.employee.employeeNumber})</span>
                   </TableCell>
+                  <TableCell>{MOMENT_LABELS[item.moment]}</TableCell>
                   <TableCell>{METHOD_LABELS[item.method]}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap items-center gap-2">
@@ -120,7 +126,11 @@ export default async function VerificationReviewPage({ searchParams }: PageProps
                   <TableCell>
                     <div className="flex justify-end gap-2">
                       {canSeePhotos && item.photoAvailable && (
-                        <ViewPhotoButton id={item.id} employeeName={item.employee.fullName} />
+                        <ViewPhotoButton
+                          id={item.id}
+                          employeeName={item.employee.fullName}
+                          moment={item.moment}
+                        />
                       )}
                       {canReview && item.flagged && <MarkReviewedButton id={item.id} />}
                     </div>

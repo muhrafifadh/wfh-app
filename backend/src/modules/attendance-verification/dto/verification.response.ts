@@ -12,6 +12,7 @@ const RESULTS = [
   "captured",
 ] as const;
 const METHODS = ["location", "selfie"] as const;
+const MOMENTS = ["check_in", "check_out"] as const;
 const employee = z.object({ id: z.uuid(), employeeNumber: z.string(), fullName: z.string() });
 
 export const verificationSettingsSchema = z.object({
@@ -25,16 +26,12 @@ export class VerificationSettingsResponse extends createZodDto(verificationSetti
 
 /** What the employee's card needs. Both methods off means nothing is shown or requested. */
 export const myVerificationSchema = z.object({
-  location: z.object({
-    enabled: z.boolean(),
-    result: z.enum(RESULTS).nullable(),
-    canSubmit: z.boolean(),
-  }),
-  selfie: z.object({
-    enabled: z.boolean(),
-    result: z.enum(RESULTS).nullable(),
-    canSubmit: z.boolean(),
-  }),
+  location: z.object({ enabled: z.boolean() }),
+  selfie: z.object({ enabled: z.boolean() }),
+  /** What today's check-in and check-out recorded. */
+  results: z.array(
+    z.object({ moment: z.enum(MOMENTS), method: z.enum(METHODS), result: z.enum(RESULTS) }),
+  ),
   notice: z.object({ version: z.int(), acknowledged: z.boolean() }),
   workLocation: z.object({
     approved: z.object({ label: z.string(), radiusMeters: z.int() }).nullable(),
@@ -47,6 +44,7 @@ export class MyVerificationResponse extends createZodDto(myVerificationSchema) {
 export const myResultSchema = z.object({
   id: z.uuid(),
   workDate: z.iso.date(),
+  moment: z.enum(MOMENTS),
   method: z.enum(METHODS),
   result: z.enum(RESULTS),
   photoAvailable: z.boolean(),
@@ -64,6 +62,7 @@ export const verificationItemSchema = z.object({
   id: z.uuid(),
   attendanceId: z.uuid(),
   workDate: z.iso.date(),
+  moment: z.enum(MOMENTS),
   method: z.enum(METHODS),
   result: z.enum(RESULTS),
   flagged: z.boolean(),
@@ -78,14 +77,14 @@ export type VerificationItemBody = z.infer<typeof verificationItemSchema>;
 export class VerificationItemResponse extends createZodDto(verificationItemSchema) {}
 export class VerificationListResponse extends createZodDto(paginated(verificationItemSchema)) {}
 
-export const selfieUploadSchema = z.object({
-  /** PUT the photo here, with exactly these headers, then call POST /selfie/complete. */
+export const photoUploadSchema = z.object({
+  /** PUT the photo here, with exactly these headers, then record the check-in or check-out. */
   uploadUrl: z.url(),
   uploadHeaders: z.record(z.string(), z.string()),
   expiresAt: z.iso.datetime(),
 });
-export type SelfieUploadBody = z.infer<typeof selfieUploadSchema>;
-export class SelfieUploadResponse extends createZodDto(selfieUploadSchema) {}
+export type PhotoUploadBody = z.infer<typeof photoUploadSchema>;
+export class PhotoUploadResponse extends createZodDto(photoUploadSchema) {}
 
 export const signedPhotoSchema = z.object({ url: z.url(), expiresAt: z.iso.datetime() });
 export type SignedPhotoBody = z.infer<typeof signedPhotoSchema>;

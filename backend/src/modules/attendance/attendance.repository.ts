@@ -44,6 +44,15 @@ const rangeWhere = (from?: LocalDate, to?: LocalDate): Prisma.AttendanceWhereInp
 export class AttendanceRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  /** Whether the organization has a verification method on. */
+  async organizationRequiresEvidence(organizationId: string, tx: Tx = this.prisma) {
+    const organization = await tx.organization.findUniqueOrThrow({
+      where: { id: organizationId },
+      select: { locationVerificationEnabled: true, selfieVerificationEnabled: true },
+    });
+    return organization.locationVerificationEnabled || organization.selfieVerificationEnabled;
+  }
+
   findForDate(
     organizationId: string,
     employeeId: string,

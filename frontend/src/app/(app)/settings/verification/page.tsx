@@ -16,18 +16,18 @@ import {
 } from "@/features/attendance-verification/queries";
 import { can, requireUser } from "@/lib/auth/session";
 
-export const metadata: Metadata = { title: "Check-in checks" };
+export const metadata: Metadata = { title: "Attendance checks" };
 
 // ATTENDANCE_VERIFICATION_PLAN.md §8 — settings, area approvals (V5), photo requests (V12).
 export default async function VerificationSettingsPage() {
   const user = await requireUser();
-  if (!can(user, "verification:manage")) return <NoAccess title="Check-in checks" />;
+  if (!can(user, "verification:manage")) return <NoAccess title="Attendance checks" />;
   const settings = await getVerificationSettings();
 
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Check-in checks</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Attendance checks</h1>
         <Link
           href={routes.verificationReview()}
           className="text-sm text-primary underline-offset-4 hover:underline"

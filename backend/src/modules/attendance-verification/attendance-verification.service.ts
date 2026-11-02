@@ -25,12 +25,12 @@ import {
 import {
   PhotoNotAvailableError,
   PhotoRequestAlreadyDecidedError,
-  VerificationAlreadyRecordedError,
   VerificationDisabledError,
   VerificationJustificationRequiredError,
+  VerificationLocationRequiredError,
   VerificationNotAvailableError,
   VerificationNoticeRequiredError,
-  VerificationWindowClosedError,
+  VerificationPhotoRequiredError,
   WorkLocationAlreadyDecidedError,
 } from "@/modules/attendance-verification/attendance-verification.errors.js";
 import {
@@ -47,36 +47,35 @@ import {
 import {
   isFlagged,
   locationOutcome,
-  locationSubmission,
   roundCoordinate,
-  withinCaptureWindow,
 } from "@/modules/attendance-verification/domain/verification-rules.js";
 import type {
   ApproveWorkLocationInput,
-  CreateSelfieUploadInput,
+  CreatePhotoUploadInput,
   DisclosePhotoInput,
   ListVerificationsQueryInput,
+  RecordWithEvidenceInput,
   RequestPhotoInput,
   RequestWorkLocationInput,
-  SubmitLocationInput,
   UpdateVerificationSettingsInput,
 } from "@/modules/attendance-verification/dto/verification.dto.js";
 import type {
   MyResultBody,
   MyVerificationBody,
   PhotoRequestBody,
-  SelfieUploadBody,
+  PhotoUploadBody,
   SignedPhotoBody,
   VerificationItemBody,
   VerificationSettingsBody,
   WorkLocationRequestBody,
 } from "@/modules/attendance-verification/dto/verification.response.js";
-import { NotCheckedInError } from "@/modules/attendance/attendance.errors.js";
-import { AttendanceService } from "@/modules/attendance/attendance.service.js";
+import { AttendanceService, type ActionResult } from "@/modules/attendance/attendance.service.js";
 import { EmployeeProfileRequiredError } from "@/modules/employees/employees.errors.js";
 import { EmployeesService, type EmployeeProfile } from "@/modules/employees/employees.service.js";
 import { matchesContentType, SIGNATURE_BYTES } from "@/modules/uploads/file-signature.js";
 import { UploadMismatchError, UploadNotReceivedError } from "@/modules/uploads/uploads.errors.js";
+
+type Moment = "check_in" | "check_out";
 
 const CLEANUP_BATCH = 500;
 const MY_RESULTS_LIMIT = 100;
@@ -102,9 +101,9 @@ const toPhotoRequest = (row: PhotoRequestRow): PhotoRequestBody => ({
 });
 
 /**
- * ATTENDANCE_VERIFICATION_PLAN.md — optional evidence at check-in, kept apart from
- * attendance. Nothing here can block or change an attendance record: the check-in is
- * recorded first, and everything else follows it.
+ * ATTENDANCE_VERIFICATION_PLAN.md — the photo and location a check-in or check-out needs
+ * while a method is on, kept apart from attendance. The evidence is checked first and the
+ * attendance is recorded only if it passes. The result never changes that record.
  */
 @Injectable()
 export class AttendanceVerificationService {
@@ -166,46 +165,27 @@ export class AttendanceVerificationService {
     const settings = await this.effectiveSettings(user.organizationId);
     const employee = await this.employees.findProfileForUser(user.organizationId, user.id);
     const off: MyVerificationBody = {
-      location: { enabled: false, result: null, canSubmit: false },
-      selfie: { enabled: false, result: null, canSubmit: false },
+      location: { enabled: false },
+      selfie: { enabled: false },
+      results: [],
       notice: { version: NOTICE_VERSION, acknowledged: false },
       workLocation: { approved: null, pending: null },
     };
     if (!employee || (!settings.locationEnabled && !settings.selfieEnabled)) return off;
 
-    const now = this.clock.now();
-    const [acknowledged, locations, checkIn] = await Promise.all([
+    const [acknowledged, locations, { record }] = await Promise.all([
       this.repo.hasAcknowledged(employee.id, NOTICE_VERSION),
       this.repo.findWorkLocations(employee.id),
-      this.checkInToday(user),
+      this.attendance.today(user),
     ]);
     const approved = locations.find((row) => row.status === "approved") ?? null;
     const pending = locations.find((row) => row.status === "pending") ?? null;
-    const rows = checkIn ? await this.repo.findForAttendance(checkIn.id) : [];
-    const location = rows.find((row) => row.method === "location") ?? null;
-    const selfie = rows.find((row) => row.method === "selfie") ?? null;
+    const rows = record ? await this.repo.findForAttendance(record.id) : [];
 
     return {
-      location: {
-        enabled: settings.locationEnabled,
-        result: location?.result ?? null,
-        canSubmit:
-          settings.locationEnabled &&
-          approved !== null &&
-          checkIn !== null &&
-          location !== null &&
-          locationSubmission(location.result, checkIn.checkInAt, now) === "allowed",
-      },
-      selfie: {
-        enabled: settings.selfieEnabled,
-        result: selfie?.result ?? null,
-        canSubmit:
-          settings.selfieEnabled &&
-          checkIn !== null &&
-          selfie !== null &&
-          selfie.result !== "captured" &&
-          withinCaptureWindow(checkIn.checkInAt, now),
-      },
+      location: { enabled: settings.locationEnabled },
+      selfie: { enabled: settings.selfieEnabled },
+      results: rows.map(({ moment, method, result }) => ({ moment, method, result })),
       notice: { version: NOTICE_VERSION, acknowledged },
       workLocation: {
         approved: approved && { label: approved.label, radiusMeters: approved.radiusMeters },
@@ -221,6 +201,7 @@ export class AttendanceVerificationService {
       items: rows.map((row) => ({
         id: row.id,
         workDate: fromDateColumn(row.workDate),
+        moment: row.moment,
         method: row.method,
         result: row.result,
         photoAvailable: row.photoKey !== null,
@@ -242,67 +223,133 @@ export class AttendanceVerificationService {
     });
   }
 
-  /**
-   * After a check-in commits: one result per method that's on, "not shared" until the
-   * employee shares something. Without an approved area there is nothing to compare,
-   * so location is never requested.
-   */
-  async recordCheckIn(organizationId: string, attendanceId: string): Promise<void> {
-    const settings = await this.effectiveSettings(organizationId);
-    if (!settings.locationEnabled && !settings.selfieEnabled) return;
-    const attendance = await this.attendance.findForCorrection(organizationId, attendanceId);
-    if (!attendance) return;
-    const locations = await this.repo.findWorkLocations(attendance.employeeId);
-    const hasArea = locations.some((row) => row.status === "approved");
-    const base = {
-      organizationId,
-      attendanceId,
-      employeeId: attendance.employeeId,
-      workDate: toDateColumn(attendance.workDate),
-      deleteAfter: new Date(this.clock.now().getTime() + RESULT_RETENTION_MS),
-    };
-    await this.repo.createResults([
-      ...(settings.locationEnabled
-        ? [
-            {
-              ...base,
-              method: "location" as const,
-              result: hasArea ? ("not_shared" as const) : ("no_approved_area" as const),
-            },
-          ]
-        : []),
-      ...(settings.selfieEnabled
-        ? [{ ...base, method: "selfie" as const, result: "not_shared" as const }]
-        : []),
-    ]);
+  // Check-in and check-out with evidence
+
+  checkIn(user: AuthUser, key: string | undefined, input: RecordWithEvidenceInput) {
+    return this.recordWithEvidence(user, "check_in", key, input);
   }
 
-  // Location (Phase 7A)
+  checkOut(user: AuthUser, key: string | undefined, input: RecordWithEvidenceInput) {
+    return this.recordWithEvidence(user, "check_out", key, input);
+  }
 
-  async submitLocation(user: AuthUser, input: SubmitLocationInput): Promise<MyVerificationBody> {
-    const { employee, checkIn } = await this.readyToCapture(user, "locationEnabled");
-    const row = await this.resultFor(user, checkIn.id, "location");
+  private async recordWithEvidence(
+    user: AuthUser,
+    moment: Moment,
+    key: string | undefined,
+    input: RecordWithEvidenceInput,
+  ): Promise<ActionResult> {
+    const settings = await this.effectiveSettings(user.organizationId);
+    if (!settings.locationEnabled && !settings.selfieEnabled) throw new VerificationDisabledError();
+    const employee = await this.requireProfile(user);
+    await this.requireNotice(employee);
+
+    const attend = () =>
+      moment === "check_in"
+        ? this.attendance.recordCheckIn(user, key)
+        : this.attendance.recordCheckOut(user, key);
+
+    // A retry after a lost response: the evidence is already in, so this replays the result
+    const { record: today } = await this.attendance.today(user);
+    const existing = today ? await this.repo.findForAttendance(today.id) : [];
+    if (existing.some((row) => row.moment === moment)) return attend();
+
+    const photo = settings.selfieEnabled ? await this.checkedPhoto(employee.id, moment) : null;
+    if (settings.locationEnabled && !input.location) throw new VerificationLocationRequiredError();
+    const location = settings.locationEnabled
+      ? await this.locationResult(employee.id, input)
+      : null;
+
+    const result = await attend();
+
     const now = this.clock.now();
-
-    const locations = await this.repo.findWorkLocations(employee.id);
-    const area = locations.find((location) => location.status === "approved");
-    // Nothing to compare with: the coordinates are dropped and the result stays
-    if (!area) return this.mine(user);
-
-    const submission = locationSubmission(row.result, checkIn.checkInAt, now);
-    if (submission === "already_recorded") throw new VerificationAlreadyRecordedError();
-    if (submission === "window_closed") throw new VerificationWindowClosedError();
-
-    // The coordinates end here (decision V3): only the outcome is stored
-    const outcome = locationOutcome(input, area);
-    await this.repo.updateResult(row.id, {
-      result: outcome.result,
-      distanceBand: outcome.distanceBand,
-      accuracyMeters: Math.round(input.accuracyMeters),
+    const base = {
+      organizationId: user.organizationId,
+      attendanceId: result.body.id,
+      employeeId: employee.id,
+      workDate: toDateColumn(result.body.workDate),
+      moment,
       capturedAt: now,
+      deleteAfter: new Date(now.getTime() + RESULT_RETENTION_MS),
+    };
+    await this.prisma.$transaction(async (tx) => {
+      await this.repo.createResults(
+        [
+          ...(location ? [{ ...base, method: "location" as const, ...location }] : []),
+          ...(photo
+            ? [
+                {
+                  ...base,
+                  method: "selfie" as const,
+                  result: "captured" as const,
+                  photoKey: photo.key,
+                  photoDeleteAfter: new Date(now.getTime() + PHOTO_RETENTION_MS),
+                },
+              ]
+            : []),
+        ],
+        tx,
+      );
+      if (photo) await this.repo.deletePendingPhoto(photo.id, tx);
     });
-    return this.mine(user);
+    return result;
   }
+
+  /** Compared with the approved area, then dropped: only the outcome is stored (decision V3). */
+  private async locationResult(employeeId: string, input: RecordWithEvidenceInput) {
+    const locations = await this.repo.findWorkLocations(employeeId);
+    const area = locations.find((location) => location.status === "approved");
+    if (!area || !input.location) return { result: "no_approved_area" as const };
+    return {
+      ...locationOutcome(input.location, area),
+      accuracyMeters: Math.round(input.location.accuracyMeters),
+    };
+  }
+
+  /** The uploaded photo, once what arrived is checked. A bad file is removed, for a retake. */
+  private async checkedPhoto(employeeId: string, moment: Moment) {
+    const pending = await this.repo.findPendingPhoto(employeeId, moment);
+    if (!pending) throw new VerificationPhotoRequiredError();
+    const stored = await this.storage.head(pending.key);
+    if (!stored) throw new UploadNotReceivedError();
+    const start = await this.storage.readStart(pending.key, SIGNATURE_BYTES);
+    const contentType = pending.contentType === "image/webp" ? "image/webp" : "image/jpeg";
+    if (stored.size !== pending.size || !matchesContentType(start, contentType)) {
+      await this.storage.delete(pending.key);
+      await this.repo.deletePendingPhoto(pending.id);
+      throw new UploadMismatchError();
+    }
+    return pending;
+  }
+
+  /** A URL for the photo, before anything is recorded. A retake replaces the earlier upload. */
+  async createPhotoUpload(user: AuthUser, input: CreatePhotoUploadInput): Promise<PhotoUploadBody> {
+    const settings = await this.effectiveSettings(user.organizationId);
+    if (!settings.selfieEnabled) throw new VerificationDisabledError();
+    const employee = await this.requireProfile(user);
+    await this.requireNotice(employee);
+
+    const earlier = await this.repo.findPendingPhoto(employee.id, input.moment);
+    if (earlier) await this.storage.delete(earlier.key);
+    const now = this.clock.now();
+    const key = `verification-selfies/${user.organizationId}/${randomUUID()}${PHOTO_EXTENSIONS[input.contentType]}`;
+    await this.repo.savePendingPhoto({
+      organizationId: user.organizationId,
+      employeeId: employee.id,
+      moment: input.moment,
+      key,
+      contentType: input.contentType,
+      size: input.size,
+      expiresAt: new Date(now.getTime() + PENDING_PHOTO_TTL_MS),
+    });
+    return {
+      uploadUrl: await this.storage.signUpload(key, input.contentType, input.size),
+      uploadHeaders: { "Content-Type": input.contentType },
+      expiresAt: new Date(now.getTime() + SIGNED_URL_TTL_SECONDS * 1000).toISOString(),
+    };
+  }
+
+  // Approved areas
 
   async requestWorkLocation(
     user: AuthUser,
@@ -377,70 +424,6 @@ export class AttendanceVerificationService {
     return toWorkLocation(await this.loadWorkLocation(user, id));
   }
 
-  // Selfie (Phase 7B)
-
-  async createSelfieUpload(
-    user: AuthUser,
-    input: CreateSelfieUploadInput,
-  ): Promise<SelfieUploadBody> {
-    const { checkIn } = await this.readyToCapture(user, "selfieEnabled");
-    const row = await this.resultFor(user, checkIn.id, "selfie");
-    const now = this.clock.now();
-    if (row.result === "captured") throw new VerificationAlreadyRecordedError();
-    if (!withinCaptureWindow(checkIn.checkInAt, now)) throw new VerificationWindowClosedError();
-
-    // A retake replaces the upload in progress
-    if (row.pendingPhotoKey) await this.storage.delete(row.pendingPhotoKey);
-    const key = `verification-selfies/${user.organizationId}/${randomUUID()}${PHOTO_EXTENSIONS[input.contentType]}`;
-    await this.repo.updateResult(row.id, {
-      pendingPhotoKey: key,
-      pendingPhotoContentType: input.contentType,
-      pendingPhotoSize: input.size,
-      pendingPhotoExpiresAt: new Date(now.getTime() + PENDING_PHOTO_TTL_MS),
-    });
-    return {
-      uploadUrl: await this.storage.signUpload(key, input.contentType, input.size),
-      uploadHeaders: { "Content-Type": input.contentType },
-      expiresAt: new Date(now.getTime() + SIGNED_URL_TTL_SECONDS * 1000).toISOString(),
-    };
-  }
-
-  /** After the PUT: check what arrived, then keep it for 30 days at most. */
-  async completeSelfie(user: AuthUser): Promise<MyVerificationBody> {
-    const { checkIn } = await this.readyToCapture(user, "selfieEnabled");
-    const row = await this.resultFor(user, checkIn.id, "selfie");
-    if (row.result === "captured") throw new VerificationAlreadyRecordedError();
-    if (!row.pendingPhotoKey || !row.pendingPhotoContentType) throw new UploadNotReceivedError();
-
-    const stored = await this.storage.head(row.pendingPhotoKey);
-    if (!stored) throw new UploadNotReceivedError();
-    const start = await this.storage.readStart(row.pendingPhotoKey, SIGNATURE_BYTES);
-    const contentType = row.pendingPhotoContentType === "image/webp" ? "image/webp" : "image/jpeg";
-    if (stored.size !== row.pendingPhotoSize || !matchesContentType(start, contentType)) {
-      await this.storage.delete(row.pendingPhotoKey);
-      await this.repo.updateResult(row.id, {
-        pendingPhotoKey: null,
-        pendingPhotoContentType: null,
-        pendingPhotoSize: null,
-        pendingPhotoExpiresAt: null,
-      });
-      throw new UploadMismatchError();
-    }
-
-    const now = this.clock.now();
-    await this.repo.updateResult(row.id, {
-      result: "captured",
-      photoKey: row.pendingPhotoKey,
-      photoDeleteAfter: new Date(now.getTime() + PHOTO_RETENTION_MS),
-      capturedAt: now,
-      pendingPhotoKey: null,
-      pendingPhotoContentType: null,
-      pendingPhotoSize: null,
-      pendingPhotoExpiresAt: null,
-    });
-    return this.mine(user);
-  }
-
   // Review
 
   /** Organization for attendance:read_all, direct reports for attendance:read_team. */
@@ -488,7 +471,7 @@ export class AttendanceVerificationService {
       employeeId: row.employeeId,
       workDate: fromDateColumn(row.workDate),
     });
-    return this.signPhoto(row.photoKey, fromDateColumn(row.workDate));
+    return this.signPhoto(row.photoKey, fromDateColumn(row.workDate), row.moment);
   }
 
   // The employee's photo access (decision V12)
@@ -524,8 +507,8 @@ export class AttendanceVerificationService {
     input: DisclosePhotoInput,
   ): Promise<SignedPhotoBody> {
     const request = await this.loadPhotoRequest(user, id);
-    const key = request.verification?.photoKey;
-    if (!key) throw new PhotoNotAvailableError();
+    const verification = request.verification;
+    if (!verification?.photoKey) throw new PhotoNotAvailableError();
     const decided = await this.repo.decidePhotoRequest(id, {
       status: "disclosed",
       decidedAt: this.clock.now(),
@@ -536,7 +519,11 @@ export class AttendanceVerificationService {
       employeeId: request.employeeId,
       identityCheck: input.identityCheck,
     });
-    return this.signPhoto(key, fromDateColumn(request.workDate));
+    return this.signPhoto(
+      verification.photoKey,
+      fromDateColumn(request.workDate),
+      verification.moment,
+    );
   }
 
   async declinePhotoRequest(user: AuthUser, id: string): Promise<PhotoRequestBody> {
@@ -563,13 +550,8 @@ export class AttendanceVerificationService {
     }
     const pending = await this.repo.findExpiredPendingPhotos(now, CLEANUP_BATCH);
     for (const row of pending) {
-      if (row.pendingPhotoKey) await this.storage.delete(row.pendingPhotoKey);
-      await this.repo.updateResult(row.id, {
-        pendingPhotoKey: null,
-        pendingPhotoContentType: null,
-        pendingPhotoSize: null,
-        pendingPhotoExpiresAt: null,
-      });
+      await this.storage.delete(row.key);
+      await this.repo.deletePendingPhoto(row.id);
     }
     const closedBefore = new Date(now.getTime() - CLOSED_ITEM_RETENTION_MS);
     return {
@@ -611,45 +593,13 @@ export class AttendanceVerificationService {
     }
   }
 
-  private async checkInToday(user: AuthUser): Promise<{ id: string; checkInAt: Date } | null> {
-    const { record } = await this.attendance.today(user);
-    return record?.checkInAt ? { id: record.id, checkInAt: new Date(record.checkInAt) } : null;
-  }
-
-  /** The checks every capture shares: the method is on, the notice was seen, a check-in exists. */
-  private async readyToCapture(
-    user: AuthUser,
-    method: "locationEnabled" | "selfieEnabled",
-  ): Promise<{ employee: EmployeeProfile; checkIn: { id: string; checkInAt: Date } }> {
-    const settings = await this.effectiveSettings(user.organizationId);
-    if (!settings[method]) throw new VerificationDisabledError();
-    const employee = await this.requireProfile(user);
-    await this.requireNotice(employee);
-    const checkIn = await this.checkInToday(user);
-    if (!checkIn) throw new NotCheckedInError();
-    return { employee, checkIn };
-  }
-
-  /** The row made at check-in. Made here if that listener failed, or the method was just turned on. */
-  private async resultFor(
-    user: AuthUser,
-    attendanceId: string,
-    method: "location" | "selfie",
-  ): Promise<VerificationRow> {
-    const existing = await this.repo.findResult(attendanceId, method);
-    if (existing) return existing;
-    await this.recordCheckIn(user.organizationId, attendanceId);
-    const created = await this.repo.findResult(attendanceId, method);
-    if (!created) throw new VerificationDisabledError();
-    return created;
-  }
-
   private toItem(user: AuthUser, row: VerificationRow): VerificationItemBody {
     const canDiagnose = user.permissions.includes("verification:manage");
     return {
       id: row.id,
       attendanceId: row.attendanceId,
       workDate: fromDateColumn(row.workDate),
+      moment: row.moment,
       method: row.method,
       result: row.result,
       flagged: isFlagged(row.result) && !row.reviewedAt,
@@ -664,11 +614,11 @@ export class AttendanceVerificationService {
     };
   }
 
-  private async signPhoto(key: string, workDate: string): Promise<SignedPhotoBody> {
+  private async signPhoto(key: string, workDate: string, moment: Moment): Promise<SignedPhotoBody> {
     return {
       url: await this.storage.signDownload(
         key,
-        `check-in-photo-${workDate}${key.slice(key.lastIndexOf("."))}`,
+        `${moment === "check_in" ? "check-in" : "check-out"}-photo-${workDate}${key.slice(key.lastIndexOf("."))}`,
       ),
       expiresAt: new Date(this.clock.now().getTime() + SIGNED_URL_TTL_SECONDS * 1000).toISOString(),
     };

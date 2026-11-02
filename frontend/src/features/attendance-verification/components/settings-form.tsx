@@ -69,6 +69,9 @@ export function VerificationSettingsForm({ settings }: { settings: VerificationS
           <AlertDescription>{error.message}</AlertDescription>
         </Alert>
       )}
+      <p className="text-sm text-muted-foreground">
+        Employees can&apos;t check in or out without the checks turned on here.
+      </p>
       <FieldGroup>
         <Field orientation="horizontal">
           <Checkbox
@@ -78,7 +81,7 @@ export function VerificationSettingsForm({ settings }: { settings: VerificationS
             onCheckedChange={(next) => setLocationEnabled(next === true)}
           />
           <FieldLabel htmlFor="locationEnabled" className="font-normal">
-            Location at check-in, compared with each employee&apos;s approved area
+            Location at check-in and check-out, compared with each employee&apos;s approved area
           </FieldLabel>
         </Field>
         <Field orientation="horizontal">
@@ -89,8 +92,7 @@ export function VerificationSettingsForm({ settings }: { settings: VerificationS
             onCheckedChange={(next) => setSelfieEnabled(next === true)}
           />
           <FieldLabel htmlFor="selfieEnabled" className="font-normal">
-            Check-in photo, kept 30 days (use only if location and existing controls aren&apos;t
-            enough)
+            Photo at check-in and check-out, kept 30 days
           </FieldLabel>
         </Field>
         {turningOn && (

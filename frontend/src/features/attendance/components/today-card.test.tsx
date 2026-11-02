@@ -13,6 +13,10 @@ vi.mock("@/features/attendance/actions", () => ({
   checkInAction: vi.fn(),
   checkOutAction: vi.fn(),
 }));
+vi.mock("@/features/attendance-verification/actions", () => ({
+  acknowledgeNoticeAction: vi.fn(),
+  startPhotoUploadAction: vi.fn(),
+}));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
 const checkedIn = aToday({

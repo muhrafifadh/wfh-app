@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { loadToday } from "@/app/(app)/_components/load-today";
+import { loadMyChecks, loadToday } from "@/app/(app)/_components/load-today";
 import { EmployeeSection } from "@/app/(app)/dashboard/_components/employee-section";
 import { OrganizationSection } from "@/app/(app)/dashboard/_components/organization-section";
 import { TeamSection } from "@/app/(app)/dashboard/_components/team-section";
@@ -26,6 +26,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
   const organizationView = can(user, "attendance:read_all");
   const teamView = !organizationView && can(user, "attendance:read_team");
   const today = ownAttendance ? await loadToday() : null;
+  const checks = ownAttendance ? await loadMyChecks() : null;
 
   return (
     <>
@@ -38,6 +39,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
       {ownAttendance && (
         <EmployeeSection
           today={today}
+          checks={checks}
           workDate={organization.workDate}
           supportContact={organization.supportContact}
           canRequestCorrections={can(user, "correction:submit")}

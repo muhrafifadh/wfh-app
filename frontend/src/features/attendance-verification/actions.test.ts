@@ -1,6 +1,6 @@
 import {
   disclosePhotoAction,
-  submitLocationAction,
+  startPhotoUploadAction,
   updateVerificationSettingsAction,
   viewPhotoAction,
 } from "@/features/attendance-verification/actions";
@@ -87,31 +87,29 @@ describe("updateVerificationSettingsAction", () => {
   });
 });
 
-describe("submitLocationAction", () => {
+describe("startPhotoUploadAction", () => {
   beforeEach(() => signedInWith(["attendance:self"]));
 
-  it("sends only the reading, and says the check-in still stands when refused", async () => {
-    vi.mocked(apiFetch).mockRejectedValue(
-      new ApiError(409, "VERIFICATION_WINDOW_CLOSED", "Closed"),
-    );
-    const result = await submitLocationAction({
-      latitude: -6.2,
-      longitude: 106.8,
-      accuracyMeters: 20,
+  it("asks for an upload for that moment", async () => {
+    vi.mocked(apiFetch).mockResolvedValue({
+      uploadUrl: "https://storage.test/x",
+      uploadHeaders: {},
     });
-    expect(apiFetch).toHaveBeenCalledWith("/attendance-verification/location", {
+    const body = { moment: "check_out", contentType: "image/jpeg", size: 100 };
+    const result = await startPhotoUploadAction(body);
+    expect(apiFetch).toHaveBeenCalledWith("/attendance-verification/photo-upload", {
       method: "POST",
-      body: { latitude: -6.2, longitude: 106.8, accuracyMeters: 20 },
+      body,
       schema: expect.anything(),
     });
-    expect(result).toMatchObject({ ok: false, error: expect.stringContaining("still checked in") });
+    expect(result).toMatchObject({ ok: true });
   });
 
   it("rejects extra fields before calling the backend", async () => {
-    const result = await submitLocationAction({
-      latitude: -6.2,
-      longitude: 106.8,
-      accuracyMeters: 20,
+    const result = await startPhotoUploadAction({
+      moment: "check_in",
+      contentType: "image/jpeg",
+      size: 100,
       employeeId: "someone-else",
     });
     expect(result).toMatchObject({ ok: false });

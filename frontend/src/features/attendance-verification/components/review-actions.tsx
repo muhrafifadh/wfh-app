@@ -16,6 +16,10 @@ import {
   reviewVerificationAction,
   viewPhotoAction,
 } from "@/features/attendance-verification/actions";
+import {
+  MOMENT_LABELS,
+  type VerificationMoment,
+} from "@/features/attendance-verification/constants";
 
 export function MarkReviewedButton({ id }: { id: string }) {
   const [isPending, startTransition] = useTransition();
@@ -37,7 +41,15 @@ export function MarkReviewedButton({ id }: { id: string }) {
 }
 
 /** Decision V9: each opening asks the backend again, which records it in the audit log. */
-export function ViewPhotoButton({ id, employeeName }: { id: string; employeeName: string }) {
+export function ViewPhotoButton({
+  id,
+  employeeName,
+  moment,
+}: {
+  id: string;
+  employeeName: string;
+  moment: VerificationMoment;
+}) {
   const [url, setUrl] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   return (
@@ -59,7 +71,7 @@ export function ViewPhotoButton({ id, employeeName }: { id: string; employeeName
       <Dialog open={url !== null} onOpenChange={(open) => !open && setUrl(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Check-in photo</DialogTitle>
+            <DialogTitle>{MOMENT_LABELS[moment]} photo</DialogTitle>
             <DialogDescription>
               {employeeName}. This view is recorded in the audit log.
             </DialogDescription>
@@ -67,7 +79,11 @@ export function ViewPhotoButton({ id, employeeName }: { id: string; employeeName
           {url && (
             // A short-lived signed link to private storage; next/image would cache it
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={url} alt={`${employeeName} at check-in`} className="w-full rounded-md" />
+            <img
+              src={url}
+              alt={`${employeeName} at ${MOMENT_LABELS[moment].toLowerCase()}`}
+              className="w-full rounded-md"
+            />
           )}
         </DialogContent>
       </Dialog>

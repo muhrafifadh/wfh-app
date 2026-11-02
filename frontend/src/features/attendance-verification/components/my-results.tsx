@@ -17,7 +17,7 @@ import {
 import { formatLongDate } from "@/features/attendance/format";
 import { requestPhotoAction } from "@/features/attendance-verification/actions";
 import { ResultBadge } from "@/features/attendance-verification/components/result-badge";
-import { METHOD_LABELS } from "@/features/attendance-verification/constants";
+import { METHOD_LABELS, MOMENT_LABELS } from "@/features/attendance-verification/constants";
 import type { MyResult } from "@/features/attendance-verification/schemas";
 
 const REQUEST_LABELS = {
@@ -33,7 +33,7 @@ export function MyResults({ results }: { results: MyResult[] }) {
     return (
       <EmptyState
         title="Nothing recorded"
-        description="Results from your check-ins show here for 90 days."
+        description="Results from your check-ins and check-outs show here for 90 days."
       />
     );
   }
@@ -42,6 +42,7 @@ export function MyResults({ results }: { results: MyResult[] }) {
       <TableHeader>
         <TableRow>
           <TableHead>Date</TableHead>
+          <TableHead>When</TableHead>
           <TableHead>Check</TableHead>
           <TableHead>Result</TableHead>
           <TableHead>Photo</TableHead>
@@ -51,6 +52,7 @@ export function MyResults({ results }: { results: MyResult[] }) {
         {results.map((row) => (
           <TableRow key={row.id}>
             <TableCell>{formatLongDate(row.workDate)}</TableCell>
+            <TableCell>{MOMENT_LABELS[row.moment]}</TableCell>
             <TableCell>{METHOD_LABELS[row.method]}</TableCell>
             <TableCell>
               <ResultBadge result={row.result} />

@@ -83,8 +83,30 @@ describe("Attendance verification (e2e)", () => {
   const mine = (auth: Auth) => http().get("/v1/attendance-verification/me").set(auth);
   const acknowledge = (auth: Auth) =>
     http().post("/v1/attendance-verification/notice/acknowledge").set(auth).expect(204);
-  const share = (auth: Auth, reading: object) =>
-    http().post("/v1/attendance-verification/location").set(auth).send(reading);
+  const record = (
+    auth: Auth,
+    moment: "check-in" | "check-out",
+    body: object = {},
+    key = randomUUID(),
+  ) =>
+    http()
+      .post(`/v1/attendance-verification/${moment}`)
+      .set(auth)
+      .set("Idempotency-Key", key)
+      .send(body);
+  const uploadPhoto = async (auth: Auth, moment: "check_in" | "check_out", body: Buffer = JPEG) => {
+    const upload = await http()
+      .post("/v1/attendance-verification/photo-upload")
+      .set(auth)
+      .send({ moment, contentType: "image/jpeg", size: body.length })
+      .expect(201);
+    const put = await fetch(upload.body.uploadUrl, {
+      method: "PUT",
+      headers: upload.body.uploadHeaders,
+      body: new Uint8Array(body),
+    });
+    expect(put.ok).toBe(true);
+  };
 
   /** An employee with an approved home area who has read the notice. */
   const readyEmployee = async (managerId?: string) => {
@@ -115,18 +137,17 @@ describe("Attendance verification (e2e)", () => {
   describe("off by default", () => {
     beforeEach(() => start());
 
-    it("changes nothing: no results at check-in, nothing to show, captures refused", async () => {
+    it("changes nothing: no results at check-in, nothing to show, evidence refused", async () => {
       const { auth } = await anEmployee();
       at(MONDAY, "09:00:00");
       await checkIn(auth).expect(201);
 
       expect(await prisma().attendanceVerification.count()).toBe(0);
       const me = await mine(auth).expect(200);
-      expect(me.body).toMatchObject({
-        location: { enabled: false, canSubmit: false },
-        selfie: { enabled: false, canSubmit: false },
-      });
-      const res = await share(auth, { ...HOME, accuracyMeters: 10 }).expect(409);
+      expect(me.body).toMatchObject({ location: { enabled: false }, selfie: { enabled: false } });
+      const res = await record(auth, "check-out", {
+        location: { ...HOME, accuracyMeters: 10 },
+      }).expect(409);
       expect(res.body.error.code).toBe("VERIFICATION_DISABLED");
     });
 
@@ -134,6 +155,21 @@ describe("Attendance verification (e2e)", () => {
       const { auth } = await anEmployee();
       at(MONDAY, "09:00:00");
       await checkIn(auth).send({ latitude: 1 }).expect(400);
+    });
+
+    it("leaves the plain endpoints working when the deployment switch overrides a stored setting", async () => {
+      app = await createTestApp([], { config: { VERIFICATION_ENABLED: false } });
+      await resetDatabase(app);
+      admin = await createUser(app, { permissions: ["policy:manage"] });
+      divisionId = (await createDivision(app, admin)).id;
+      await createSchedule(app, admin);
+      await prisma().organization.update({
+        where: { id: admin.organizationId },
+        data: { selfieVerificationEnabled: true },
+      });
+      const { auth } = await anEmployee();
+      at(MONDAY, "09:00:00");
+      await checkIn(auth).expect(201);
     });
   });
 
@@ -262,23 +298,153 @@ describe("Attendance verification (e2e)", () => {
     });
   });
 
+  describe("evidence is required", () => {
+    beforeEach(async () => {
+      await start();
+      await enable({ locationEnabled: true, selfieEnabled: true }).expect(200);
+    });
+
+    const location = { location: { ...HOME, accuracyMeters: 12 } };
+
+    it("refuses the plain endpoints, so nothing is recorded without evidence", async () => {
+      const { auth } = await readyEmployee();
+      at(MONDAY, "09:00:00");
+      const res = await checkIn(auth).expect(409);
+      expect(res.body.error.code).toBe("VERIFICATION_REQUIRED");
+      const out = await http()
+        .post("/v1/attendance/check-out")
+        .set(auth)
+        .set("Idempotency-Key", randomUUID())
+        .expect(409);
+      expect(out.body.error.code).toBe("VERIFICATION_REQUIRED");
+      expect(await prisma().attendance.count()).toBe(0);
+    });
+
+    it("needs the notice first", async () => {
+      const { auth } = await anEmployee();
+      at(MONDAY, "09:00:00");
+      const res = await record(auth, "check-in", location).expect(409);
+      expect(res.body.error.code).toBe("VERIFICATION_NOTICE_REQUIRED");
+      expect(await prisma().attendance.count()).toBe(0);
+    });
+
+    it("records nothing without a photo", async () => {
+      const { auth } = await readyEmployee();
+      at(MONDAY, "09:00:00");
+      const res = await record(auth, "check-in", location).expect(409);
+      expect(res.body.error.code).toBe("VERIFICATION_PHOTO_REQUIRED");
+      expect(await prisma().attendance.count()).toBe(0);
+    });
+
+    it("records nothing without a location", async () => {
+      const { auth } = await readyEmployee();
+      at(MONDAY, "09:00:00");
+      await uploadPhoto(auth, "check_in");
+      const res = await record(auth, "check-in").expect(409);
+      expect(res.body.error.code).toBe("VERIFICATION_LOCATION_REQUIRED");
+      expect(await prisma().attendance.count()).toBe(0);
+    });
+
+    it("rejects a file that isn't the declared image, and allows a retake", async () => {
+      const { auth } = await readyEmployee();
+      at(MONDAY, "09:00:00");
+      await uploadPhoto(auth, "check_in", Buffer.from("not a jpeg at all, just text pretending"));
+      const res = await record(auth, "check-in", location).expect(422);
+      expect(res.body.error.code).toBe("UPLOAD_MISMATCH");
+      expect(await prisma().attendance.count()).toBe(0);
+
+      await uploadPhoto(auth, "check_in");
+      await record(auth, "check-in", location).expect(201);
+    });
+
+    it("records check-in and check-out, each with its own photo and location", async () => {
+      const { auth } = await readyEmployee();
+      at(MONDAY, "09:00:00");
+      await uploadPhoto(auth, "check_in");
+      const attendance = await record(auth, "check-in", location).expect(201);
+      expect(attendance.body.checkInAt).not.toBeNull();
+
+      at(MONDAY, "17:00:00");
+      // The check-in's photo can't stand in for the check-out's
+      const missing = await record(auth, "check-out", location).expect(409);
+      expect(missing.body.error.code).toBe("VERIFICATION_PHOTO_REQUIRED");
+      await uploadPhoto(auth, "check_out");
+      const out = await record(auth, "check-out", {
+        location: { ...ELSEWHERE, accuracyMeters: 20 },
+      }).expect(200);
+      expect(out.body.checkOutAt).not.toBeNull();
+
+      const rows = await prisma().attendanceVerification.findMany({
+        where: { attendanceId: attendance.body.id },
+      });
+      expect(
+        rows.map(({ moment, method, result }) => `${moment} ${method} ${result}`).toSorted(),
+      ).toEqual([
+        "check_in location verified",
+        "check_in selfie captured",
+        "check_out location outside_approved_area",
+        "check_out selfie captured",
+      ]);
+      expect(await prisma().verificationPendingPhoto.count()).toBe(0);
+      expect((await mine(auth).expect(200)).body.results).toHaveLength(4);
+
+      // Each photo downloads under a name that says which one it is
+      for (const [moment, name] of [
+        ["check_in", "check-in-photo-2026-11-02"],
+        ["check_out", "check-out-photo-2026-11-02"],
+      ] as const) {
+        const photo = rows.find((row) => row.moment === moment && row.method === "selfie");
+        const link = await http()
+          .get(`/v1/attendance-verification/${photo?.id}/photo`)
+          .set(adminAuth)
+          .expect(200);
+        expect(link.body.url).toContain(name);
+      }
+    });
+
+    it("replays a retry with the same key, with no second result", async () => {
+      const { auth } = await readyEmployee();
+      const key = randomUUID();
+      at(MONDAY, "09:00:00");
+      await uploadPhoto(auth, "check_in");
+      const first = await record(auth, "check-in", location, key).expect(201);
+      const again = await record(auth, "check-in", location, key).expect(201);
+      expect(again.headers["idempotent-replayed"]).toBe("true");
+      expect(again.body.id).toBe(first.body.id);
+      expect(await prisma().attendanceVerification.count()).toBe(2);
+
+      const other = await record(auth, "check-in", location).expect(409);
+      expect(other.body.error.code).toBe("ATTENDANCE_ALREADY_CHECKED_IN");
+    });
+
+    it("keeps the photo for a retake when the attendance itself is refused", async () => {
+      const { auth } = await readyEmployee();
+      at(MONDAY, "04:00:00");
+      await uploadPhoto(auth, "check_in");
+      const res = await record(auth, "check-in", location).expect(422);
+      expect(res.body.error.code).toBe("CHECK_IN_TOO_EARLY");
+      expect(await prisma().attendanceVerification.count()).toBe(0);
+      expect(await prisma().verificationPendingPhoto.count()).toBe(1);
+    });
+  });
+
   describe("location at check-in (Phase 7A)", () => {
     beforeEach(async () => {
       await start();
       await enable({ locationEnabled: true, selfieEnabled: false }).expect(200);
     });
 
+    const share = (auth: Auth, reading: object) => record(auth, "check-in", { location: reading });
+
     it("verifies a reading inside the area and stores no coordinates", async () => {
       const { auth } = await readyEmployee();
       at(MONDAY, "09:00:00");
-      const attendance = await checkIn(auth).expect(201);
-
-      const res = await share(auth, { ...HOME, accuracyMeters: 12.4 }).expect(200);
-      expect(res.body.location).toMatchObject({ result: "verified", canSubmit: false });
+      const attendance = await share(auth, { ...HOME, accuracyMeters: 12.4 }).expect(201);
 
       const row = await prisma().attendanceVerification.findFirstOrThrow();
       expect(row).toMatchObject({
         attendanceId: attendance.body.id,
+        moment: "check_in",
         result: "verified",
         accuracyMeters: 12,
         distanceBand: "within_1km",
@@ -288,11 +454,10 @@ describe("Attendance verification (e2e)", () => {
       expect(audit).not.toContain("verified");
     });
 
-    it("flags a reading outside the area, without touching attendance", async () => {
+    it("flags a reading outside the area, and still records attendance as usual", async () => {
       const { auth } = await readyEmployee();
       at(MONDAY, "09:00:00");
-      const attendance = await checkIn(auth).expect(201);
-      await share(auth, { ...ELSEWHERE, accuracyMeters: 20 }).expect(200);
+      const attendance = await share(auth, { ...ELSEWHERE, accuracyMeters: 20 }).expect(201);
 
       const list = await http()
         .get("/v1/attendance-verification?flagged=true")
@@ -300,47 +465,24 @@ describe("Attendance verification (e2e)", () => {
         .expect(200);
       expect(list.body.items).toHaveLength(1);
       expect(list.body.items[0]).toMatchObject({
+        moment: "check_in",
         result: "outside_approved_area",
         flagged: true,
         diagnostics: { accuracyMeters: 20, distanceBand: "within_10km" },
       });
-      const record = await prisma().attendance.findUniqueOrThrow({
+      const stored = await prisma().attendance.findUniqueOrThrow({
         where: { id: attendance.body.id },
       });
-      expect(record).toMatchObject({ status: "present", version: 1 });
+      expect(stored).toMatchObject({ status: "present", version: 1 });
     });
 
-    it("shows low accuracy without a flag, and lets the employee retry later that day", async () => {
+    it("records low accuracy without a flag", async () => {
       const { auth } = await readyEmployee();
       at(MONDAY, "09:00:00");
-      await checkIn(auth).expect(201);
-      const first = await share(auth, { ...ELSEWHERE, accuracyMeters: 2500 }).expect(200);
-      expect(first.body.location).toMatchObject({ result: "low_accuracy", canSubmit: true });
-      const flagged = await http()
-        .get("/v1/attendance-verification?flagged=true")
-        .set(adminAuth)
-        .expect(200);
-      expect(flagged.body.total).toBe(0);
-
-      at(MONDAY, "13:00:00");
-      const retry = await share(auth, { ...HOME, accuracyMeters: 30 }).expect(200);
-      expect(retry.body.location.result).toBe("verified");
-      const again = await share(auth, { ...HOME, accuracyMeters: 30 }).expect(409);
-      expect(again.body.error.code).toBe("VERIFICATION_ALREADY_RECORDED");
-    });
-
-    it("keeps a neutral 'not shared' when nothing is shared within the capture window", async () => {
-      const { auth } = await readyEmployee();
-      at(MONDAY, "09:00:00");
-      await checkIn(auth).expect(201);
-      expect((await mine(auth).expect(200)).body.location).toMatchObject({
-        result: "not_shared",
-        canSubmit: true,
-      });
-
-      at(MONDAY, "09:06:00");
-      const res = await share(auth, { ...HOME, accuracyMeters: 10 }).expect(409);
-      expect(res.body.error.code).toBe("VERIFICATION_WINDOW_CLOSED");
+      await share(auth, { ...ELSEWHERE, accuracyMeters: 2500 }).expect(201);
+      expect((await mine(auth).expect(200)).body.results).toEqual([
+        { moment: "check_in", method: "location", result: "low_accuracy" },
+      ]);
       const flagged = await http()
         .get("/v1/attendance-verification?flagged=true")
         .set(adminAuth)
@@ -348,20 +490,28 @@ describe("Attendance verification (e2e)", () => {
       expect(flagged.body.total).toBe(0);
     });
 
-    it("doesn't ask for a location without an approved area", async () => {
+    it("records 'no approved area' without one, and no flag", async () => {
       const { auth } = await anEmployee();
       await acknowledge(auth);
       at(MONDAY, "09:00:00");
-      await checkIn(auth).expect(201);
-      const me = await mine(auth).expect(200);
-      expect(me.body.location).toMatchObject({ result: "no_approved_area", canSubmit: false });
+      await share(auth, { ...HOME, accuracyMeters: 10 }).expect(201);
+      expect((await mine(auth).expect(200)).body.results).toEqual([
+        { moment: "check_in", method: "location", result: "no_approved_area" },
+      ]);
+      const stored = await prisma().attendanceVerification.findFirstOrThrow();
+      expect(stored.accuracyMeters).toBeNull();
     });
 
-    it("needs a check-in first", async () => {
+    it("needs no photo while only location is on", async () => {
       const { auth } = await readyEmployee();
       at(MONDAY, "09:00:00");
-      const res = await share(auth, { ...HOME, accuracyMeters: 10 }).expect(409);
-      expect(res.body.error.code).toBe("ATTENDANCE_NOT_CHECKED_IN");
+      await share(auth, { ...HOME, accuracyMeters: 10 }).expect(201);
+      const upload = await http()
+        .post("/v1/attendance-verification/photo-upload")
+        .set(auth)
+        .send({ moment: "check_in", contentType: "image/jpeg", size: JPEG.length })
+        .expect(409);
+      expect(upload.body.error.code).toBe("VERIFICATION_DISABLED");
     });
 
     it("shows managers their direct reports' status only, without diagnostics", async () => {
@@ -369,10 +519,8 @@ describe("Attendance verification (e2e)", () => {
       const report = await readyEmployee(managerUser.employee.id);
       const other = await readyEmployee();
       at(MONDAY, "09:00:00");
-      await checkIn(report.auth).expect(201);
-      await checkIn(other.auth).expect(201);
-      await share(report.auth, { ...ELSEWHERE, accuracyMeters: 20 }).expect(200);
-      await share(other.auth, { ...ELSEWHERE, accuracyMeters: 20 }).expect(200);
+      await share(report.auth, { ...ELSEWHERE, accuracyMeters: 20 }).expect(201);
+      await share(other.auth, { ...ELSEWHERE, accuracyMeters: 20 }).expect(201);
 
       const res = await http().get("/v1/attendance-verification").set(managerUser.auth).expect(200);
       expect(res.body.items).toHaveLength(1);
@@ -389,8 +537,7 @@ describe("Attendance verification (e2e)", () => {
     it("clears a flag once Admin/HR has reviewed it, and audits the review", async () => {
       const { auth } = await readyEmployee();
       at(MONDAY, "09:00:00");
-      await checkIn(auth).expect(201);
-      await share(auth, { ...ELSEWHERE, accuracyMeters: 20 }).expect(200);
+      await share(auth, { ...ELSEWHERE, accuracyMeters: 20 }).expect(201);
       const row = await prisma().attendanceVerification.findFirstOrThrow();
 
       const reviewed = await http()
@@ -406,7 +553,7 @@ describe("Attendance verification (e2e)", () => {
     it("keeps other organizations' results out of reach", async () => {
       const { auth } = await readyEmployee();
       at(MONDAY, "09:00:00");
-      await checkIn(auth).expect(201);
+      await share(auth, { ...HOME, accuracyMeters: 10 }).expect(201);
       const row = await prisma().attendanceVerification.findFirstOrThrow();
       const outsider = await createUser(app, { permissions: ["verification:manage"] });
       await http()
@@ -422,17 +569,9 @@ describe("Attendance verification (e2e)", () => {
       await enable({ locationEnabled: false, selfieEnabled: true }).expect(200);
     });
 
-    const put = (url: string, headers: Record<string, string>, body: Buffer) =>
-      fetch(url, { method: "PUT", headers, body: new Uint8Array(body) });
-
-    const takeSelfie = async (auth: Auth, status: number, body: Buffer = JPEG) => {
-      const upload = await http()
-        .post("/v1/attendance-verification/selfie")
-        .set(auth)
-        .send({ contentType: "image/jpeg", size: body.length })
-        .expect(201);
-      expect((await put(upload.body.uploadUrl, upload.body.uploadHeaders, body)).ok).toBe(true);
-      return http().post("/v1/attendance-verification/selfie/complete").set(auth).expect(status);
+    const takeSelfie = async (auth: Auth) => {
+      await uploadPhoto(auth, "check_in");
+      return record(auth, "check-in").expect(201);
     };
 
     it("stores the photo apart from the uploads module, for Admin/HR with photo access only", async () => {
@@ -440,9 +579,10 @@ describe("Attendance verification (e2e)", () => {
       const { auth } = await anEmployee(managerUser.employee.id);
       await acknowledge(auth);
       at(MONDAY, "09:00:00");
-      await checkIn(auth).expect(201);
-      const done = await takeSelfie(auth, 200);
-      expect(done.body.selfie).toMatchObject({ result: "captured", canSubmit: false });
+      await takeSelfie(auth);
+      expect((await mine(auth).expect(200)).body.results).toEqual([
+        { moment: "check_in", method: "selfie", result: "captured" },
+      ]);
       expect(await prisma().upload.count()).toBe(0);
 
       const row = await prisma().attendanceVerification.findFirstOrThrow();
@@ -468,42 +608,28 @@ describe("Attendance verification (e2e)", () => {
       expect(viewed[0]).toMatchObject({ actorId: admin.id, targetId: row.id });
     });
 
-    it("rejects a file that isn't the declared image, and allows a retake", async () => {
+    it("removes a photo that's never used", async () => {
       const { auth } = await anEmployee();
       await acknowledge(auth);
       at(MONDAY, "09:00:00");
-      await checkIn(auth).expect(201);
-      const fake = Buffer.from("not a jpeg at all, just text pretending to be one");
-      const res = await takeSelfie(auth, 422, fake);
-      expect(res.body.error.code).toBe("UPLOAD_MISMATCH");
-      await takeSelfie(auth, 200);
-    });
+      await uploadPhoto(auth, "check_in");
+      const { key } = await prisma().verificationPendingPhoto.findFirstOrThrow();
 
-    it("leaves attendance recorded when no photo is taken", async () => {
-      const { auth } = await anEmployee();
-      await acknowledge(auth);
-      at(MONDAY, "09:00:00");
-      await checkIn(auth).expect(201);
-      at(MONDAY, "09:10:00");
-      expect((await mine(auth).expect(200)).body.selfie).toMatchObject({
-        result: "not_shared",
-        canSubmit: false,
-      });
-      const res = await http()
-        .post("/v1/attendance-verification/selfie")
-        .set(auth)
-        .send({ contentType: "image/jpeg", size: JPEG.length })
-        .expect(409);
-      expect(res.body.error.code).toBe("VERIFICATION_WINDOW_CLOSED");
-      expect(await prisma().attendance.count()).toBe(1);
+      await app.get(AttendanceVerificationService).purgeExpired(new Date(wib(MONDAY, "23:00:00")));
+      expect(await prisma().verificationPendingPhoto.count()).toBe(1);
+
+      await app
+        .get(AttendanceVerificationService)
+        .purgeExpired(new Date(wib("2026-11-04", "09:00:00")));
+      expect(await prisma().verificationPendingPhoto.count()).toBe(0);
+      expect(await app.get(StorageService).head(key)).toBeNull();
     });
 
     it("discloses an employee's own photo only after an identity check, audited", async () => {
       const { auth } = await anEmployee();
       await acknowledge(auth);
       at(MONDAY, "09:00:00");
-      await checkIn(auth).expect(201);
-      await takeSelfie(auth, 200);
+      await takeSelfie(auth);
 
       const results = await http()
         .get("/v1/attendance-verification/me/results")
@@ -554,8 +680,7 @@ describe("Attendance verification (e2e)", () => {
       const { auth } = await anEmployee();
       await acknowledge(auth);
       at(MONDAY, "09:00:00");
-      const attendance = await checkIn(auth).expect(201);
-      await takeSelfie(auth, 200);
+      const attendance = await takeSelfie(auth);
       const row = await prisma().attendanceVerification.findFirstOrThrow();
       const service = app.get(AttendanceVerificationService);
 

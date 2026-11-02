@@ -44,14 +44,14 @@ import {
   ListMyAttendanceQuery,
 } from "@/modules/attendance/dto/list-my-attendance.query.js";
 
-const IDEMPOTENCY_HEADER = {
+export const IDEMPOTENCY_HEADER = {
   name: "Idempotency-Key",
   required: true,
   description: "Unique per attempt (e.g. a UUID). Reuse it to retry the same attempt safely.",
 } as const;
 
 /** Lets the client tell a replayed result from a fresh one; the body is identical. */
-const markReplay = (res: Response, result: ActionResult) => {
+export const markReplay = (res: Response, result: ActionResult) => {
   if (result.replayed) res.setHeader("Idempotent-Replayed", "true");
   return result.body;
 };
@@ -85,7 +85,7 @@ export class AttendanceController {
   })
   @ApiConflictResponse({
     type: ErrorResponse,
-    description: "ATTENDANCE_ALREADY_CHECKED_IN, IDEMPOTENCY_KEY_REUSED",
+    description: "ATTENDANCE_ALREADY_CHECKED_IN, IDEMPOTENCY_KEY_REUSED, VERIFICATION_REQUIRED",
   })
   @ApiUnprocessableEntityResponse({
     type: ErrorResponse,
@@ -114,7 +114,7 @@ export class AttendanceController {
   @ApiConflictResponse({
     type: ErrorResponse,
     description:
-      "ATTENDANCE_NOT_CHECKED_IN, ATTENDANCE_ALREADY_CHECKED_OUT, IDEMPOTENCY_KEY_REUSED",
+      "ATTENDANCE_NOT_CHECKED_IN, ATTENDANCE_ALREADY_CHECKED_OUT, IDEMPOTENCY_KEY_REUSED, VERIFICATION_REQUIRED",
   })
   @ApiUnprocessableEntityResponse({
     type: ErrorResponse,

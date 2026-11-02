@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   MIN_JUSTIFICATION_LENGTH,
   VERIFICATION_METHODS,
+  VERIFICATION_MOMENTS,
   VERIFICATION_RESULTS,
 } from "@/features/attendance-verification/constants";
 
@@ -10,6 +11,7 @@ import {
 
 const result = z.enum(VERIFICATION_RESULTS);
 const method = z.enum(VERIFICATION_METHODS);
+const moment = z.enum(VERIFICATION_MOMENTS);
 const employee = z.object({ id: z.string(), employeeNumber: z.string(), fullName: z.string() });
 
 export const verificationSettingsSchema = z.object({
@@ -20,8 +22,9 @@ export const verificationSettingsSchema = z.object({
 export type VerificationSettings = z.infer<typeof verificationSettingsSchema>;
 
 export const myVerificationSchema = z.object({
-  location: z.object({ enabled: z.boolean(), result: result.nullable(), canSubmit: z.boolean() }),
-  selfie: z.object({ enabled: z.boolean(), result: result.nullable(), canSubmit: z.boolean() }),
+  location: z.object({ enabled: z.boolean() }),
+  selfie: z.object({ enabled: z.boolean() }),
+  results: z.array(z.object({ moment, method, result })),
   notice: z.object({ version: z.int(), acknowledged: z.boolean() }),
   workLocation: z.object({
     approved: z.object({ label: z.string(), radiusMeters: z.int() }).nullable(),
@@ -35,6 +38,7 @@ export const myResultsSchema = z.object({
     z.object({
       id: z.string(),
       workDate: z.string(),
+      moment,
       method,
       result,
       photoAvailable: z.boolean(),
@@ -48,6 +52,7 @@ export const verificationItemSchema = z.object({
   id: z.string(),
   attendanceId: z.string(),
   workDate: z.string(),
+  moment,
   method,
   result,
   flagged: z.boolean(),
@@ -92,7 +97,7 @@ export const photoRequestSchema = z.object({
 export type PhotoRequest = z.infer<typeof photoRequestSchema>;
 export const photoRequestListSchema = z.object({ items: z.array(photoRequestSchema) });
 
-export const selfieUploadSchema = z.object({
+export const photoUploadSchema = z.object({
   uploadUrl: z.url(),
   uploadHeaders: z.record(z.string(), z.string()),
   expiresAt: z.string(),
@@ -132,6 +137,10 @@ export const locationReadingSchema = z
   })
   .strict();
 
+/** What a check-in or check-out carries. The photo is the one already uploaded for it. */
+export const evidenceSchema = z.object({ location: locationReadingSchema.optional() }).strict();
+export type Evidence = z.infer<typeof evidenceSchema>;
+
 export const workLocationFormSchema = z
   .object({
     label: z.string().trim().min(1, "Name this location").max(120, "Use at most 120 characters"),
@@ -140,8 +149,9 @@ export const workLocationFormSchema = z
   })
   .strict();
 
-export const selfieUploadInputSchema = z
+export const photoUploadInputSchema = z
   .object({
+    moment,
     contentType: z.enum(["image/jpeg", "image/webp"]),
     size: z.int().min(1),
   })
