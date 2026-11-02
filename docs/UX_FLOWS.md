@@ -556,7 +556,7 @@ On an info/help page, briefly explain:
 - Duration is the time between check-in and check-out, not a productivity measure.
 - Corrections are recorded for audit.
 
-Never request geolocation, camera, or device fingerprint permissions.
+Never request geolocation, camera, or device fingerprint permissions. The one planned exception: once legal has approved it and an organization has enabled it (PRD decision 26), location and camera may be requested at check-in, after the employee has seen the notice in `ATTENDANCE_VERIFICATION_PIA.md` §9. That organization's copy above is rewritten to match at the same time. Device fingerprinting stays prohibited.
 
 ## 22. UX acceptance criteria
 

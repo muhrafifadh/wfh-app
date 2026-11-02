@@ -63,7 +63,7 @@ The following are not part of the current scope:
 
 - Payroll calculation or automatic payroll deductions.
 - Activity, productivity, screen, or computer-usage tracking.
-- Continuous location tracking, geofencing, selfies, face recognition, or biometrics.
+- Continuous location tracking, face recognition, or biometric matching. Approved-area location and check-in selfies stay out of scope too, unless legally approved and enabled per decision 26.
 - Native mobile applications.
 - Shifts that cross midnight, per-division or per-employee schedules, flexible hours.
 - Leave, sick, and time-off requests; multi-level approval.
@@ -453,7 +453,7 @@ Not approved for the current implementation. Each item requires a separate decis
 - SSO (Google/Microsoft), HRIS/payroll integration, public API and webhooks, scheduled reports.
 - Geolocation, selfies, device registration — only after a privacy impact assessment and legal review.
 
-Planning started on 1 November 2026, for discussion only: notifications in [`NOTIFICATIONS_PLAN.md`](NOTIFICATIONS_PLAN.md) and geolocation and selfies in [`ATTENDANCE_VERIFICATION_PLAN.md`](ATTENDANCE_VERIFICATION_PLAN.md). Neither is approved; the decisions each plan lists come back here as decision rows.
+Geolocation and selfies are planned in [`ATTENDANCE_VERIFICATION_PLAN.md`](ATTENDANCE_VERIFICATION_PLAN.md), assessed in [`ATTENDANCE_VERIFICATION_PIA.md`](ATTENDANCE_VERIFICATION_PIA.md), and decided in decision 26. Legal review is still pending.
 - Anomaly detection, advanced analytics, PWA or native mobile apps.
 
 ## 14. Development workflow
@@ -466,6 +466,7 @@ Planning started on 1 November 2026, for discussion only: notifications in [`NOT
 | 23  | Implementation start        | Phase 01 (backend divisions and employees), conditional on the Phase 0 assessment confirming what already exists.                                                    |
 | 24  | Environments                | Local required; staging if available; production not required.                                                                                                      |
 | 25  | Notifications (Phase 6)     | Approved 1 November 2026, with the recommendations in `NOTIFICATIONS_PLAN.md` §8: pilot types are correction emails and the check-in/check-out reminders (N1); reminders at 09:00 and 18:00 (N2); a new correction goes to the direct manager, Admin/HR only when there is none (N3); outcome emails can't be turned off until the in-app centre exists (N4); no absence or lateness alerts to managers (N5); notifications kept 90 days (N6); Slack or Teams decided after 6C (N7). Rules: `DOMAIN_RULES.md` §18. |
+| 26  | Attendance verification (Phase 7) | Product decisions final 2 November 2026, in `ATTENDANCE_VERIFICATION_PLAN.md` §8 (V1–V12). Rollout order: standard attendance and audit logging; approved-area location at check-in only if necessary; check-in selfies only if location and existing controls don't address the risk. Each method is configured per organization and off by default. Neither may be enabled in production without legal approval. Never blocks attendance. No tracking or biometric matching. |
 
 ### 14.1 Named owners
 

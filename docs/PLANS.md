@@ -125,7 +125,7 @@ Both app repositories started on `main` and clean. Phase 0.5 work is on local br
 |    4D | Frontend corrections, team, manager/HR dashboards, reports      | In review   | 4C, 3, 3B      |
 |     5 | Verification, demo seed, documentation, pilot walkthrough       | Done        | All            |
 |     6 | Notifications: corrections (6A), reminders (6B), in-app (6C), Slack/Teams (6D) | 6A–6C done; 6D awaiting decision N7 | 5 |
-|     7 | Attendance verification: privacy gate (7.0), location (7A), selfie (7B) | Planning; gated | 5, 7.0, 6 recommended |
+|     7 | Attendance verification: privacy gate (7.0), location (7A), selfie (7B) | 7.0 complete (legal review pending); 7A and 7B gated | 5, 7.0, 6 recommended |
 
 Phase numbers match PRD §15. Frontend sub-phases may start as soon as the backend contract they depend on is in `openapi.json`; they do not need to wait for all backend phases.
 
@@ -788,13 +788,13 @@ pnpm build
 
 ### Phase 7 — Attendance verification (location and selfie)
 
-**Status:** Planning — gated. Detailed plan, principles and decisions V1–V7: [`ATTENDANCE_VERIFICATION_PLAN.md`](ATTENDANCE_VERIFICATION_PLAN.md).
+**Status:** 7.0 closed on final product decisions, 2 November 2026. Legal review is still pending: [`ATTENDANCE_VERIFICATION_PIA.md`](ATTENDANCE_VERIFICATION_PIA.md). 7A and 7B are not started. Detailed plan, principles and decisions V1–V12: [`ATTENDANCE_VERIFICATION_PLAN.md`](ATTENDANCE_VERIFICATION_PLAN.md).
 
-**Objective:** optional, moment-only evidence at check-in and check-out (location, then a selfie), flagged for human review and never blocking attendance.
+**Objective:** optional, moment-only evidence at check-in (approved-area location, then a selfie if still needed), flagged for human review and never blocking attendance.
 
-**Sub-phases:** 7.0 privacy impact assessment and legal review (no code) → 7A location → 7B selfie. No face matching.
+**Sub-phases:** 7.0 product decisions and draft assessment (no code) → 7A approved-area location, only if necessary → 7B selfie, only if location and existing controls don't address the risk. No face matching.
 
-**Approval gate:** PRD §13 requires a privacy impact assessment and legal review first. 7A does not start until 7.0 is approved and `DOMAIN_RULES.md` §15, `UX_FLOWS.md` §21 and PRD §4 are updated.
+**Production gate:** PRD §13 requires a privacy impact assessment and legal review. Neither method is enabled in production without legal approval, and both are off by default.
 
 ---
 
