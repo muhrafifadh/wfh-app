@@ -2,9 +2,9 @@ import { Injectable } from "@nestjs/common";
 
 import { pageWindow, parseSort } from "@/common/dto/pagination.js";
 import { DEFAULT_ROLES } from "@/common/types/auth.js";
-import { Prisma, type UserTokenPurpose } from "@/generated/prisma/client.js";
-import { PrismaService } from "@/infra/prisma/prisma.service.js";
-import type { Tx } from "@/infra/prisma/prisma.types.js";
+import { Prisma, type UserTokenPurpose } from "@/generated/employee-db/client.js";
+import { PrismaService } from "@/infra/employee-db/prisma.service.js";
+import type { Tx } from "@/infra/employee-db/prisma.types.js";
 import { notDeleted } from "@/infra/prisma/soft-delete.js";
 import type { ListUsersQueryInput } from "@/modules/users/dto/list-users.query.js";
 import type { UserStatus } from "@/modules/users/users.constants.js";

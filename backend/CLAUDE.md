@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-NestJS + TypeScript + PostgreSQL (Prisma) + JWT auth boilerplate. The client is [`../frontend`](../frontend) (Next.js), in the same repository.
+Two NestJS services (`employee`, `attendance`) behind a gateway, each with its own PostgreSQL database (Prisma), plus JWT auth. Read `../docs/EMPLOYEE_ATTENDANCE_SPLIT_PLAN.md` before changing anything between them; `src/apps/service-boundaries.spec.ts` fails if a module crosses the line. The client is [`../frontend`](../frontend) (Next.js), in the same repository.
 
 The rules live in [`docs/`](docs/README.md). **Before you write or review code, read [`docs/quick-reference.md`](docs/quick-reference.md), then the topic docs for the task:**
 

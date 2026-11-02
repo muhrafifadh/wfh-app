@@ -4,20 +4,20 @@ A one-page summary of the rules. Each line links to the doc that explains it.
 
 ## Where does it go?
 
-| I'm writing…                                             | Put it in                                                                          |
-| -------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| An HTTP endpoint                                         | `src/modules/<m>/<m>.controller.ts` → [03](03-modules-and-layers.md)               |
-| Business logic                                           | `src/modules/<m>/<m>.service.ts`                                                   |
-| A Prisma query                                           | `src/modules/<m>/<m>.repository.ts` → [07](07-database-and-prisma.md)              |
-| Request / response shapes                                | `src/modules/<m>/dto/` → [06](06-validation-and-dtos.md)                           |
-| A module-specific error                                  | `src/modules/<m>/<m>.errors.ts` → [10](10-error-handling.md)                       |
-| A guard, decorator, filter, or pipe used by many modules | `src/common/`                                                                      |
-| An external system client (DB, mail, storage, queue)     | `src/infra/`                                                                       |
-| An env var                                               | `src/config/env.ts` + `.env.example` → [11](11-configuration.md)                   |
-| A schema change                                          | `prisma/schema.prisma` + a migration → [playbook](playbooks/database-migration.md) |
-| A background job                                         | `src/modules/<m>/jobs/` → [15](15-background-jobs.md)                              |
-| Something to audit                                       | A domain event `<m>.events.ts` → [12](12-logging-and-observability.md#audit-log)   |
-| A file upload                                            | Store an upload id from `modules/uploads` → [17](17-file-uploads.md)               |
+| I'm writing…                                             | Put it in                                                                                    |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| An HTTP endpoint                                         | `src/modules/<m>/<m>.controller.ts` → [03](03-modules-and-layers.md)                         |
+| Business logic                                           | `src/modules/<m>/<m>.service.ts`                                                             |
+| A Prisma query                                           | `src/modules/<m>/<m>.repository.ts` → [07](07-database-and-prisma.md)                        |
+| Request / response shapes                                | `src/modules/<m>/dto/` → [06](06-validation-and-dtos.md)                                     |
+| A module-specific error                                  | `src/modules/<m>/<m>.errors.ts` → [10](10-error-handling.md)                                 |
+| A guard, decorator, filter, or pipe used by many modules | `src/common/`                                                                                |
+| An external system client (DB, mail, storage, queue)     | `src/infra/`                                                                                 |
+| An env var                                               | `src/config/env.ts` + `.env.example` → [11](11-configuration.md)                             |
+| A schema change                                          | `prisma/<service>/schema.prisma` + a migration → [playbook](playbooks/database-migration.md) |
+| A background job                                         | `src/modules/<m>/jobs/` → [15](15-background-jobs.md)                                        |
+| Something to audit                                       | A domain event `<m>.events.ts` → [12](12-logging-and-observability.md#audit-log)             |
+| A file upload                                            | Store an upload id from `modules/uploads` → [17](17-file-uploads.md)                         |
 
 ## Request lifecycle
 

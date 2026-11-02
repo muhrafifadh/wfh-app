@@ -1,9 +1,9 @@
 import { Injectable } from "@nestjs/common";
 
 import { pageWindow, parseSort } from "@/common/dto/pagination.js";
-import { Prisma } from "@/generated/prisma/client.js";
-import { PrismaService } from "@/infra/prisma/prisma.service.js";
-import type { Tx } from "@/infra/prisma/prisma.types.js";
+import { Prisma } from "@/generated/employee-db/client.js";
+import { PrismaService } from "@/infra/employee-db/prisma.service.js";
+import type { Tx } from "@/infra/employee-db/prisma.types.js";
 import { notDeleted } from "@/infra/prisma/soft-delete.js";
 import type { ListEmployeesQueryInput } from "@/modules/employees/dto/list-employees.query.js";
 import {
@@ -162,73 +162,6 @@ export class EmployeesRepository {
       if (isDuplicate(error)) return DUPLICATE;
       throw error;
     }
-  }
-
-  /**
-   * Active employees employed on `date`, by id after `afterId` (keyset batches for
-   * close-day). Deactivated ones are left out, so deactivation stops future absences.
-   */
-  async eligibleIdsOn(
-    organizationId: string,
-    date: Date,
-    afterId: string | null,
-    take: number,
-    tx: Tx = this.prisma,
-  ): Promise<string[]> {
-    const rows = await tx.employee.findMany({
-      where: {
-        organizationId,
-        ...notDeleted,
-        status: "active",
-        employmentStartDate: { lte: date },
-        OR: [{ employmentEndDate: null }, { employmentEndDate: { gte: date } }],
-        ...(afterId && { id: { gt: afterId } }),
-      },
-      select: { id: true },
-      orderBy: { id: "asc" },
-      take,
-    });
-    return rows.map((row) => row.id);
-  }
-
-  /** Active, non-deleted direct reports of `managerId` (a manager's team, §12). */
-  /** Accounts linked to these employees (notifications). */
-  findAccounts(organizationId: string, ids: string[], tx: Tx = this.prisma) {
-    return tx.employee.findMany({
-      where: { organizationId, id: { in: ids }, userId: { not: null }, ...notDeleted },
-      select: { id: true, userId: true },
-    });
-  }
-
-  /** The employee's name and their manager's state and account (notifications). */
-  findReportingLine(organizationId: string, id: string, tx: Tx = this.prisma) {
-    return tx.employee.findFirst({
-      where: { id, organizationId, ...notDeleted },
-      select: {
-        fullName: true,
-        manager: { select: { userId: true, status: true, deletedAt: true } },
-      },
-    });
-  }
-
-  async activeReportIds(
-    organizationId: string,
-    managerId: string,
-    tx: Tx = this.prisma,
-  ): Promise<string[]> {
-    const rows = await tx.employee.findMany({
-      where: { organizationId, managerId, status: "active", ...notDeleted },
-      select: { id: true },
-    });
-    return rows.map((row) => row.id);
-  }
-
-  /** Names for display, deleted employees included (history outlives them). */
-  findSummaries(organizationId: string, ids: string[], tx: Tx = this.prisma) {
-    return tx.employee.findMany({
-      where: { organizationId, id: { in: ids } },
-      select: { id: true, employeeNumber: true, fullName: true, status: true, managerId: true },
-    });
   }
 
   // Reporting lines

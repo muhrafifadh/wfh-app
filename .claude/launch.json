@@ -2,34 +2,43 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "hadirin-api",
-      "runtimeExecutable": "pnpm",
+      "name": "wfh-employee",
+      "runtimeExecutable": "sh",
       "runtimeArgs": [
-        "--dir",
-        "backend",
-        "dev"
+        "-c",
+        "cd backend && pnpm exec nest build && node --enable-source-maps dist/apps/employee/main.js"
       ],
-      "env": {
-        "REGISTRATION_ENABLED": "false",
-        "CORS_ORIGINS": "http://localhost:3000,http://localhost:3001"
-      },
-      "port": 8000
+      "port": 8101
     },
     {
-      "name": "hadirin-web",
+      "name": "wfh-attendance",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && node --enable-source-maps dist/apps/attendance/main.js"
+      ],
+      "port": 8102
+    },
+    {
+      "name": "wfh-gateway",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && node --enable-source-maps dist/apps/gateway/main.js"
+      ],
+      "port": 8100
+    },
+    {
+      "name": "wfh-web",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": [
         "--dir",
         "frontend",
         "dev",
         "--port",
-        "3001"
+        "3100"
       ],
-      "env": {
-        "REGISTRATION_ENABLED": "false",
-        "NEXT_PUBLIC_APP_URL": "http://localhost:3001"
-      },
-      "port": 3001
+      "port": 3100
     }
   ]
 }

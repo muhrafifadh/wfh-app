@@ -26,10 +26,11 @@ const csv = z.string().transform((s) =>
 
 export const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
-  PORT: z.coerce.number().int().default(8000),
+  PORT: z.coerce.number().int().default(8100),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
 
-  DATABASE_URL: z.url(),
+  EMPLOYEE_DATABASE_URL: z.url(),
+  ATTENDANCE_DATABASE_URL: z.url(),
   REDIS_URL: z.url(),
 
   JWT_ACCESS_SECRET: z.string().min(32),
@@ -90,11 +91,12 @@ export class AppConfig {
 
 ```bash
 NODE_ENV=development
-PORT=8000
+PORT=8100
 LOG_LEVEL=debug
 
 # docker compose up -d
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/hadirin?schema=public
+EMPLOYEE_DATABASE_URL=postgresql://postgres:postgres@localhost:5444/wfh_employee?schema=public
+ATTENDANCE_DATABASE_URL=postgresql://postgres:postgres@localhost:5444/wfh_attendance?schema=public
 REDIS_URL=redis://localhost:6379
 
 # openssl rand -base64 48

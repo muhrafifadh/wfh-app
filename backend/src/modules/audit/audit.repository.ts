@@ -1,9 +1,9 @@
 import { Injectable } from "@nestjs/common";
 
 import { pageWindow } from "@/common/dto/pagination.js";
-import type { Prisma } from "@/generated/prisma/client.js";
-import { PrismaService } from "@/infra/prisma/prisma.service.js";
-import type { Tx } from "@/infra/prisma/prisma.types.js";
+import type { Prisma } from "@/generated/employee-db/client.js";
+import { PrismaService } from "@/infra/employee-db/prisma.service.js";
+import type { Tx } from "@/infra/employee-db/prisma.types.js";
 import type { ListAuditLogsQueryInput } from "@/modules/audit/dto/list-audit-logs.query.js";
 
 const auditRow = {

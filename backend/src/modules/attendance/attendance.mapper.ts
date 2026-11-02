@@ -2,7 +2,7 @@
 // team/report views (ARCHITECTURE.md §6.7), so every endpoint shows a record the same way.
 
 import { fromDateColumn } from "@/common/time/zoned-time.js";
-import type { Prisma } from "@/generated/prisma/client.js";
+import type { Prisma } from "@/generated/attendance-db/client.js";
 import { isIncomplete } from "@/modules/attendance/domain/attendance-calculator.js";
 import type { AttendanceResponseBody } from "@/modules/attendance/dto/attendance.response.js";
 import type { ScheduleBoundaries } from "@/modules/work-settings/domain/schedule-policy.js";

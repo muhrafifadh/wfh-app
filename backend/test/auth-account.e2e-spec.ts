@@ -5,10 +5,9 @@ import request from "supertest";
 import { PERMISSIONS } from "@/common/types/auth.js";
 import { MailService } from "@/infra/mail/mail.service.js";
 import { MemoryMailer } from "@/infra/mail/mailers.js";
-import { PrismaService } from "@/infra/prisma/prisma.service.js";
 import { PasswordResetService } from "@/modules/auth/password-reset.service.js";
 
-import { createTestApp, createUser, resetDatabase, waitForJobs } from "./helpers.js";
+import { createTestApp, createUser, PrismaService, resetDatabase, waitForJobs } from "./helpers.js";
 import { decodeBody, startSmtpTestServer } from "./support/smtp-test-server.js";
 
 const NEW_PASSWORD = "a-brand-new-long-password";

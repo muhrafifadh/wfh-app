@@ -1,5 +1,5 @@
 import { AppError } from "@/common/errors/app-error.js";
-import type { Permission } from "@/common/types/auth.js";
+import type { AuthUser, Permission } from "@/common/types/auth.js";
 
 /**
  * The boundary between the attendance side and the employee side. The attendance
@@ -37,6 +37,11 @@ export class EmployeeProfileRequiredError extends AppError {
   constructor() {
     super("Your account has no employee profile. Contact HR.");
   }
+}
+
+/** Checks an access token and its session, wherever those live. */
+export abstract class Authenticator {
+  abstract authenticate(accessToken: string): Promise<AuthUser>;
 }
 
 export abstract class EmployeeDirectory {

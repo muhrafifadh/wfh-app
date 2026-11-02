@@ -4,7 +4,6 @@ import type { NestExpressApplication } from "@nestjs/platform-express";
 
 import request from "supertest";
 
-import { PrismaService } from "@/infra/prisma/prisma.service.js";
 import { IdempotencyRepository } from "@/modules/attendance/idempotency.repository.js";
 import { AttendanceJobsProcessor } from "@/modules/attendance/jobs/attendance-jobs.processor.js";
 
@@ -16,6 +15,7 @@ import {
   createSchedule,
   createTestApp,
   createUser,
+  PrismaService,
   resetDatabase,
   waitForJobs,
   type TestUser,

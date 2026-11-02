@@ -2,11 +2,17 @@ import type { NestExpressApplication } from "@nestjs/platform-express";
 
 import request from "supertest";
 
-import { PrismaService } from "@/infra/prisma/prisma.service.js";
 import { StorageService } from "@/infra/storage/storage.service.js";
 import { UploadsService } from "@/modules/uploads/uploads.service.js";
 
-import { authHeader, createTestApp, createUser, resetDatabase, type TestUser } from "./helpers.js";
+import {
+  authHeader,
+  createTestApp,
+  createUser,
+  PrismaService,
+  resetDatabase,
+  type TestUser,
+} from "./helpers.js";
 
 // Needs the storage container: docker compose up -d storage
 describe("Uploads (e2e)", () => {

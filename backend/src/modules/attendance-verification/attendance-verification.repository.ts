@@ -2,9 +2,9 @@ import { Injectable } from "@nestjs/common";
 
 import { pageWindow } from "@/common/dto/pagination.js";
 import { toDateColumn, type LocalDate } from "@/common/time/zoned-time.js";
-import { Prisma, type VerificationMoment } from "@/generated/prisma/client.js";
-import { PrismaService } from "@/infra/prisma/prisma.service.js";
-import type { Tx } from "@/infra/prisma/prisma.types.js";
+import { Prisma, type VerificationMoment } from "@/generated/attendance-db/client.js";
+import { PrismaService } from "@/infra/attendance-db/prisma.service.js";
+import type { Tx } from "@/infra/attendance-db/prisma.types.js";
 
 const employeeSummary = { select: { id: true, employeeNumber: true, fullName: true } };
 

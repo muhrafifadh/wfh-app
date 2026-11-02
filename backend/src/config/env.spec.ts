@@ -1,7 +1,8 @@
 import { envSchema } from "@/config/env.js";
 
 const base = {
-  DATABASE_URL: "postgresql://u:p@localhost:5432/db",
+  EMPLOYEE_DATABASE_URL: "postgresql://u:p@localhost:5432/employee",
+  ATTENDANCE_DATABASE_URL: "postgresql://u:p@localhost:5432/attendance",
   REDIS_URL: "redis://localhost:6379",
   JWT_ACCESS_SECRET: "x".repeat(32),
   CORS_ORIGINS: "http://localhost:3000",

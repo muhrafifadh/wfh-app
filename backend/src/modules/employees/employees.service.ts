@@ -1,18 +1,12 @@
 import { Injectable } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
-import {
-  EmployeeProfileRequiredError,
-  type EmployeeDirectory,
-  type EmployeeProfile,
-  type EmployeeStatus,
-  type EmployeeSummary,
-} from "@/common/contracts/directory.js";
+import { EmployeeProfileRequiredError, type EmployeeStatus } from "@/common/contracts/directory.js";
 import type { Paginated } from "@/common/dto/pagination.js";
 import { NotFoundError } from "@/common/errors/app-error.js";
 import { fromDateColumn, toDateColumn } from "@/common/time/zoned-time.js";
 import type { AuthUser } from "@/common/types/auth.js";
-import { PrismaService } from "@/infra/prisma/prisma.service.js";
+import { PrismaService } from "@/infra/employee-db/prisma.service.js";
 import { DivisionsService } from "@/modules/divisions/divisions.service.js";
 import type { CreateEmployeeInput } from "@/modules/employees/dto/create-employee.dto.js";
 import type { EmployeeResponseBody } from "@/modules/employees/dto/employee.response.js";
@@ -74,7 +68,7 @@ const toWrite = (input: UpdateEmployeeInput): EmployeeWrite => {
 };
 
 @Injectable()
-export class EmployeesService implements EmployeeDirectory {
+export class EmployeesService {
   constructor(
     private readonly repo: EmployeesRepository,
     private readonly prisma: PrismaService,
@@ -93,82 +87,6 @@ export class EmployeesService implements EmployeeDirectory {
 
   async findOne(user: AuthUser, id: string): Promise<EmployeeResponseBody> {
     return toEmployee(await this.load(user.organizationId, id));
-  }
-
-  /** The profile a user records attendance as, or null (for attendance). */
-  async findProfileForUser(
-    organizationId: string,
-    userId: string,
-  ): Promise<EmployeeProfile | null> {
-    const row = await this.repo.findByUser(organizationId, userId);
-    return (
-      row && {
-        id: row.id,
-        employeeNumber: row.employeeNumber,
-        fullName: row.fullName,
-        status: row.status,
-        employmentStartDate: fromDateColumn(row.employmentStartDate),
-        employmentEndDate: row.employmentEndDate ? fromDateColumn(row.employmentEndDate) : null,
-      }
-    );
-  }
-
-  /** One batch of employees close-day must account for on `date` (see the repository). */
-  eligibleIdsOn(
-    organizationId: string,
-    date: string,
-    afterId: string | null,
-    take: number,
-  ): Promise<string[]> {
-    return this.repo.eligibleIdsOn(organizationId, toDateColumn(date), afterId, take);
-  }
-
-  /**
-   * The caller's team (§12): active direct reports of their own active profile.
-   * Null when they have no active profile, so they lead no team.
-   */
-  async teamOf(
-    organizationId: string,
-    userId: string,
-  ): Promise<{ managerId: string; employeeIds: string[] } | null> {
-    const manager = await this.repo.findByUser(organizationId, userId);
-    if (!manager || manager.status !== "active") return null;
-    return {
-      managerId: manager.id,
-      employeeIds: await this.repo.activeReportIds(organizationId, manager.id),
-    };
-  }
-
-  /** Employee id → linked user id, for those of the given employees that have an account. */
-  async accountsOf(organizationId: string, ids: string[]): Promise<Map<string, string>> {
-    if (ids.length === 0) return new Map();
-    const rows = await this.repo.findAccounts(organizationId, [...new Set(ids)]);
-    return new Map(rows.flatMap((row) => (row.userId ? [[row.id, row.userId] as const] : [])));
-  }
-
-  /**
-   * The employee's name and the account of their direct manager, when that manager's
-   * profile is active and linked to an account. Null if the employee isn't found.
-   */
-  async reportingLineOf(
-    organizationId: string,
-    employeeId: string,
-  ): Promise<{ fullName: string; managerUserId: string | null } | null> {
-    const row = await this.repo.findReportingLine(organizationId, employeeId);
-    if (!row) return null;
-    const { manager } = row;
-    const activeManager = manager && manager.status === "active" && manager.deletedAt === null;
-    return { fullName: row.fullName, managerUserId: activeManager ? manager.userId : null };
-  }
-
-  /** Id → number, name, status and manager, for the given employees of the organization. */
-  async summariesByIds(
-    organizationId: string,
-    ids: string[],
-  ): Promise<Map<string, EmployeeSummary>> {
-    if (ids.length === 0) return new Map();
-    const rows = await this.repo.findSummaries(organizationId, [...new Set(ids)]);
-    return new Map(rows.map((row) => [row.id, row]));
   }
 
   /** The caller's own profile (GET /me/employee). */

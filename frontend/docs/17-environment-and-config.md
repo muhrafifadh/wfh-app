@@ -43,11 +43,11 @@ export const env = createEnv({
 
 ```bash
 # Backend base URL (server only)
-API_URL=http://localhost:8000/v1
+API_URL=http://localhost:8100/v1
 # 32+ random characters: openssl rand -base64 32
 SESSION_SECRET=replace-me-with-32-plus-random-characters
 # Public URL of this app
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_APP_URL=http://localhost:3100
 ```
 
 ## Static config

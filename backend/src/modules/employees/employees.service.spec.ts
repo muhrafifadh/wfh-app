@@ -4,7 +4,7 @@ import { mock } from "vitest-mock-extended";
 
 import { NotFoundError } from "@/common/errors/app-error.js";
 import type { AuthUser } from "@/common/types/auth.js";
-import type { PrismaService } from "@/infra/prisma/prisma.service.js";
+import type { PrismaService } from "@/infra/employee-db/prisma.service.js";
 import type { DivisionsService } from "@/modules/divisions/divisions.service.js";
 import {
   EmployeeHasAccountError,

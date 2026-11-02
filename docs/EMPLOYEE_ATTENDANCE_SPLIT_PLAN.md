@@ -1,11 +1,11 @@
-# Employee and attendance split plan
+# Employee and attendance split
 
 | Attribute | Value                                                         |
 | --------- | ------------------------------------------------------------- |
-| Status    | Proposed. Nothing is built.                                   |
+| Status    | Built and tested locally. Not deployed. |
 | Date      | 2 November 2026                                               |
 | Scope     | Local only: Docker Compose and dev servers. No production change. |
-| Replaces  | `ARCHITECTURE.md` §3 principle 9, once this is built          |
+| Replaces  | The single-service backend (see `ARCHITECTURE.md` §3, principle 9) |
 
 ## 1. Goal
 
@@ -54,23 +54,24 @@ Auth sits with employees because a user and an employee are linked one to one, a
 | 5 | The audit log is an in-process listener on events from every module. Photo views must always be audited (decision V9). | Audit stays in the employee service. Attendance sends its events through a BullMQ queue. | Audit entries arrive slightly later. A failed enqueue must log an error, and for photo views must refuse the view. |
 | 6 | `Organization` holds attendance settings: timezone, retention, reminders, verification flags. | Identity columns (`name`, `deletedAt`) stay with employee. Settings move to a new `OrganizationSettings` table in attendance, with a copy of `name` and a row created from an `organization.created` event. | Another small replica. |
 | 7 | `GET /me/context` in the employee module reads work settings, which would break the dependency rule. | Move that route to attendance. `/me/employee` stays. | The gateway has to route `/me` by full path. |
-| 8 | `WorkSchedule` and `Holiday` return `createdBy` through a User relation. Corrections and notifications store user IDs with foreign keys. | Keep plain UUIDs without foreign keys. Fill names with `namesByIds`. | The database no longer enforces these links. |
+| 8 | `WorkSchedule` and `Holiday` return `createdBy` through a User relation. Corrections and notifications store user IDs with foreign keys. | Keep plain UUIDs without foreign keys. Corrections and notifications fetch names with `namesByIds`. Schedules and holidays store the name when created, because they're read on nearly every request. | The database no longer enforces these links, and a renamed user keeps their old name on past schedules and holidays. |
 
 **Transport:** TCP for request-response, because it needs no new infrastructure. BullMQ for events, because the Redis it uses is already running and it keeps messages if the consumer is down. Plain Redis pub/sub would lose them.
 
 ## 5. Code layout
 
-Keep `backend/` as one package with several entry points, and leave `src/modules`, `src/common` and `src/infra` where they are:
+`backend/` is one package with several entry points. `src/modules`, `src/common` and `src/infra` stay where they were:
 
 ```text
 backend/src/apps/gateway/{main.ts, gateway.module.ts, routes.ts}
 backend/src/apps/employee/{main.ts, employee.module.ts}
 backend/src/apps/attendance/{main.ts, attendance.module.ts}
-backend/prisma/employee/{schema.prisma, migrations/, seed.ts}
-backend/prisma/attendance/{schema.prisma, migrations/, seed.ts}
+backend/prisma/employee/{schema.prisma, migrations/}
+backend/prisma/attendance/{schema.prisma, migrations/}
+backend/prisma/seed.ts
 ```
 
-This is a much smaller diff than Nest's monorepo mode, and it keeps the `@/` imports. The cost is that nothing physically stops a forbidden import, so a spec test must fail if a module imports across the boundary.
+This is a much smaller diff than Nest's monorepo mode, and it keeps the `@/` imports. The cost is that nothing physically stops a forbidden import, so `src/apps/service-boundaries.spec.ts` fails if a module imports across the boundary or touches the other service's database.
 
 ## 6. Gateway routes
 
@@ -79,38 +80,35 @@ This is a much smaller diff than Nest's monorepo mode, and it keeps the `@/` imp
 | employee   | `auth`, `users`, `roles`, `employees`, `divisions`, `audit-logs`, `uploads`, `me/employee`                                                                            |
 | attendance | `attendance`, `attendance-verification`, `correction-requests`, `dashboard`, `reports`, `team/attendance`, `holidays`, `work-calendar`, `work-schedules`, `work-settings`, `notifications`, `me/context` |
 
-The gateway listens on port 8000, so the frontend's `API_URL` doesn't change. It must pass the request ID on, stream the CSV export without buffering it, and forward the client IP. `TRUST_PROXY` has to be set correctly on both services, or the login rate limit will count every user as the gateway's IP.
+The gateway is the frontend's only `API_URL`. It must pass the request ID on, stream the CSV export without buffering it, and forward the client IP. `TRUST_PROXY` has to be set correctly on both services, or the login rate limit will count every user as the gateway's IP.
 
-## 7. Phases
+## 7. How it was built
 
-Each phase ends with all tests passing. Phases 1–3 still run as one process, so they're safe and can stop at any point. Estimates are rough, for one developer.
+1. **Boundaries:** `EmployeeDirectory` and `UserDirectory` interfaces, with `/me/context` moved, while still one process. All tests passed unchanged.
+2. **Split:** two Prisma schemas and databases, the replicas and queues, the TCP link, the gateway and the entry points.
+3. **Initial migrations:** generated by applying the old migrations to a scratch database, removing the other service's objects, and dumping the result. That keeps the hand-written check constraints that Prisma's own schema diff would lose. `prisma migrate diff` shows no drift for either service.
 
-| Phase | Work | Done when | Estimate |
-| --- | --- | --- | --- |
-| 1. Boundaries | Add `EmployeeDirectory` and `UserDirectory` interfaces with in-process adapters. Switch the attendance side to them. Move `/me/context`. Add the boundary spec test. | Existing unit and e2e tests pass unchanged. | 1 day |
-| 2. Remove shared relations | Add `OrganizationSettings`. Drop Prisma relations to User and Organization on the attendance side, and fill names in the services. | Same tests pass. | 2 days |
-| 3. Replicas and events | Add Employee and Division replica tables, repoint attendance foreign keys, publish changes through BullMQ, add the consumer and `resync`. Send audit through the queue. | Same behaviour, with tests changed only to wait for queued work. Tests added for out-of-order updates and resync. | 2–3 days |
-| 4. Two databases | Split into two Prisma schemas and clients, with fresh initial migrations and two seeds. Add the second database to Compose. | `migrate deploy` and seed work from empty. The e2e suite passes. | 2 days |
-| 5. Three processes | Add entry points, TCP clients and handlers, the gateway, and error mapping over TCP. Add `.claude/launch.json` entries. | Login, check-in with a photo, HR employee edit and HR report all work in a browser through port 8000. | 2–3 days |
-| 6. Tests and docs | Boot both services in the e2e helpers. Merge the two OpenAPI documents. Update CI, READMEs, `ARCHITECTURE.md`, `DATA_MODEL.md` and `DOMAIN_RULES.md`. | All checks pass and the OpenAPI diff is empty. | 2 days |
+**What proves it works:**
 
-**Total: roughly 11–13 working days.**
+- The 255 existing e2e tests pass with only setup changes and one updated health check. Each test starts the gateway and both services as separate Nest apps on real ports, so every request crosses HTTP, TCP and the queues.
+- `test/service-split.e2e-spec.ts` adds tests for the link itself: copying changes, stale messages, resync, immediate logout, error codes over TCP, and audit entries that keep their request ID.
+- `openapi.json` is identical to the single-service version once key order is ignored, so the frontend didn't change.
 
 ## 8. Things that are easy to miss
 
 - **Error codes over TCP:** `AppError` subclasses must survive the hop with their code and status. The frontend's token refresh relies on the specific expired-token error, so a generic 500 or 401 would break sessions.
 - **OpenAPI:** `backend/openapi.json` generates the frontend types, so the export has to merge both services. An empty diff is the proof that the contract hasn't changed.
 - **Route auth audit:** `RouteAuthAuditor` must run in both services.
-- **E2E tests:** `test/helpers.ts` uses one `AppModule` and one Prisma client, and specs write rows directly. It needs both apps, two clients and a way to wait for queued work. This is likely to be the largest unknown across the 19 spec files.
+- **E2E tests:** awaiting a request in a spec also waits for the queue messages it caused (`test/helpers.ts`), because specs check audit entries and copied rows straight after a response. Production callers don't get that wait.
 - **Scheduled jobs:** close-day and reminders move with attendance, and `organizationIds()` reads the new settings table.
-- **Seeding:** the two seeds must run in order, with employee first, and then a resync.
-- **Dev database:** this plan assumes a local reseed, so existing local data is thrown away.
+- **Seeding:** one script writes both databases directly, so it works before any service has started.
+- **Dev database:** there's no data migration from the single-service database. A new setup starts from the seed.
 
 ## 9. Before this could go live
 
 Not part of this work, but required first: a data migration for the existing database, an outbox for reliable events, service-to-service authentication on the TCP port (it trusts anyone who can reach it), hosting for three processes, and a rollback plan.
 
-## 10. Decisions for the product owner
+## 10. Decisions made
 
-1. Is the replica lag in decision 3 acceptable? **Recommended: yes**, since the alternative of live checks would still leave reports needing a replica.
-2. Should this reach the live site before submission? **Recommended: no.** Submit the branch with this plan, and state in the README that the live site runs the single-service version.
+1. **Replica lag is acceptable** (decision 3). Live checks wouldn't remove the need for a copy, because reports need one anyway.
+2. **This doesn't go to the live site for now.** The live site runs the earlier single-service version from a separate repository.

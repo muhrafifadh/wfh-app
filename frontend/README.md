@@ -6,7 +6,7 @@ Next.js 16 (App Router, Cache Components) · React 19 · TypeScript · Tailwind 
 
 ## Quick start
 
-Requires Node 24 (`nvm use`), pnpm (`corepack enable`), and the backend running on `http://localhost:8000` with its demo data (`pnpm db:seed` there).
+Requires Node 24 (`nvm use`), pnpm (`corepack enable`), and the backend running on `http://localhost:8100` with its demo data (`pnpm db:seed` there).
 
 ```bash
 pnpm install
@@ -14,7 +14,7 @@ cp .env.example .env.local   # set SESSION_SECRET; keep REGISTRATION_ENABLED=fal
 pnpm dev
 ```
 
-Open http://localhost:3000 (`pnpm dev --port 3001` if 3000 is taken; then set `NEXT_PUBLIC_APP_URL` to match, and the backend's `FRONTEND_URL` so links in emails point here). Every variable is described in [`.env.example`](.env.example) and [`docs/17-environment-and-config.md`](docs/17-environment-and-config.md).
+Run `pnpm dev --port 3100`, then open http://localhost:3100 (with another port, set `NEXT_PUBLIC_APP_URL` to match, and the backend's `FRONTEND_URL` so links in emails point here). Every variable is described in [`.env.example`](.env.example) and [`docs/17-environment-and-config.md`](docs/17-environment-and-config.md).
 
 ## Demo accounts
 

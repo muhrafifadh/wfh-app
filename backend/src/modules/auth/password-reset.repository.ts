@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 
-import { PrismaService } from "@/infra/prisma/prisma.service.js";
-import type { Tx } from "@/infra/prisma/prisma.types.js";
+import { PrismaService } from "@/infra/employee-db/prisma.service.js";
+import type { Tx } from "@/infra/employee-db/prisma.types.js";
 
 @Injectable()
 export class PasswordResetRepository {

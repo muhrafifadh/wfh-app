@@ -6,8 +6,8 @@ import { mock } from "vitest-mock-extended";
 import { NotFoundError } from "@/common/errors/app-error.js";
 import type { AuthUser } from "@/common/types/auth.js";
 import type { AppConfig } from "@/config/config.module.js";
+import type { PrismaService } from "@/infra/employee-db/prisma.service.js";
 import type { MailService } from "@/infra/mail/mail.service.js";
-import type { PrismaService } from "@/infra/prisma/prisma.service.js";
 import type { UserEmailJob } from "@/modules/users/jobs/user-emails.queue.js";
 import {
   CannotChangeOwnAccountError,

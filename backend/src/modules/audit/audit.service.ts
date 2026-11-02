@@ -37,7 +37,7 @@ export class AuditService {
    * Writes one entry. A failure is logged, never thrown: the action already
    * happened, and failing the request now would only hide that from the user.
    */
-  async record(event: AuditableEvent): Promise<void> {
+  async record(event: AuditableEvent, forwardedRequestId?: string | null): Promise<void> {
     try {
       await this.repo.insert({
         organizationId: event.organizationId,
@@ -47,7 +47,12 @@ export class AuditService {
         targetId: event.targetId,
         metadata: jsonObject.parse(event.metadata),
         // Set when the event came from an HTTP request; links the entry to its logs
-        requestId: this.cls.isActive() ? (this.cls.getId() ?? null) : null,
+        requestId:
+          forwardedRequestId !== undefined
+            ? forwardedRequestId
+            : this.cls.isActive()
+              ? (this.cls.getId() ?? null)
+              : null,
       });
     } catch (error) {
       this.logger.error({ err: error, action: event.name }, "Writing audit log failed");

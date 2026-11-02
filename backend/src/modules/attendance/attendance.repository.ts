@@ -2,9 +2,9 @@ import { Injectable } from "@nestjs/common";
 
 import { pageWindow, type PaginationQuery } from "@/common/dto/pagination.js";
 import { toDateColumn, type LocalDate } from "@/common/time/zoned-time.js";
-import { Prisma, type AttendanceStatus } from "@/generated/prisma/client.js";
-import { PrismaService } from "@/infra/prisma/prisma.service.js";
-import type { Tx } from "@/infra/prisma/prisma.types.js";
+import { Prisma, type AttendanceStatus } from "@/generated/attendance-db/client.js";
+import { PrismaService } from "@/infra/attendance-db/prisma.service.js";
+import type { Tx } from "@/infra/attendance-db/prisma.types.js";
 import { attendanceRow, type AttendanceRow } from "@/modules/attendance/attendance.mapper.js";
 
 export type { AttendanceRow };

@@ -1,13 +1,14 @@
 import { Injectable } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
+import { UserDirectory } from "@/common/contracts/directory.js";
 import type { Paginated } from "@/common/dto/pagination.js";
 import { NotFoundError } from "@/common/errors/app-error.js";
 import { addDays, fromDateColumn, toDateColumn, type LocalDate } from "@/common/time/zoned-time.js";
 import type { AuthUser } from "@/common/types/auth.js";
+import { PrismaService } from "@/infra/attendance-db/prisma.service.js";
+import type { Tx } from "@/infra/attendance-db/prisma.types.js";
 import { Clock } from "@/infra/clock/clock.js";
-import { PrismaService } from "@/infra/prisma/prisma.service.js";
-import type { Tx } from "@/infra/prisma/prisma.types.js";
 import type { CreateHolidayInput } from "@/modules/holidays/dto/create-holiday.dto.js";
 import type {
   CalendarDayBody,
@@ -43,7 +44,7 @@ const toHoliday = (row: HolidayRow): HolidayResponseBody => ({
   id: row.id,
   date: fromDateColumn(row.date),
   name: row.name,
-  createdBy: row.createdBy,
+  createdBy: { id: row.createdById, name: row.createdByName },
   createdAt: row.createdAt.toISOString(),
   updatedAt: row.updatedAt.toISOString(),
 });
@@ -71,6 +72,7 @@ export class HolidaysService {
     private readonly workSettings: WorkSettingsService,
     private readonly clock: Clock,
     private readonly events: EventEmitter2,
+    private readonly users: UserDirectory,
   ) {}
 
   async list(
@@ -90,6 +92,7 @@ export class HolidaysService {
    * and close-day doesn't reprocess closed dates (§6.3).
    */
   async create(user: AuthUser, input: CreateHolidayInput): Promise<HolidayResponseBody> {
+    const names = await this.users.namesByIds(user.organizationId, [user.id]);
     const created = await this.prisma.$transaction(async (tx) => {
       await this.repo.lockHolidays(user.organizationId, tx);
       if (await this.repo.findOnDate(user.organizationId, input.date, undefined, tx)) {
@@ -99,6 +102,7 @@ export class HolidaysService {
         {
           organizationId: user.organizationId,
           createdById: user.id,
+          createdByName: names.get(user.id) ?? "",
           date: toDateColumn(input.date),
           name: input.name,
         },

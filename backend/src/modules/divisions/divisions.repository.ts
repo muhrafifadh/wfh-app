@@ -1,9 +1,9 @@
 import { Injectable } from "@nestjs/common";
 
 import { pageWindow, parseSort } from "@/common/dto/pagination.js";
-import { Prisma } from "@/generated/prisma/client.js";
-import { PrismaService } from "@/infra/prisma/prisma.service.js";
-import type { Tx } from "@/infra/prisma/prisma.types.js";
+import { Prisma } from "@/generated/employee-db/client.js";
+import { PrismaService } from "@/infra/employee-db/prisma.service.js";
+import type { Tx } from "@/infra/employee-db/prisma.types.js";
 import { notDeleted } from "@/infra/prisma/soft-delete.js";
 import type { DivisionStatus } from "@/modules/divisions/divisions.constants.js";
 import type { ListDivisionsQueryInput } from "@/modules/divisions/dto/list-divisions.query.js";

@@ -1,9 +1,9 @@
 import { Injectable } from "@nestjs/common";
 
 import { pageWindow, type PaginationQuery } from "@/common/dto/pagination.js";
-import { Prisma, type CorrectionStatus } from "@/generated/prisma/client.js";
-import { PrismaService } from "@/infra/prisma/prisma.service.js";
-import type { Tx } from "@/infra/prisma/prisma.types.js";
+import { Prisma, type CorrectionStatus } from "@/generated/attendance-db/client.js";
+import { PrismaService } from "@/infra/attendance-db/prisma.service.js";
+import type { Tx } from "@/infra/attendance-db/prisma.types.js";
 
 const correctionRow = {
   id: true,

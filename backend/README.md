@@ -1,6 +1,6 @@
 # Hadir.in API (`backend/`)
 
-The API for Hadir.in, a work-from-home attendance system: employees check in and out at server time, managers and Admin/HR review corrections, and Admin/HR run the organization's employees, schedule, holidays and reports.
+The API for Hadir.in, a work-from-home attendance system, built as two NestJS microservices behind a gateway. See the [root README](../README.md) for how they fit together. Employees check in and out at server time, managers and Admin/HR review corrections, and Admin/HR run the organization's employees, schedule, holidays and reports.
 
 NestJS 12 (ESM) · TypeScript · PostgreSQL 17 · Prisma 7 · Redis + BullMQ · JWT auth with rotating refresh tokens. The web app is [`frontend/`](../frontend) (Next.js), in the same repository. Product documents (requirements, domain rules, UX flows) are in [`docs/`](../docs): `DOMAIN_RULES.md`, `ARCHITECTURE.md`, `UX_FLOWS.md`.
 
@@ -9,16 +9,22 @@ NestJS 12 (ESM) · TypeScript · PostgreSQL 17 · Prisma 7 · Redis + BullMQ · 
 Requires Node 24 (`nvm use`), pnpm (`corepack enable`), and Docker.
 
 ```bash
-cp .env.example .env        # first: install runs `prisma generate`, which reads DATABASE_URL
-                            # set SEED_ADMIN_PASSWORD (12+ characters); change ports if they clash
+cp .env.example .env        # first: install generates the Prisma clients, which read the database URLs
+                            # set JWT_ACCESS_SECRET and SEED_ADMIN_PASSWORD (12+ characters)
 pnpm install
-docker compose up -d        # project "hadirin": Postgres and Redis (dev + test), S3-compatible storage
-pnpm db:migrate             # applies every migration to the dev database
+docker compose up -d        # project "wfh-app": Postgres and Redis (dev + test), S3-compatible storage
+pnpm db:deploy              # creates and migrates both services' databases
 pnpm db:seed                # the demo organization (see "Demo data")
-pnpm dev
+pnpm dev                    # builds, then runs the gateway and both services with reload
 ```
 
-The API runs on http://localhost:8000/v1. Swagger UI: http://localhost:8000/docs. Health: `/health/live`, `/health/ready`. Local storage has a console at http://localhost:9001.
+| Process              | Address                                   | Reached by                                   |
+| -------------------- | ----------------------------------------- | -------------------------------------------- |
+| Gateway              | http://localhost:8100/v1                  | Clients. The only public entry point.        |
+| `employee-service`   | http://localhost:8101, Swagger at `/docs` | The gateway, and TCP on 8111 from attendance |
+| `attendance-service` | http://localhost:8102, Swagger at `/docs` | The gateway                                  |
+
+Health is at `/health/live` and `/health/ready` on each. The gateway's `/health/ready` is up only when both services are. Local storage has a console at http://localhost:9011. Run `pnpm db:resync`, with the services running, to send every employee to the attendance service again.
 
 Every variable is listed, with a comment, in [`.env.example`](.env.example); the rules are in [`docs/11-configuration.md`](docs/11-configuration.md). Keep `REGISTRATION_ENABLED=false`: Admin/HR invite accounts, there is no public sign-up.
 

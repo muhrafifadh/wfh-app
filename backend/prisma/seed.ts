@@ -6,7 +6,8 @@ import { config } from "dotenv";
 
 import { addDays, isoWeekday, localDateOf, parseTimeOfDay } from "../src/common/time/zoned-time.js";
 import { DEFAULT_ROLES, type DefaultRoleName } from "../src/common/types/auth.js";
-import { PrismaClient } from "../src/generated/prisma/client.js";
+import { PrismaClient as AttendanceClient } from "../src/generated/attendance-db/client.js";
+import { PrismaClient as EmployeeClient } from "../src/generated/employee-db/client.js";
 import {
   statusAtCheckIn,
   valuesFor,
@@ -16,11 +17,19 @@ import { boundariesFor } from "../src/modules/work-settings/domain/schedule-poli
 
 config({ quiet: true });
 
-const { DATABASE_URL, NODE_ENV, SEED_ADMIN_EMAIL, SEED_ADMIN_PASSWORD, SEED_DEMO_PASSWORD } =
-  process.env;
+const {
+  ATTENDANCE_DATABASE_URL,
+  EMPLOYEE_DATABASE_URL,
+  NODE_ENV,
+  SEED_ADMIN_EMAIL,
+  SEED_ADMIN_PASSWORD,
+  SEED_DEMO_PASSWORD,
+} = process.env;
 
 if (NODE_ENV === "production") throw new Error("Refusing to seed a production database.");
-if (!DATABASE_URL) throw new Error("DATABASE_URL is not set.");
+if (!EMPLOYEE_DATABASE_URL || !ATTENDANCE_DATABASE_URL) {
+  throw new Error("EMPLOYEE_DATABASE_URL and ATTENDANCE_DATABASE_URL must be set.");
+}
 if (!SEED_ADMIN_PASSWORD || SEED_ADMIN_PASSWORD.length < 12) {
   throw new Error("Set SEED_ADMIN_PASSWORD (12+ characters) in .env before seeding.");
 }
@@ -28,7 +37,14 @@ const demoPassword = SEED_DEMO_PASSWORD ?? SEED_ADMIN_PASSWORD;
 if (demoPassword.length < 12) throw new Error("SEED_DEMO_PASSWORD needs 12+ characters.");
 
 const email = (SEED_ADMIN_EMAIL ?? "admin@example.com").toLowerCase();
-const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: DATABASE_URL }) });
+// Writes each database directly, and the attendance service's copy of the shared rows with
+// it, so the seed works before any service has started.
+const employeeDb = new EmployeeClient({
+  adapter: new PrismaPg({ connectionString: EMPLOYEE_DATABASE_URL }),
+});
+const prisma = new AttendanceClient({
+  adapter: new PrismaPg({ connectionString: ATTENDANCE_DATABASE_URL }),
+});
 
 const PILOT_START = new Date("2026-01-05T00:00:00.000Z");
 
@@ -183,25 +199,25 @@ const historyDates = (): string[] => {
 const ORGANIZATION_NAME = "Hadir.in";
 
 async function main(): Promise<void> {
-  // Databases seeded before the rename still hold "Acme": update that row instead of adding a second organization.
   const organization =
-    (await prisma.organization.findFirst({
-      where: { name: { in: [ORGANIZATION_NAME, "Acme"] } },
-    })) ?? (await prisma.organization.create({ data: { name: ORGANIZATION_NAME } }));
-  await prisma.organization.update({
+    (await employeeDb.organization.findFirst({ where: { name: ORGANIZATION_NAME } })) ??
+    (await employeeDb.organization.create({ data: { name: ORGANIZATION_NAME } }));
+  const organizationSettings = {
+    name: ORGANIZATION_NAME,
+    timezone: "Asia/Jakarta",
+    supportContact: "hr@example.com",
+    // The use case asks for a photo as proof of working from home. Takes effect only with VERIFICATION_ENABLED on.
+    selfieVerificationEnabled: true,
+  };
+  await prisma.organization.upsert({
     where: { id: organization.id },
-    data: {
-      name: ORGANIZATION_NAME,
-      timezone: "Asia/Jakarta",
-      supportContact: "hr@example.com",
-      // The use case asks for a photo as proof of working from home. Takes effect only with VERIFICATION_ENABLED on.
-      selfieVerificationEnabled: true,
-    },
+    update: organizationSettings,
+    create: { id: organization.id, ...organizationSettings },
   });
 
   const roles = {} as Record<DefaultRoleName, string>;
   for (const [name, permissions] of Object.entries(DEFAULT_ROLES)) {
-    const role = await prisma.role.upsert({
+    const role = await employeeDb.role.upsert({
       where: { organizationId_name: { organizationId: organization.id, name } },
       update: { permissions: [...permissions] },
       create: { organizationId: organization.id, name, permissions: [...permissions] },
@@ -210,7 +226,7 @@ async function main(): Promise<void> {
   }
 
   // The owner has no employee profile: the "user without a profile" fixture
-  const owner = await prisma.user.upsert({
+  const owner = await employeeDb.user.upsert({
     where: { email },
     update: { roleId: roles.owner, disabledAt: null, deletedAt: null },
     create: {
@@ -225,11 +241,12 @@ async function main(): Promise<void> {
 
   const divisions = {} as Record<(typeof DIVISIONS)[number]["code"], string>;
   for (const division of DIVISIONS) {
-    const row = await prisma.division.upsert({
+    const row = await employeeDb.division.upsert({
       where: { organizationId_code: { organizationId: organization.id, code: division.code } },
       update: { name: division.name, status: "active" },
       create: { organizationId: organization.id, ...division },
     });
+    await prisma.division.upsert({ where: { id: row.id }, update: row, create: row });
     divisions[division.code] = row.id;
   }
 
@@ -240,7 +257,7 @@ async function main(): Promise<void> {
   for (const seed of EMPLOYEES) {
     const userId = seed.account
       ? (
-          await prisma.user.upsert({
+          await employeeDb.user.upsert({
             where: { email: seed.account.email },
             update: { roleId: roles[seed.account.role], disabledAt: null, deletedAt: null },
             create: {
@@ -264,7 +281,7 @@ async function main(): Promise<void> {
       employmentStartDate: PILOT_START,
       userId,
     };
-    const employee = await prisma.employee.upsert({
+    const employee = await employeeDb.employee.upsert({
       where: {
         organizationId_employeeNumber: {
           organizationId: organization.id,
@@ -274,6 +291,8 @@ async function main(): Promise<void> {
       update: data,
       create: { organizationId: organization.id, employeeNumber: seed.number, ...data },
     });
+    const { workEmail: _workEmail, jobTitle: _jobTitle, ...copy } = employee;
+    await prisma.employee.upsert({ where: { id: copy.id }, update: copy, create: copy });
     employeeIds.set(seed.number, employee.id);
     if (userId) userIds.set(seed.number, userId);
   }
@@ -292,6 +311,7 @@ async function main(): Promise<void> {
       organizationId: organization.id,
       effectiveFrom: PILOT_START,
       createdById: owner.id,
+      createdByName: owner.name,
     },
   });
 
@@ -304,7 +324,13 @@ async function main(): Promise<void> {
       await prisma.holiday.update({ where: { id: existing.id }, data: { name: holiday.name } });
     } else {
       await prisma.holiday.create({
-        data: { organizationId: organization.id, date, name: holiday.name, createdById: owner.id },
+        data: {
+          organizationId: organization.id,
+          date,
+          name: holiday.name,
+          createdById: owner.id,
+          createdByName: owner.name,
+        },
       });
     }
   }
@@ -467,4 +493,5 @@ try {
   await main();
 } finally {
   await prisma.$disconnect();
+  await employeeDb.$disconnect();
 }

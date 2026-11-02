@@ -45,10 +45,11 @@ describe("App (e2e)", () => {
     expect(res.headers["x-request-id"]).toBeTruthy();
   });
 
-  it("GET /health/ready reports the database as up", async () => {
+  it("GET /health/ready reports both services as up", async () => {
     const res = await request(app.getHttpServer()).get("/health/ready").expect(200);
 
-    expect(res.body.info.database.status).toBe("up");
+    expect(res.body.details["employee-service"].status).toBe("up");
+    expect(res.body.details["attendance-service"].status).toBe("up");
   });
 
   it("routes are served under /v1", async () => {

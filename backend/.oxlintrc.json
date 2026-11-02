@@ -33,7 +33,7 @@
   },
   "overrides": [
     {
-      "files": ["src/config/**", "prisma.config.ts"],
+      "files": ["src/config/**", "prisma.*.config.ts", "src/scripts/resync-directory.ts"],
       "rules": {
         "node/no-process-env": "off"
       }
@@ -42,6 +42,12 @@
       "files": ["*.config.ts", "*.config.*.ts", "*.config.mjs"],
       "rules": {
         "import/no-default-export": "off"
+      }
+    },
+    {
+      "files": ["src/scripts/resync-directory.ts"],
+      "rules": {
+        "no-console": "off"
       }
     },
     {

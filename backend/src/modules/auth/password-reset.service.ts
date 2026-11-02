@@ -7,8 +7,8 @@ import { PinoLogger } from "nestjs-pino";
 
 import { generateToken, hashToken } from "@/common/crypto/tokens.js";
 import { AppConfig } from "@/config/config.module.js";
+import { PrismaService } from "@/infra/employee-db/prisma.service.js";
 import { MailService } from "@/infra/mail/mail.service.js";
-import { PrismaService } from "@/infra/prisma/prisma.service.js";
 import { PASSWORD_RESET_TTL_MS } from "@/modules/auth/auth.constants.js";
 import { InvalidResetTokenError } from "@/modules/auth/auth.errors.js";
 import {

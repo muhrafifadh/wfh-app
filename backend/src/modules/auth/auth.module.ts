@@ -1,7 +1,8 @@
 import { BullModule } from "@nestjs/bullmq";
-import { Module } from "@nestjs/common";
+import { Global, Module } from "@nestjs/common";
 import { JwtModule } from "@nestjs/jwt";
 
+import { Authenticator } from "@/common/contracts/directory.js";
 import { AppConfig } from "@/config/config.module.js";
 import { ACCESS_TOKEN_TTL_SECONDS } from "@/modules/auth/auth.constants.js";
 import { AuthController } from "@/modules/auth/auth.controller.js";
@@ -14,6 +15,7 @@ import { PasswordResetService } from "@/modules/auth/password-reset.service.js";
 import { SessionsRepository } from "@/modules/auth/sessions.repository.js";
 import { UsersModule } from "@/modules/users/users.module.js";
 
+@Global()
 @Module({
   imports: [
     UsersModule,
@@ -33,13 +35,14 @@ import { UsersModule } from "@/modules/users/users.module.js";
   controllers: [AuthController],
   providers: [
     AuthService,
+    { provide: Authenticator, useExisting: AuthService },
     SessionsRepository,
     SessionsListener,
     PasswordResetService,
     PasswordResetRepository,
     PasswordResetProcessor,
   ],
-  // The global guards (registered in AppModule) need AuthService.
-  exports: [AuthService],
+  // The global guards (registered in FoundationModule) need the Authenticator.
+  exports: [AuthService, Authenticator],
 })
 export class AuthModule {}

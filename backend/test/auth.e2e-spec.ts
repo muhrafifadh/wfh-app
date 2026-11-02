@@ -4,9 +4,8 @@ import type { NestExpressApplication } from "@nestjs/platform-express";
 import request from "supertest";
 
 import { RequirePermissions } from "@/common/decorators/require-permissions.decorator.js";
-import { PrismaService } from "@/infra/prisma/prisma.service.js";
 
-import { authHeader, createTestApp, createUser, resetDatabase } from "./helpers.js";
+import { authHeader, createTestApp, createUser, PrismaService, resetDatabase } from "./helpers.js";
 
 @Controller("admin-only")
 class AdminOnlyController {

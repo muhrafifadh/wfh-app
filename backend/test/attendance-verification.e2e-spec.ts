@@ -5,7 +5,6 @@ import type { NestExpressApplication } from "@nestjs/platform-express";
 import request from "supertest";
 
 import type { Permission } from "@/common/types/auth.js";
-import { PrismaService } from "@/infra/prisma/prisma.service.js";
 import { StorageService } from "@/infra/storage/storage.service.js";
 import { AttendanceVerificationService } from "@/modules/attendance-verification/attendance-verification.service.js";
 
@@ -17,6 +16,7 @@ import {
   createSchedule,
   createTestApp,
   createUser,
+  PrismaService,
   resetDatabase,
   type TestUser,
 } from "./helpers.js";

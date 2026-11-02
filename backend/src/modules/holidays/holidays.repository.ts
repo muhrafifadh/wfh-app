@@ -2,9 +2,9 @@ import { Injectable } from "@nestjs/common";
 
 import { pageWindow } from "@/common/dto/pagination.js";
 import { toDateColumn, type LocalDate } from "@/common/time/zoned-time.js";
-import type { Prisma } from "@/generated/prisma/client.js";
-import { PrismaService } from "@/infra/prisma/prisma.service.js";
-import type { Tx } from "@/infra/prisma/prisma.types.js";
+import type { Prisma } from "@/generated/attendance-db/client.js";
+import { PrismaService } from "@/infra/attendance-db/prisma.service.js";
+import type { Tx } from "@/infra/attendance-db/prisma.types.js";
 import { notDeleted } from "@/infra/prisma/soft-delete.js";
 import type { ListHolidaysQueryInput } from "@/modules/holidays/dto/list-holidays.query.js";
 
@@ -15,7 +15,8 @@ const holidayRow = {
   name: true,
   createdAt: true,
   updatedAt: true,
-  createdBy: { select: { id: true, name: true } },
+  createdById: true,
+  createdByName: true,
 } satisfies Prisma.HolidaySelect;
 
 export type HolidayRow = Prisma.HolidayGetPayload<{ select: typeof holidayRow }>;
@@ -81,7 +82,13 @@ export class HolidaysRepository {
   }
 
   insert(
-    data: { organizationId: string; createdById: string; date: Date; name: string },
+    data: {
+      organizationId: string;
+      createdById: string;
+      createdByName: string;
+      date: Date;
+      name: string;
+    },
     tx: Tx = this.prisma,
   ): Promise<HolidayRow> {
     return tx.holiday.create({ data, select: holidayRow });

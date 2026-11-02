@@ -10,8 +10,8 @@ import type { Paginated } from "@/common/dto/pagination.js";
 import { ForbiddenError, NotFoundError } from "@/common/errors/app-error.js";
 import { fromDateColumn, toDateColumn } from "@/common/time/zoned-time.js";
 import type { AuthUser } from "@/common/types/auth.js";
+import { PrismaService } from "@/infra/attendance-db/prisma.service.js";
 import { Clock } from "@/infra/clock/clock.js";
-import { PrismaService } from "@/infra/prisma/prisma.service.js";
 import {
   ATTENDANCE_SNAPSHOT_VERSION,
   AttendanceService,

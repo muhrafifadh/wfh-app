@@ -12,7 +12,7 @@ You can create the skeleton with `pnpm nest g resource modules/invoices --no-spe
 
 ## 2. Schema & migration
 
-- [ ] Add the model to `prisma/schema.prisma` following the conventions ([07](../07-database-and-prisma.md)): UUIDv7 `id`, `organizationId`, timestamps, `deletedAt`, indexes on foreign keys, `@@map`.
+- [ ] Add the model to the owning service's `prisma/<service>/schema.prisma` following the conventions ([07](../07-database-and-prisma.md)): UUIDv7 `id`, `organizationId`, timestamps, `deletedAt`, indexes on foreign keys, `@@map`.
 - [ ] `pnpm db:migrate --name add_invoices`, then review the generated SQL ([migration playbook](database-migration.md)).
 
 ## 3. Permissions

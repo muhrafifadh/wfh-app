@@ -13,13 +13,13 @@ import { MeContextService } from "@/modules/work-settings/me-context.service.js"
 @ApiTags("me")
 @ApiBearerAuth()
 @Controller("me")
-export class MeContextController {
-  constructor(private readonly context: MeContextService) {}
+export class MeController {
+  constructor(private readonly meContext: MeContextService) {}
 
   @Get("context")
   @Authenticated()
   @ZodResponse({ status: 200, type: MeContextResponse })
-  me(@CurrentUser() user: AuthUser) {
-    return this.context.contextFor(user);
+  context(@CurrentUser() user: AuthUser) {
+    return this.meContext.contextFor(user);
   }
 }

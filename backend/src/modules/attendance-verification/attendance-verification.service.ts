@@ -15,8 +15,8 @@ import { UploadMismatchError, UploadNotReceivedError } from "@/common/files/uplo
 import { fromDateColumn, toDateColumn } from "@/common/time/zoned-time.js";
 import type { AuthUser } from "@/common/types/auth.js";
 import { AppConfig } from "@/config/config.module.js";
+import { PrismaService } from "@/infra/attendance-db/prisma.service.js";
 import { Clock } from "@/infra/clock/clock.js";
-import { PrismaService } from "@/infra/prisma/prisma.service.js";
 import { SIGNED_URL_TTL_SECONDS, StorageService } from "@/infra/storage/storage.service.js";
 import {
   CLOSED_ITEM_RETENTION_MS,

@@ -1,9 +1,9 @@
 import { Injectable } from "@nestjs/common";
 
 import { pageWindow } from "@/common/dto/pagination.js";
-import type { NotificationStatus } from "@/generated/prisma/client.js";
-import { PrismaService } from "@/infra/prisma/prisma.service.js";
-import type { Tx } from "@/infra/prisma/prisma.types.js";
+import type { NotificationStatus } from "@/generated/attendance-db/client.js";
+import { PrismaService } from "@/infra/attendance-db/prisma.service.js";
+import type { Tx } from "@/infra/attendance-db/prisma.types.js";
 import type { NotificationType } from "@/modules/notifications/domain/notification-rules.js";
 
 export type NotificationInsert = {

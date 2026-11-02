@@ -14,9 +14,9 @@ import { NotFoundError } from "@/common/errors/app-error.js";
 import { addDays, fromDateColumn, toDateColumn, type LocalDate } from "@/common/time/zoned-time.js";
 import type { AuthUser } from "@/common/types/auth.js";
 import { AppConfig } from "@/config/config.module.js";
-import type { IdempotencyAction, Prisma } from "@/generated/prisma/client.js";
+import type { IdempotencyAction, Prisma } from "@/generated/attendance-db/client.js";
+import { PrismaService } from "@/infra/attendance-db/prisma.service.js";
 import { Clock } from "@/infra/clock/clock.js";
-import { PrismaService } from "@/infra/prisma/prisma.service.js";
 import {
   IDEMPOTENCY_KEY_PATTERN,
   IDEMPOTENCY_TTL_MS,

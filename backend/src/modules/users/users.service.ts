@@ -5,15 +5,16 @@ import { EventEmitter2 } from "@nestjs/event-emitter";
 import { hash } from "@node-rs/argon2";
 import type { Queue } from "bullmq";
 
-import type { Contact, UserDirectory } from "@/common/contracts/directory.js";
+import type { Contact } from "@/common/contracts/directory.js";
+import { ORGANIZATION_CREATED_EVENT } from "@/common/contracts/service-events.js";
 import { generateToken, hashToken } from "@/common/crypto/tokens.js";
 import type { Paginated } from "@/common/dto/pagination.js";
 import { NotFoundError } from "@/common/errors/app-error.js";
 import { isPermission, type AuthUser, type Permission } from "@/common/types/auth.js";
 import { AppConfig } from "@/config/config.module.js";
+import { PrismaService } from "@/infra/employee-db/prisma.service.js";
+import type { Tx } from "@/infra/employee-db/prisma.types.js";
 import { MailService } from "@/infra/mail/mail.service.js";
-import { PrismaService } from "@/infra/prisma/prisma.service.js";
-import type { Tx } from "@/infra/prisma/prisma.types.js";
 import type { InviteUserInput } from "@/modules/users/dto/invite-user.dto.js";
 import type { ListUsersQueryInput } from "@/modules/users/dto/list-users.query.js";
 import type { RoleResponseBody } from "@/modules/users/dto/role.response.js";
@@ -84,7 +85,7 @@ const toUser = (row: UserRow): UserResponseBody => ({
 });
 
 @Injectable()
-export class UsersService implements UserDirectory {
+export class UsersService {
   constructor(
     private readonly repo: UsersRepository,
     private readonly prisma: PrismaService,
@@ -131,6 +132,7 @@ export class UsersService implements UserDirectory {
     const { password, ...rest } = input;
     const user = await this.repo.createOwner({ ...rest, passwordHash: await hash(password) });
     if (!user) throw new EmailTakenError();
+    await this.events.emitAsync(ORGANIZATION_CREATED_EVENT, user.organizationId);
     return user;
   }
 

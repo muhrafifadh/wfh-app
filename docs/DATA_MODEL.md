@@ -1,5 +1,7 @@
 # Data Model — Hadir.in
 
+> The tables described here now live in two databases, one per service. `backend/prisma/employee/schema.prisma` and `backend/prisma/attendance/schema.prisma` are the source of truth, and `EMPLOYEE_ATTENDANCE_SPLIT_PLAN.md` explains which rows are copied between them.
+
 | Attribute | Value                                                   |
 | --------- | ------------------------------------------------------- |
 | Status    | Target logical model for the baseline scope             |
@@ -13,7 +15,7 @@ This document turns the PRD and domain rules into an implementable data model. I
 
 ## 2. Conventions
 
-These follow the existing `backend/prisma/schema.prisma`:
+These follow the existing `backend/prisma/employee/schema.prisma` and `backend/prisma/attendance/schema.prisma`:
 
 - Primary keys use UUIDv7 (`@default(uuid(7)) @db.Uuid`).
 - Database tables and columns use `snake_case` (`@@map`/`@map`); Prisma models/fields use `PascalCase`/`camelCase`.
@@ -570,7 +572,7 @@ Every migration must apply to an empty database and to a database with existing 
 
 ## 16. Seed and fixtures
 
-The existing `prisma/seed.ts` is extended (idempotent upserts, refuses production):
+`prisma/seed.ts` writes both services' databases, including the attendance service's copy of the shared rows (idempotent upserts, refuses production):
 
 - Organization `Hadir.in`, timezone `Asia/Jakarta` (a database seeded under the old name `Acme` is renamed in place), with the selfie check on. It takes effect only where `VERIFICATION_ENABLED` is on; the column default stays off for any other organization.
 - Roles `admin_hr`, `manager`, `employee` with the permissions in §4.2; existing `owner` and `member` kept.

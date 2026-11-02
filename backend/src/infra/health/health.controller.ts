@@ -4,7 +4,7 @@ import { HealthCheck, HealthCheckService, HealthIndicatorService } from "@nestjs
 import { SkipThrottle } from "@nestjs/throttler";
 
 import { Public } from "@/common/decorators/public.decorator.js";
-import { PrismaService } from "@/infra/prisma/prisma.service.js";
+import { DatabaseHealth } from "@/infra/health/database-health.js";
 import { RedisHealth } from "@/infra/redis/redis-health.js";
 
 // docs/12-logging-and-observability.md — served outside /v1.
@@ -16,7 +16,7 @@ export class HealthController {
   constructor(
     private readonly health: HealthCheckService,
     private readonly indicator: HealthIndicatorService,
-    private readonly prisma: PrismaService,
+    private readonly database: DatabaseHealth,
     private readonly redis: RedisHealth,
   ) {}
 
@@ -35,9 +35,7 @@ export class HealthController {
       () =>
         this.indicator
           .check("database")
-          .attempt(async () => {
-            await this.prisma.$queryRaw`SELECT 1`;
-          })
+          .attempt(() => this.database.ping())
           .withTimeout(3000),
       // Background jobs (and so emails) stop without Redis
       () =>

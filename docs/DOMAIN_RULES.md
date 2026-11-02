@@ -9,6 +9,8 @@
 
 ## 1. Purpose and usage
 
+> **Between services:** employee data reaches the attendance service through a queue, so a change takes a moment to apply there. A new employee may be told they have no profile, or a just-deactivated one may still check in, during that short window. See `EMPLOYEE_ATTENDANCE_SPLIT_PLAN.md`, decision 3.
+
 This document is the source of truth for attendance calculations and validation. If a UI example or implementation plan conflicts with this document, the rules here apply until the decision log changes them.
 
 The words **must**, **must not**, and **rejected** are normative. Everything in this document is in baseline scope unless it is explicitly marked **Future scope**. Baseline implementation must not close off future-scope rules.

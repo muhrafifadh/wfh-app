@@ -49,7 +49,7 @@ Employee, division, schedule, holiday, attendance, and correction domains do not
 6. **Asynchronous only when needed.** Attendance transactions are synchronous; close-day and large exports use queues.
 7. **History is never silently recalculated.** Attendance stores a snapshot of the schedule used.
 8. **Observability from the start.** Request IDs, audit events, structured logs, and health checks are part of every flow.
-9. **No speculative microservices.** One modular backend is enough for 1,000 employees.
+9. **Two services, split on purpose.** Employee and attendance are separate services with separate databases behind a gateway (`EMPLOYEE_ATTENDANCE_SPLIT_PLAN.md`). The rest of this document was written for one backend: read "the backend" as both services together. Attendance, corrections and reports stay in one service because they share transactions.
 10. **Extend, don't replace.** New modules follow the existing controller → service → repository pattern, existing guards, error filter, and validation.
 
 ## 4. System context

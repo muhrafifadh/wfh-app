@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
+import { UserDirectory } from "@/common/contracts/directory.js";
 import type { Paginated, PaginationQuery } from "@/common/dto/pagination.js";
 import { NotFoundError } from "@/common/errors/app-error.js";
 import {
@@ -14,9 +15,9 @@ import {
   type LocalDate,
 } from "@/common/time/zoned-time.js";
 import type { AuthUser } from "@/common/types/auth.js";
+import { PrismaService } from "@/infra/attendance-db/prisma.service.js";
+import type { Tx } from "@/infra/attendance-db/prisma.types.js";
 import { Clock } from "@/infra/clock/clock.js";
-import { PrismaService } from "@/infra/prisma/prisma.service.js";
-import type { Tx } from "@/infra/prisma/prisma.types.js";
 import {
   boundariesFor,
   isScheduledWeekday,
@@ -82,7 +83,7 @@ const toVersion = (row: ScheduleRow): ScheduleVersion => ({
   checkOutDeadline: fromTimeColumn(row.checkOutDeadline),
   effectiveFrom: fromDateColumn(row.effectiveFrom),
   effectiveTo: row.effectiveTo ? fromDateColumn(row.effectiveTo) : null,
-  createdBy: row.createdBy,
+  createdBy: { id: row.createdById, name: row.createdByName },
   createdAt: row.createdAt,
 });
 
@@ -142,6 +143,7 @@ export class WorkSettingsService {
     private readonly prisma: PrismaService,
     private readonly clock: Clock,
     private readonly events: EventEmitter2,
+    private readonly users: UserDirectory,
   ) {}
 
   // Organization settings (policy:manage)
@@ -241,6 +243,7 @@ export class WorkSettingsService {
     input: CreateWorkScheduleInput,
   ): Promise<WorkScheduleResponseBody> {
     const now = this.clock.now();
+    const names = await this.users.namesByIds(user.organizationId, [user.id]);
     const { created, closedId, today } = await this.prisma.$transaction(async (tx) => {
       await this.repo.lockSchedules(user.organizationId, tx);
       const today = await this.today(user.organizationId, now, tx);
@@ -262,6 +265,7 @@ export class WorkSettingsService {
         {
           organizationId: user.organizationId,
           createdById: user.id,
+          createdByName: names.get(user.id) ?? "",
           name: input.name,
           timezone: input.timezone,
           workingDays: input.workingDays,

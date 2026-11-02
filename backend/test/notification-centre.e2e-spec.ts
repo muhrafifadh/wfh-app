@@ -9,7 +9,6 @@ import request from "supertest";
 import type { Permission } from "@/common/types/auth.js";
 import { MailService, type MailMessage } from "@/infra/mail/mail.service.js";
 import { MemoryMailer } from "@/infra/mail/mailers.js";
-import { PrismaService } from "@/infra/prisma/prisma.service.js";
 import { NOTIFICATION_EMAILS_QUEUE } from "@/modules/notifications/jobs/notification-emails.queue.js";
 
 import {
@@ -20,6 +19,7 @@ import {
   createSchedule,
   createTestApp,
   createUser,
+  PrismaService,
   resetDatabase,
   waitForJobs,
   type TestUser,

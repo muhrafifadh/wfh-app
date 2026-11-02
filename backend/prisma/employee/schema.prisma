@@ -1,0 +1,271 @@
+// Accounts, employees, divisions, audit log and uploads. docs/07-database-and-prisma.md for conventions.
+generator client {
+  provider            = "prisma-client"
+  output              = "../../src/generated/employee-db"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Organization {
+  id                          String    @id @default(uuid(7)) @db.Uuid
+  name                        String
+  createdAt                   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt                   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt                   DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  users                              User[]
+  roles                              Role[]
+  auditLogs                          AuditLog[]
+  uploads                            Upload[]
+  divisions                          Division[]
+  employees                          Employee[]
+
+  @@map("organizations")
+}
+
+/// Permission strings live in src/common/types/auth.ts (PERMISSIONS).
+model Role {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  name           String
+  permissions    String[]
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  users        User[]
+
+  @@unique([organizationId, name])
+  @@map("roles")
+}
+
+model User {
+  id              String    @id @default(uuid(7)) @db.Uuid
+  organizationId  String    @map("organization_id") @db.Uuid
+  roleId          String    @map("role_id") @db.Uuid
+  /// Always stored lowercased (the DTO normalizes it).
+  email           String    @unique
+  name            String
+  /// Null while an invited user hasn't accepted (set a password) yet.
+  passwordHash    String?   @map("password_hash")
+  emailVerifiedAt DateTime? @map("email_verified_at") @db.Timestamptz(3)
+  /// Deactivated: can't sign in. Reversible, unlike deletedAt.
+  disabledAt      DateTime? @map("disabled_at") @db.Timestamptz(3)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  organization         Organization            @relation(fields: [organizationId], references: [id])
+  role                 Role                    @relation(fields: [roleId], references: [id])
+  sessions             Session[]
+  passwordResetTokens  PasswordResetToken[]
+  tokens               UserToken[]
+  auditLogs            AuditLog[]
+  uploads              Upload[]
+  /// The HR profile this account signs in as (at most one).
+  employee             Employee?
+
+  @@index([organizationId])
+  @@index([roleId])
+  @@map("users")
+}
+
+/// One per login. Survives refresh-token rotation; revoked on logout or token reuse.
+model Session {
+  id         String    @id @default(uuid(7)) @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  userAgent  String?   @map("user_agent")
+  ip         String?
+  expiresAt  DateTime  @map("expires_at") @db.Timestamptz(3)
+  lastUsedAt DateTime  @default(now()) @map("last_used_at") @db.Timestamptz(3)
+  revokedAt  DateTime? @map("revoked_at") @db.Timestamptz(3)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshTokens RefreshToken[]
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+/// Only the SHA-256 hash is stored. usedAt is set when the token is rotated.
+model RefreshToken {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  sessionId String    @map("session_id") @db.Uuid
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(3)
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@map("refresh_tokens")
+}
+
+/// Single-use, 30 minutes. Only the SHA-256 hash is stored.
+model PasswordResetToken {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(3)
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
+
+enum UserTokenPurpose {
+  email_verification
+  invitation
+}
+
+/// Single-use links sent by email (invitations, email verification). Only the SHA-256 hash is stored.
+model UserToken {
+  id        String           @id @default(uuid(7)) @db.Uuid
+  userId    String           @map("user_id") @db.Uuid
+  purpose   UserTokenPurpose
+  tokenHash String           @unique @map("token_hash")
+  expiresAt DateTime         @map("expires_at") @db.Timestamptz(3)
+  usedAt    DateTime?        @map("used_at") @db.Timestamptz(3)
+  createdAt DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, purpose])
+  @@map("user_tokens")
+}
+
+/// Who did what, when. Append-only: rows are never updated or soft-deleted.
+model AuditLog {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  /// Null when no signed-in user did it (e.g. a password reset from an email link).
+  actorId        String?  @map("actor_id") @db.Uuid
+  /// "<entity>.<past-tense-verb>", e.g. "user.invited" (same names as the domain events).
+  action         String
+  targetType     String?  @map("target_type")
+  targetId       String?  @map("target_id") @db.Uuid
+  /// Small, non-secret details (changed field names, old/new role). Never tokens or passwords.
+  metadata       Json     @default("{}")
+  /// Matches the request's log lines (docs/12-logging-and-observability.md).
+  requestId      String?  @map("request_id")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  actor        User?        @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([organizationId, targetId])
+  @@index([actorId])
+  @@map("audit_logs")
+}
+
+enum UploadStatus {
+  /// Upload URL handed out; the file may not be in storage yet.
+  pending
+  /// The file was checked in storage (size and type match) and can be downloaded.
+  ready
+}
+
+/// A file in object storage (S3/MinIO). The bytes never pass through the API.
+model Upload {
+  id             String       @id @default(uuid(7)) @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  uploadedById   String       @map("uploaded_by_id") @db.Uuid
+  /// Object key in the bucket. Generated by the server, never taken from the client.
+  key            String       @unique
+  filename       String
+  contentType    String       @map("content_type")
+  /// Bytes, as declared by the client and checked against storage on completion.
+  size           Int
+  status         UploadStatus @default(pending)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt      DateTime?    @map("deleted_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  uploadedBy   User         @relation(fields: [uploadedById], references: [id])
+
+  @@index([organizationId, createdAt])
+  @@index([uploadedById])
+  @@map("uploads")
+}
+
+enum DivisionStatus {
+  active
+  inactive
+}
+
+/// A group of employees (e.g. Engineering). Deactivated, never deleted: history refers to it.
+model Division {
+  id             String         @id @default(uuid(7)) @db.Uuid
+  organizationId String         @map("organization_id") @db.Uuid
+  /// Uppercase business code, e.g. "ENG" (check constraint). Unique in the organization.
+  code           String         @db.VarChar(32)
+  /// Unique in the organization, ignoring case (checked by the service).
+  name           String         @db.VarChar(120)
+  status         DivisionStatus @default(active)
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt      DateTime?      @map("deleted_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  employees    Employee[]
+
+  @@unique([organizationId, code])
+  @@unique([organizationId, name])
+  @@index([organizationId, status, name])
+  @@map("divisions")
+}
+
+enum EmployeeStatus {
+  active
+  inactive
+}
+
+/// HR identity and attendance eligibility. The login identity stays on User.
+model Employee {
+  id                  String         @id @default(uuid(7)) @db.Uuid
+  organizationId      String         @map("organization_id") @db.Uuid
+  /// Null until an account is invited or linked. One user has at most one employee.
+  userId              String?        @unique @map("user_id") @db.Uuid
+  divisionId          String         @map("division_id") @db.Uuid
+  /// Direct manager (an employee of the same organization). Never itself, never a cycle.
+  managerId           String?        @map("manager_id") @db.Uuid
+  /// Uppercase, e.g. "EMP-001" (check constraint). Never changed or reused.
+  employeeNumber      String         @map("employee_number") @db.VarChar(32)
+  fullName            String         @map("full_name") @db.VarChar(160)
+  workEmail           String?        @map("work_email") @db.VarChar(255)
+  jobTitle            String?        @map("job_title") @db.VarChar(120)
+  status              EmployeeStatus @default(active)
+  /// First eligible day.
+  employmentStartDate DateTime       @map("employment_start_date") @db.Date
+  /// Last eligible day, inclusive.
+  employmentEndDate   DateTime?      @map("employment_end_date") @db.Date
+  createdAt           DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt           DateTime?      @map("deleted_at") @db.Timestamptz(3)
+
+  organization                       Organization                        @relation(fields: [organizationId], references: [id])
+  user                               User?                               @relation(fields: [userId], references: [id], onDelete: Restrict)
+  division                           Division                            @relation(fields: [divisionId], references: [id])
+  manager                            Employee?                           @relation("ReportingLine", fields: [managerId], references: [id], onDelete: Restrict)
+  reports                            Employee[]                          @relation("ReportingLine")
+
+  @@unique([organizationId, employeeNumber])
+  @@index([organizationId, status, divisionId])
+  @@index([organizationId, managerId])
+  @@index([organizationId, fullName])
+  @@index([divisionId])
+  @@index([managerId])
+  @@map("employees")
+}

@@ -15,10 +15,20 @@ const flag = z.enum(["true", "false"]).transform((v) => v === "true");
 export const envSchema = z
   .object({
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
-    PORT: z.coerce.number().int().default(8000),
+    /** The gateway: the only port clients use. */
+    PORT: z.coerce.number().int().default(8100),
+    EMPLOYEE_SERVICE_URL: z.url().default("http://127.0.0.1:8101"),
+    ATTENDANCE_SERVICE_URL: z.url().default("http://127.0.0.1:8102"),
+    EMPLOYEE_SERVICE_PORT: z.coerce.number().int().default(8101),
+    ATTENDANCE_SERVICE_PORT: z.coerce.number().int().default(8102),
+    /** Request-response calls from the attendance service. Has no authentication: keep it private. */
+    EMPLOYEE_RPC_HOST: z.string().default("127.0.0.1"),
+    EMPLOYEE_RPC_PORT: z.coerce.number().int().default(8111),
     LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
 
-    DATABASE_URL: z.url(),
+    /** Each service owns one database and never connects to the other. */
+    EMPLOYEE_DATABASE_URL: z.url(),
+    ATTENDANCE_DATABASE_URL: z.url(),
     REDIS_URL: z.url(),
     /** Redis key prefix for BullMQ, so tests (and other apps) never share queues with dev. */
     QUEUE_PREFIX: z
@@ -43,7 +53,7 @@ export const envSchema = z
 
     CORS_ORIGINS: csv,
     /** Where links in emails point (password reset). */
-    FRONTEND_URL: z.url().default("http://localhost:3000"),
+    FRONTEND_URL: z.url().default("http://localhost:3100"),
 
     /** Public sign-up (POST /auth/register). Off unless explicitly enabled. */
     REGISTRATION_ENABLED: flag.default(false),

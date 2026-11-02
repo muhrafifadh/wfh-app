@@ -4,8 +4,6 @@ import type { NestExpressApplication } from "@nestjs/platform-express";
 
 import request from "supertest";
 
-import { PrismaService } from "@/infra/prisma/prisma.service.js";
-
 import {
   authHeader,
   clockOf,
@@ -14,6 +12,7 @@ import {
   createSchedule,
   createTestApp,
   createUser,
+  PrismaService,
   resetDatabase,
   type TestUser,
 } from "./helpers.js";

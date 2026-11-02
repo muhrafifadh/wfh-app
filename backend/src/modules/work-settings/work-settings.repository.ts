@@ -2,9 +2,9 @@ import { Injectable } from "@nestjs/common";
 
 import { pageWindow, type PaginationQuery } from "@/common/dto/pagination.js";
 import { toDateColumn, type LocalDate } from "@/common/time/zoned-time.js";
-import { Prisma } from "@/generated/prisma/client.js";
-import { PrismaService } from "@/infra/prisma/prisma.service.js";
-import type { Tx } from "@/infra/prisma/prisma.types.js";
+import { Prisma } from "@/generated/attendance-db/client.js";
+import { PrismaService } from "@/infra/attendance-db/prisma.service.js";
+import type { Tx } from "@/infra/attendance-db/prisma.types.js";
 
 const scheduleRow = {
   id: true,
@@ -22,7 +22,8 @@ const scheduleRow = {
   effectiveFrom: true,
   effectiveTo: true,
   createdAt: true,
-  createdBy: { select: { id: true, name: true } },
+  createdById: true,
+  createdByName: true,
 } satisfies Prisma.WorkScheduleSelect;
 
 export type ScheduleRow = Prisma.WorkScheduleGetPayload<{ select: typeof scheduleRow }>;
@@ -30,6 +31,7 @@ export type ScheduleRow = Prisma.WorkScheduleGetPayload<{ select: typeof schedul
 export type ScheduleInsert = {
   organizationId: string;
   createdById: string;
+  createdByName: string;
   name: string;
   timezone: string;
   workingDays: number[];

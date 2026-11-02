@@ -2,9 +2,10 @@ import type { EventEmitter2 } from "@nestjs/event-emitter";
 
 import { mock } from "vitest-mock-extended";
 
+import type { UserDirectory } from "@/common/contracts/directory.js";
 import type { AuthUser } from "@/common/types/auth.js";
+import type { PrismaService } from "@/infra/attendance-db/prisma.service.js";
 import { FixedClock } from "@/infra/clock/clock.js";
-import type { PrismaService } from "@/infra/prisma/prisma.service.js";
 import type { CreateWorkScheduleInput } from "@/modules/work-settings/dto/create-work-schedule.dto.js";
 import {
   ScheduleEffectiveDateTooEarlyError,
@@ -47,7 +48,8 @@ const aRow = (overrides: Partial<ScheduleRow> = {}): ScheduleRow => ({
   effectiveFrom: date("2026-01-05"),
   effectiveTo: null,
   createdAt: new Date("2026-01-01T00:00:00Z"),
-  createdBy: { id: ME, name: "HR" },
+  createdById: ME,
+  createdByName: "HR",
   ...overrides,
 });
 
@@ -65,6 +67,7 @@ const input: CreateWorkScheduleInput = {
 };
 
 describe("WorkSettingsService", () => {
+  const users = mock<UserDirectory>();
   const repo = mock<WorkSettingsRepository>();
   const prisma = mock<PrismaService>();
   // Monday 2 November 2026, 10:00 in Jakarta
@@ -84,7 +87,8 @@ describe("WorkSettingsService", () => {
       checkOutReminderEnabled: true,
       checkOutReminderAt: new Date(18 * 3600_000),
     });
-    service = new WorkSettingsService(repo, prisma, clock, mock<EventEmitter2>());
+    users.namesByIds.mockResolvedValue(new Map([[ME, "HR"]]));
+    service = new WorkSettingsService(repo, prisma, clock, mock<EventEmitter2>(), users);
   });
 
   describe("today", () => {

@@ -9,7 +9,7 @@ import { generateToken, hashToken } from "@/common/crypto/tokens.js";
 import { UnauthenticatedError } from "@/common/errors/app-error.js";
 import type { AuthUser } from "@/common/types/auth.js";
 import { AppConfig } from "@/config/config.module.js";
-import { PrismaService } from "@/infra/prisma/prisma.service.js";
+import { PrismaService } from "@/infra/employee-db/prisma.service.js";
 import {
   ACCESS_TOKEN_TTL_SECONDS,
   REFRESH_REUSE_GRACE_MS,

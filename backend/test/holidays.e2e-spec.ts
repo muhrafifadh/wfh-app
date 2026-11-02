@@ -2,7 +2,6 @@ import type { NestExpressApplication } from "@nestjs/platform-express";
 
 import request from "supertest";
 
-import { PrismaService } from "@/infra/prisma/prisma.service.js";
 import { HolidaysService } from "@/modules/holidays/holidays.service.js";
 
 import {
@@ -10,6 +9,7 @@ import {
   createSchedule,
   createTestApp,
   createUser,
+  PrismaService,
   resetDatabase,
   type TestUser,
 } from "./helpers.js";

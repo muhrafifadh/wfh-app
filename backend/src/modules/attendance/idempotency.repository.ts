@@ -1,8 +1,8 @@
 import { Injectable } from "@nestjs/common";
 
-import { Prisma, type IdempotencyAction } from "@/generated/prisma/client.js";
-import { PrismaService } from "@/infra/prisma/prisma.service.js";
-import type { Tx } from "@/infra/prisma/prisma.types.js";
+import { Prisma, type IdempotencyAction } from "@/generated/attendance-db/client.js";
+import { PrismaService } from "@/infra/attendance-db/prisma.service.js";
+import type { Tx } from "@/infra/attendance-db/prisma.types.js";
 
 export type IdempotencyClaim = {
   organizationId: string;

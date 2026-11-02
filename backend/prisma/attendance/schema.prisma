@@ -1,0 +1,589 @@
+// Attendance, corrections, schedules, notifications and verification. docs/07-database-and-prisma.md for conventions.
+generator client {
+  provider            = "prisma-client"
+  output              = "../../src/generated/attendance-db"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// This service's settings for an organization. The id and name come from the employee service.
+model Organization {
+  id                          String    @id @default(uuid(7)) @db.Uuid
+  name                        String
+  /// IANA zone for work dates and schedule times (validated by the service that edits it).
+  timezone                    String    @default("Asia/Jakarta") @db.VarChar(64)
+  /// Shown in the UI as who to contact for help.
+  supportContact              String?   @map("support_contact") @db.VarChar(255)
+  /// How long attendance, corrections and audit entries are kept (1–10, check constraint).
+  retentionYears              Int       @default(5) @map("retention_years") @db.SmallInt
+  /// DOMAIN_RULES.md §18.4 — reminder times are local times in the schedule's zone.
+  checkInReminderEnabled      Boolean   @default(true) @map("check_in_reminder_enabled")
+  checkInReminderAt           DateTime  @default(dbgenerated("'09:00:00'::time without time zone")) @map("check_in_reminder_at") @db.Time(0)
+  checkOutReminderEnabled     Boolean   @default(true) @map("check_out_reminder_enabled")
+  checkOutReminderAt          DateTime  @default(dbgenerated("'18:00:00'::time without time zone")) @map("check_out_reminder_at") @db.Time(0)
+  /// ATTENDANCE_VERIFICATION_PLAN.md §3 — each method is off until an organization turns it on.
+  locationVerificationEnabled Boolean   @default(false) @map("location_verification_enabled")
+  selfieVerificationEnabled   Boolean   @default(false) @map("selfie_verification_enabled")
+  createdAt                   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt                   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt                   DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  attendanceVerifications            AttendanceVerification[]
+  workLocations                      WorkLocation[]
+  verificationNoticeAcknowledgements VerificationNoticeAcknowledgement[]
+  verificationPhotoRequests          VerificationPhotoRequest[]
+  verificationPendingPhotos          VerificationPendingPhoto[]
+  divisions                          Division[]
+  employees                          Employee[]
+  workSchedules                      WorkSchedule[]
+  holidays                           Holiday[]
+  attendances                        Attendance[]
+  idempotencyRecords                 IdempotencyRecord[]
+  corrections                        CorrectionRequest[]
+  notifications                      Notification[]
+
+  @@map("organizations")
+}
+
+enum DivisionStatus {
+  active
+  inactive
+}
+
+/// A copy of the employee service's divisions (see Employee).
+model Division {
+  id             String         @id @default(uuid(7)) @db.Uuid
+  organizationId String         @map("organization_id") @db.Uuid
+  /// Uppercase business code, e.g. "ENG" (check constraint). Unique in the organization.
+  code           String         @db.VarChar(32)
+  /// Unique in the organization, ignoring case (checked by the service).
+  name           String         @db.VarChar(120)
+  status         DivisionStatus @default(active)
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime       @map("updated_at") @db.Timestamptz(3)
+  deletedAt      DateTime?      @map("deleted_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  employees    Employee[]
+
+  @@unique([organizationId, code])
+  @@unique([organizationId, name])
+  @@index([organizationId, status, name])
+  @@map("divisions")
+}
+
+enum EmployeeStatus {
+  active
+  inactive
+}
+
+/// A copy of the employee service's employees, kept current by directory-sync events. Written only by
+/// DirectorySyncProcessor. updatedAt is the source row's, so an older event can never overwrite a newer one.
+model Employee {
+  id                  String         @id @default(uuid(7)) @db.Uuid
+  organizationId      String         @map("organization_id") @db.Uuid
+  /// Null until an account is invited or linked. One user has at most one employee.
+  userId              String?        @unique @map("user_id") @db.Uuid
+  divisionId          String         @map("division_id") @db.Uuid
+  /// Plain column: a report's event may arrive before their manager's.
+  managerId           String?        @map("manager_id") @db.Uuid
+  /// Uppercase, e.g. "EMP-001" (check constraint). Never changed or reused.
+  employeeNumber      String         @map("employee_number") @db.VarChar(32)
+  fullName            String         @map("full_name") @db.VarChar(160)
+  status              EmployeeStatus @default(active)
+  /// First eligible day.
+  employmentStartDate DateTime       @map("employment_start_date") @db.Date
+  /// Last eligible day, inclusive.
+  employmentEndDate   DateTime?      @map("employment_end_date") @db.Date
+  createdAt           DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime       @map("updated_at") @db.Timestamptz(3)
+  deletedAt           DateTime?      @map("deleted_at") @db.Timestamptz(3)
+
+  organization                       Organization                        @relation(fields: [organizationId], references: [id])
+  division                           Division                            @relation(fields: [divisionId], references: [id])
+  attendances                        Attendance[]
+  corrections                        CorrectionRequest[]
+  attendanceVerifications            AttendanceVerification[]
+  workLocations                      WorkLocation[]
+  verificationNoticeAcknowledgements VerificationNoticeAcknowledgement[]
+  verificationPhotoRequests          VerificationPhotoRequest[]
+  verificationPendingPhotos          VerificationPendingPhoto[]
+
+  @@unique([organizationId, employeeNumber])
+  @@index([organizationId, status, divisionId])
+  @@index([organizationId, managerId])
+  @@index([organizationId, fullName])
+  @@index([divisionId])
+  @@index([managerId])
+  @@map("employees")
+}
+
+enum ScheduleScope {
+  organization
+  /// Future scope
+  division
+  /// Future scope
+  employee
+}
+
+/// One schedule version (DATA_MODEL.md §6.3). Policy fields are never edited: a new
+/// version is created and the previous one's period is closed (effectiveTo).
+/// Times are local to `timezone`; ordering and ranges are check constraints.
+model WorkSchedule {
+  id               String        @id @default(uuid(7)) @db.Uuid
+  organizationId   String        @map("organization_id") @db.Uuid
+  name             String        @db.VarChar(120)
+  /// Only "organization" until division/employee schedules exist (check constraint).
+  scope            ScheduleScope @default(organization)
+  timezone         String        @db.VarChar(64)
+  /// ISO weekdays, 1 = Monday … 7 = Sunday.
+  workingDays      Int[]         @map("working_days") @db.SmallInt
+  startTime        DateTime      @map("start_time") @db.Time(0)
+  endTime          DateTime      @map("end_time") @db.Time(0)
+  toleranceMinutes Int           @map("tolerance_minutes") @db.SmallInt
+  checkInOpensAt   DateTime      @map("check_in_opens_at") @db.Time(0)
+  checkInClosesAt  DateTime      @map("check_in_closes_at") @db.Time(0)
+  checkOutDeadline DateTime      @map("check_out_deadline") @db.Time(3)
+  /// Inclusive.
+  effectiveFrom    DateTime      @map("effective_from") @db.Date
+  /// Inclusive; null while it's the latest version.
+  effectiveTo      DateTime?     @map("effective_to") @db.Date
+  createdById      String        @map("created_by_id") @db.Uuid
+  /// The name when it was created: the user lives in the employee service.
+  createdByName String @default("") @map("created_by_name") @db.VarChar(255)
+  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  attendances  Attendance[]
+
+  /// Backstop for the overlap check: two versions can never start on the same day.
+  @@unique([organizationId, scope, effectiveFrom])
+  @@index([organizationId, scope, effectiveFrom, effectiveTo])
+  @@index([createdById])
+  @@map("work_schedules")
+}
+
+/// A public holiday: not a working day. At most one active (not deleted) per date,
+/// checked by the service under a lock.
+model Holiday {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  /// Local organization date.
+  date           DateTime  @db.Date
+  name           String    @db.VarChar(160)
+  createdById    String    @map("created_by_id") @db.Uuid
+  /// The name when it was created: the user lives in the employee service.
+  createdByName String @default("") @map("created_by_name") @db.VarChar(255)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId, date])
+  @@index([createdById])
+  @@map("holidays")
+}
+
+enum AttendanceStatus {
+  present
+  late
+  absent
+  /// Future scope
+  excused
+}
+
+/// "not_started" is never stored: it means no row exists yet.
+enum AttendanceCompletion {
+  open
+  complete
+  not_applicable
+}
+
+enum AttendanceSource {
+  self_service
+  close_day_job
+}
+
+model Attendance {
+  id               String               @id @default(uuid(7)) @db.Uuid
+  organizationId   String               @map("organization_id") @db.Uuid
+  employeeId       String               @map("employee_id") @db.Uuid
+  workScheduleId   String?              @map("work_schedule_id") @db.Uuid
+  workDate         DateTime             @map("work_date") @db.Date
+  status           AttendanceStatus
+  completion       AttendanceCompletion
+  source           AttendanceSource
+  checkInAt        DateTime?            @map("check_in_at") @db.Timestamptz(3)
+  checkOutAt       DateTime?            @map("check_out_at") @db.Timestamptz(3)
+  lateMinutes      Int                  @default(0) @map("late_minutes")
+  /// Set when complete: floor((checkOutAt - checkInAt) / 1 minute).
+  workedMinutes    Int?                 @map("worked_minutes")
+  scheduleTimezone String               @map("schedule_timezone") @db.VarChar(64)
+  scheduledStartAt DateTime             @map("scheduled_start_at") @db.Timestamptz(3)
+  scheduledEndAt   DateTime             @map("scheduled_end_at") @db.Timestamptz(3)
+  onTimeDeadlineAt DateTime             @map("on_time_deadline_at") @db.Timestamptz(3)
+  checkInOpensAt   DateTime             @map("check_in_opens_at") @db.Timestamptz(3)
+  checkInClosesAt  DateTime             @map("check_in_closes_at") @db.Timestamptz(3)
+  checkOutClosesAt DateTime             @map("check_out_closes_at") @db.Timestamptz(3)
+  closeDayRunId    String?              @map("close_day_run_id") @db.VarChar(64)
+  /// Incremented on every change (compare-and-set for check-out and corrections).
+  version          Int                  @default(1)
+  /// Set when the first correction is approved.
+  correctedAt      DateTime?            @map("corrected_at") @db.Timestamptz(3)
+  createdAt        DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime             @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  organization       Organization             @relation(fields: [organizationId], references: [id])
+  employee           Employee                 @relation(fields: [employeeId], references: [id])
+  workSchedule       WorkSchedule?            @relation(fields: [workScheduleId], references: [id], onDelete: Restrict)
+  idempotencyRecords IdempotencyRecord[]
+  corrections        CorrectionRequest[]
+  /// The pending request, if any (at most one; see CorrectionRequest.pendingAttendanceId).
+  pendingCorrection  CorrectionRequest?       @relation("PendingCorrection")
+  verifications      AttendanceVerification[]
+
+  @@unique([organizationId, employeeId, workDate])
+  @@index([organizationId, employeeId, workDate(sort: Desc)])
+  @@index([organizationId, workDate, status, completion])
+  @@index([organizationId, workDate, employeeId])
+  @@index([employeeId])
+  @@index([workScheduleId])
+  @@map("attendances")
+}
+
+enum IdempotencyAction {
+  attendance_check_in
+  attendance_check_out
+}
+
+model IdempotencyRecord {
+  id             String            @id @default(uuid(7)) @db.Uuid
+  organizationId String            @map("organization_id") @db.Uuid
+  userId         String            @map("user_id") @db.Uuid
+  /// SHA-256 of the header value.
+  key            String            @db.VarChar(128)
+  action         IdempotencyAction
+  /// SHA-256 of the canonical request context (action, employee, work date).
+  requestHash    String            @map("request_hash") @db.Char(64)
+  attendanceId   String?           @map("attendance_id") @db.Uuid
+  responseStatus Int?              @map("response_status") @db.SmallInt
+  responseBody   Json?             @map("response_body")
+  lockedAt       DateTime          @map("locked_at") @db.Timestamptz(3)
+  completedAt    DateTime?         @map("completed_at") @db.Timestamptz(3)
+  expiresAt      DateTime          @map("expires_at") @db.Timestamptz(3)
+  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  attendance   Attendance?  @relation(fields: [attendanceId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, userId, key])
+  @@index([expiresAt])
+  @@index([userId])
+  @@index([attendanceId])
+  @@map("idempotency_records")
+}
+
+enum CorrectionStatus {
+  pending
+  approved
+  rejected
+}
+
+/// DOMAIN_RULES.md §11 — a request to change an attendance record's check-in/out.
+model CorrectionRequest {
+  id                        String           @id @default(uuid(7)) @db.Uuid
+  organizationId            String           @map("organization_id") @db.Uuid
+  attendanceId              String           @map("attendance_id") @db.Uuid
+  /// Attendance owner (denormalized for queues and history).
+  employeeId                String           @map("employee_id") @db.Uuid
+  workDate                  DateTime         @map("work_date") @db.Date
+  status                    CorrectionStatus @default(pending)
+  /// Equals attendanceId while pending, null once decided. Its unique index allows one
+  /// pending request per record without a partial index (check constraint keeps it in step).
+  pendingAttendanceId       String?          @unique @map("pending_attendance_id") @db.Uuid
+  /// Values at submission (for display).
+  currentCheckInAt          DateTime?        @map("current_check_in_at") @db.Timestamptz(3)
+  currentCheckOutAt         DateTime?        @map("current_check_out_at") @db.Timestamptz(3)
+  /// The resulting pair if approved: proposed value, or the current one where unchanged.
+  requestedCheckInAt        DateTime         @map("requested_check_in_at") @db.Timestamptz(3)
+  requestedCheckOutAt       DateTime?        @map("requested_check_out_at") @db.Timestamptz(3)
+  reason                    String           @db.VarChar(1000)
+  requestedById             String           @map("requested_by_id") @db.Uuid
+  /// Attendance version at submission; approval requires it unchanged.
+  expectedAttendanceVersion Int              @map("expected_attendance_version")
+  decidedById               String?          @map("decided_by_id") @db.Uuid
+  decisionNote              String?          @map("decision_note") @db.VarChar(1000)
+  submittedAt               DateTime         @map("submitted_at") @db.Timestamptz(3)
+  decidedAt                 DateTime?        @map("decided_at") @db.Timestamptz(3)
+  createdAt                 DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt                 DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  organization      Organization        @relation(fields: [organizationId], references: [id])
+  attendance        Attendance          @relation(fields: [attendanceId], references: [id], onDelete: Restrict)
+  pendingAttendance Attendance?         @relation("PendingCorrection", fields: [pendingAttendanceId], references: [id], onDelete: Restrict)
+  employee          Employee            @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  snapshot          CorrectionSnapshot?
+
+  @@index([organizationId, status, submittedAt])
+  @@index([organizationId, employeeId, workDate(sort: Desc)])
+  @@index([attendanceId])
+  @@index([employeeId])
+  @@index([requestedById])
+  @@index([decidedById])
+  @@map("correction_requests")
+}
+
+/// The record before and after an approved correction. Immutable.
+model CorrectionSnapshot {
+  id                  String   @id @default(uuid(7)) @db.Uuid
+  correctionRequestId String   @unique @map("correction_request_id") @db.Uuid
+  before              Json
+  after               Json
+  /// Shape of before/after (see corrections domain).
+  schemaVersion       Int      @map("schema_version") @db.SmallInt
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  correctionRequest CorrectionRequest @relation(fields: [correctionRequestId], references: [id], onDelete: Restrict)
+
+  @@map("correction_snapshots")
+}
+
+enum NotificationType {
+  correction_submitted
+  correction_approved
+  correction_rejected
+  reminder_check_in
+  reminder_check_out
+}
+
+enum NotificationStatus {
+  pending
+  sent
+  /// Not sent because it no longer applied when its turn came (e.g. already decided).
+  skipped
+  failed
+}
+
+/// One message to one recipient about one subject (DOMAIN_RULES.md §18).
+/// No message body: the email is built from current data when it is sent.
+model Notification {
+  id             String             @id @default(uuid(7)) @db.Uuid
+  organizationId String             @map("organization_id") @db.Uuid
+  recipientId    String             @map("recipient_id") @db.Uuid
+  type           NotificationType
+  /// What it is about: the correction request, or the employee for reminders. No
+  /// foreign key, because types refer to different tables.
+  subjectId      String             @map("subject_id") @db.Uuid
+  /// Reminders: the work date they are for.
+  workDate       DateTime?          @map("work_date") @db.Date
+  /// Reminders: never sent at or after this (check-in close, check-out deadline).
+  expiresAt      DateTime?          @map("expires_at") @db.Timestamptz(3)
+  /// Corrections "{type}:{subjectId}:{recipientId}", reminders "{type}:{employeeId}:{workDate}":
+  /// retries and re-runs never create a second one.
+  dedupeKey      String             @unique @map("dedupe_key") @db.VarChar(200)
+  status         NotificationStatus @default(pending)
+  /// Safe code when failed, never a stack trace.
+  failureCode    String?            @map("failure_code") @db.VarChar(80)
+  createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  /// When it was delivered (status sent): shown in the app from then on.
+  sentAt         DateTime?          @map("sent_at") @db.Timestamptz(3)
+  /// When the email went out; null when the recipient turned that email off (§18.7).
+  emailedAt      DateTime?          @map("emailed_at") @db.Timestamptz(3)
+  /// One line for the in-app list, written at delivery (§18.6).
+  title          String?            @db.VarChar(200)
+  /// App path it is about, e.g. "/corrections/{id}".
+  link           String?            @db.VarChar(300)
+  /// For the in-app notification centre (Phase 6C).
+  readAt         DateTime?          @map("read_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  /// The recipient's in-app list and unread count (§18.6)
+  @@index([recipientId, status, sentAt(sort: Desc)])
+  @@index([organizationId, createdAt])
+  @@map("notifications")
+}
+
+/// Which notifications a user also gets by email (DOMAIN_RULES.md §18.7). No row: all on.
+model NotificationPreference {
+  userId                 String   @id @map("user_id") @db.Uuid
+  reviewRequestsEmail    Boolean  @default(true) @map("review_requests_email")
+  correctionUpdatesEmail Boolean  @default(true) @map("correction_updates_email")
+  checkInReminderEmail   Boolean  @default(true) @map("check_in_reminder_email")
+  checkOutReminderEmail  Boolean  @default(true) @map("check_out_reminder_email")
+  updatedAt              DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+
+  @@map("notification_preferences")
+}
+
+enum VerificationMethod {
+  location
+  selfie
+}
+
+enum VerificationMoment {
+  check_in
+  check_out
+}
+
+/// ATTENDANCE_VERIFICATION_PLAN.md §8 (V10, V11). Only outside_approved_area is flagged for review.
+enum VerificationResult {
+  verified
+  outside_approved_area
+  low_accuracy
+  not_shared
+  no_approved_area
+  captured
+}
+
+enum VerificationDistanceBand {
+  within_1km
+  within_10km
+  over_10km
+}
+
+/// Evidence for one check-in or check-out, apart from the attendance record: deleting it never changes attendance.
+/// Raw coordinates are never stored here (decision V3).
+model AttendanceVerification {
+  id               String                    @id @default(uuid(7)) @db.Uuid
+  organizationId   String                    @map("organization_id") @db.Uuid
+  attendanceId     String                    @map("attendance_id") @db.Uuid
+  employeeId       String                    @map("employee_id") @db.Uuid
+  workDate         DateTime                  @map("work_date") @db.Date
+  moment           VerificationMoment
+  method           VerificationMethod
+  result           VerificationResult
+  accuracyMeters   Int?                      @map("accuracy_meters")
+  distanceBand     VerificationDistanceBand? @map("distance_band")
+  capturedAt       DateTime?                 @map("captured_at") @db.Timestamptz(3)
+  /// Object key of the selfie. Never in the uploads table, which anyone in the organization can read.
+  photoKey         String?                   @map("photo_key")
+  photoDeleteAfter DateTime?                 @map("photo_delete_after") @db.Timestamptz(3)
+  reviewedAt       DateTime?                 @map("reviewed_at") @db.Timestamptz(3)
+  /// Decision V8: results are deleted after 90 days, whatever happens to the attendance record.
+  deleteAfter      DateTime                  @map("delete_after") @db.Timestamptz(3)
+  createdAt        DateTime                  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime                  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  organization  Organization               @relation(fields: [organizationId], references: [id])
+  attendance    Attendance                 @relation(fields: [attendanceId], references: [id])
+  employee      Employee                   @relation(fields: [employeeId], references: [id])
+  photoRequests VerificationPhotoRequest[]
+
+  @@unique([attendanceId, moment, method])
+  @@index([organizationId, workDate(sort: Desc)])
+  @@index([organizationId, result, reviewedAt])
+  @@index([employeeId, workDate(sort: Desc)])
+  @@index([deleteAfter])
+  @@index([photoDeleteAfter])
+  @@map("attendance_verifications")
+}
+
+/// A photo uploaded for a check-in or check-out that isn't recorded yet. One per employee and
+/// moment: a retake replaces it, and the cleanup job removes it if it's never used.
+model VerificationPendingPhoto {
+  id             String             @id @default(uuid(7)) @db.Uuid
+  organizationId String             @map("organization_id") @db.Uuid
+  employeeId     String             @map("employee_id") @db.Uuid
+  moment         VerificationMoment
+  key            String
+  contentType    String             @map("content_type") @db.VarChar(32)
+  size           Int
+  expiresAt      DateTime           @map("expires_at") @db.Timestamptz(3)
+  createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  employee     Employee     @relation(fields: [employeeId], references: [id])
+
+  @@unique([employeeId, moment])
+  @@index([expiresAt])
+  @@map("verification_pending_photos")
+}
+
+enum WorkLocationStatus {
+  pending
+  approved
+  rejected
+  superseded
+}
+
+/// An employee's declared work-from-home area (decision V5). Declared by the employee, active only
+/// once Admin/HR approves it. Stored rounded to about 100 m. At most one pending and one approved
+/// per employee (partial unique indexes in the migration).
+model WorkLocation {
+  id             String             @id @default(uuid(7)) @db.Uuid
+  organizationId String             @map("organization_id") @db.Uuid
+  employeeId     String             @map("employee_id") @db.Uuid
+  label          String             @db.VarChar(120)
+  latitude       Float
+  longitude      Float
+  radiusMeters   Int                @default(1000) @map("radius_meters")
+  status         WorkLocationStatus @default(pending)
+  decidedAt      DateTime?          @map("decided_at") @db.Timestamptz(3)
+  createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  employee     Employee     @relation(fields: [employeeId], references: [id])
+
+  @@index([organizationId, status, createdAt])
+  @@index([employeeId, status])
+  @@index([status, decidedAt])
+  @@map("work_locations")
+}
+
+/// The employee saw this version of the notice. A record of being told, not consent.
+model VerificationNoticeAcknowledgement {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  employeeId     String   @map("employee_id") @db.Uuid
+  noticeVersion  Int      @map("notice_version")
+  acknowledgedAt DateTime @map("acknowledged_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  employee     Employee     @relation(fields: [employeeId], references: [id])
+
+  @@unique([employeeId, noticeVersion])
+  @@index([organizationId])
+  @@map("verification_notice_acknowledgements")
+}
+
+enum VerificationPhotoRequestStatus {
+  open
+  disclosed
+  declined
+}
+
+/// Decision V12: an employee asks authorized Admin/HR for their own photo. At most one open
+/// request per photo (partial unique index in the migration).
+model VerificationPhotoRequest {
+  id             String                         @id @default(uuid(7)) @db.Uuid
+  organizationId String                         @map("organization_id") @db.Uuid
+  employeeId     String                         @map("employee_id") @db.Uuid
+  /// Null once the verification result has been deleted.
+  verificationId String?                        @map("verification_id") @db.Uuid
+  workDate       DateTime                       @map("work_date") @db.Date
+  status         VerificationPhotoRequestStatus @default(open)
+  /// How Admin/HR confirmed the requester, without any ID numbers.
+  identityCheck  String?                        @map("identity_check") @db.VarChar(200)
+  decidedAt      DateTime?                      @map("decided_at") @db.Timestamptz(3)
+  createdAt      DateTime                       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime                       @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  organization Organization            @relation(fields: [organizationId], references: [id])
+  employee     Employee                @relation(fields: [employeeId], references: [id])
+  verification AttendanceVerification? @relation(fields: [verificationId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, status, createdAt])
+  @@index([employeeId])
+  @@index([verificationId])
+  @@index([status, decidedAt])
+  @@map("verification_photo_requests")
+}
