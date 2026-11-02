@@ -10,6 +10,8 @@ export const VERIFICATION_EVENTS = {
   workLocationRequested: "attendance_verification.work_location_requested",
   workLocationApproved: "attendance_verification.work_location_approved",
   workLocationRejected: "attendance_verification.work_location_rejected",
+  officeAdded: "attendance_verification.office_added",
+  officeRemoved: "attendance_verification.office_removed",
   reviewed: "attendance_verification.reviewed",
   photoViewed: "attendance_verification.photo_viewed",
   photoRequested: "attendance_verification.photo_requested",

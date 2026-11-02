@@ -1,5 +1,5 @@
 /** ATTENDANCE_VERIFICATION_PIA.md §9 — bump when the notice changes, so employees see it again. */
-export const NOTICE_VERSION = 3;
+export const NOTICE_VERSION = 4;
 
 /** Accuracy worse than this can't confirm anything (decision V11). */
 export const ACCURACY_THRESHOLD_METERS = 500;

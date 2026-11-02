@@ -1,4 +1,5 @@
 import {
+  BuildingIcon,
   CameraIcon,
   CircleCheckIcon,
   CircleDashedIcon,
@@ -19,6 +20,7 @@ import { cn } from "@/lib/utils";
 // neutral (decisions V10, V11); only being outside the area stands out.
 const STYLES: Record<VerificationResult, { icon: LucideIcon; className: string }> = {
   verified: { icon: CircleCheckIcon, className: "bg-success-soft text-success" },
+  at_office: { icon: BuildingIcon, className: "bg-success-soft text-success" },
   captured: { icon: CameraIcon, className: "bg-success-soft text-success" },
   outside_approved_area: { icon: TriangleAlertIcon, className: "bg-warning-soft text-warning" },
   low_accuracy: { icon: CircleHelpIcon, className: "bg-secondary text-secondary-foreground" },

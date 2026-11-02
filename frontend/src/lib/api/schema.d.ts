@@ -164,6 +164,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/attendance-verification/offices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AttendanceVerificationController_listOffices"];
+        put?: never;
+        post: operations["AttendanceVerificationController_addOffice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/attendance-verification/offices/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["AttendanceVerificationController_removeOffice"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/attendance-verification/photo-requests": {
         parameters: {
             query?: never;
@@ -1308,6 +1340,12 @@ export interface components {
             token: string;
             password: string;
         };
+        AddOfficeDto: {
+            label: string;
+            latitude: number;
+            longitude: number;
+            radiusMeters: number;
+        };
         ApproveCorrectionDto: {
             decisionNote?: string;
         };
@@ -1953,7 +1991,7 @@ export interface components {
                 /** @enum {string} */
                 method: "location" | "selfie";
                 /** @enum {string} */
-                result: "verified" | "outside_approved_area" | "low_accuracy" | "not_shared" | "no_approved_area" | "captured";
+                result: "verified" | "at_office" | "outside_approved_area" | "low_accuracy" | "not_shared" | "no_approved_area" | "captured";
                 photoAvailable: boolean;
                 /** @enum {string|null} */
                 photoRequest: "open" | "disclosed" | "declined" | null;
@@ -1972,7 +2010,7 @@ export interface components {
                 /** @enum {string} */
                 method: "location" | "selfie";
                 /** @enum {string} */
-                result: "verified" | "outside_approved_area" | "low_accuracy" | "not_shared" | "no_approved_area" | "captured";
+                result: "verified" | "at_office" | "outside_approved_area" | "low_accuracy" | "not_shared" | "no_approved_area" | "captured";
             }[];
             notice: {
                 version: number;
@@ -1987,6 +2025,9 @@ export interface components {
                     label: string;
                 } | null;
             };
+            offices: {
+                label: string;
+            }[];
         };
         NotificationListResponse_Output: {
             items: {
@@ -2004,6 +2045,24 @@ export interface components {
             page: number;
             pageSize: number;
             total: number;
+        };
+        OfficeListResponse_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                label: string;
+                latitude: number;
+                longitude: number;
+                radiusMeters: number;
+            }[];
+        };
+        OfficeResponse_Output: {
+            /** Format: uuid */
+            id: string;
+            label: string;
+            latitude: number;
+            longitude: number;
+            radiusMeters: number;
         };
         OrganizationDashboardResponse_Output: {
             /** Format: date-time */
@@ -2603,7 +2662,7 @@ export interface components {
             /** @enum {string} */
             method: "location" | "selfie";
             /** @enum {string} */
-            result: "verified" | "outside_approved_area" | "low_accuracy" | "not_shared" | "no_approved_area" | "captured";
+            result: "verified" | "at_office" | "outside_approved_area" | "low_accuracy" | "not_shared" | "no_approved_area" | "captured";
             flagged: boolean;
             /** Format: date-time */
             reviewedAt: string | null;
@@ -2632,7 +2691,7 @@ export interface components {
                 /** @enum {string} */
                 method: "location" | "selfie";
                 /** @enum {string} */
-                result: "verified" | "outside_approved_area" | "low_accuracy" | "not_shared" | "no_approved_area" | "captured";
+                result: "verified" | "at_office" | "outside_approved_area" | "low_accuracy" | "not_shared" | "no_approved_area" | "captured";
                 flagged: boolean;
                 /** Format: date-time */
                 reviewedAt: string | null;
@@ -3451,6 +3510,103 @@ export interface operations {
             };
             /** @description FORBIDDEN */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AttendanceVerificationController_listOffices: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfficeListResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AttendanceVerificationController_addOffice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddOfficeDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfficeResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AttendanceVerificationController_removeOffice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

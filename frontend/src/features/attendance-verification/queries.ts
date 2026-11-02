@@ -5,6 +5,7 @@ import { cache } from "react";
 import {
   myResultsSchema,
   myVerificationSchema,
+  officeListSchema,
   photoRequestListSchema,
   verificationListSchema,
   verificationSettingsSchema,
@@ -44,6 +45,11 @@ export const listWorkLocationRequests = cache(
         schema: workLocationRequestListSchema,
       })
     ).items,
+);
+
+export const listOffices = cache(
+  async () =>
+    (await apiFetch("/attendance-verification/offices", { schema: officeListSchema })).items,
 );
 
 export const listPhotoRequests = cache(

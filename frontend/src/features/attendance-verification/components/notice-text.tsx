@@ -14,7 +14,7 @@ export function NoticeText({ location, selfie }: { location: boolean; selfie: bo
       <p>
         <span className="font-medium">What is collected.</span>{" "}
         {location &&
-          `Location: your position once each time${selfie ? ", when you take the photo" : ""}. It's compared with your approved area, then discarded. Only the result and a rough distance are kept. If the reading isn't accurate enough you'll see “Couldn't confirm”. That isn't a failed check. `}
+          `Location: your position once each time${selfie ? ", when you take the photo" : ""}. It's compared with your approved area and your organization's offices, then discarded. Only the result, which says whether you were at home or at an office, and a rough distance are kept. If the reading isn't accurate enough you'll see “Couldn't confirm”. That isn't a failed check. `}
         {selfie &&
           "Photo: one photo each time, taken when you press the button. Frame only yourself, and keep other people out of it."}
       </p>

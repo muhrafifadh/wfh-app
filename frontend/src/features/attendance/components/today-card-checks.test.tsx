@@ -44,8 +44,9 @@ const checks: MyVerification = {
   location: { enabled: true },
   selfie: { enabled: true },
   results: [],
-  notice: { version: 3, acknowledged: true },
+  notice: { version: 4, acknowledged: true },
   workLocation: { approved: null, pending: null },
+  offices: [],
 };
 const checkedIn = aToday({
   state: "checked_in",
@@ -121,7 +122,7 @@ describe("TodayCard with checks on", () => {
 
   it("shows the notice first when it's unread", async () => {
     vi.mocked(acknowledgeNoticeAction).mockResolvedValue(ok(undefined));
-    renderCard(aToday(), { ...checks, notice: { version: 3, acknowledged: false } });
+    renderCard(aToday(), { ...checks, notice: { version: 4, acknowledged: false } });
 
     await userEvent.click(screen.getByRole("button", { name: "Check in" }));
     expect(screen.queryByRole("button", { name: "Finish capture" })).not.toBeInTheDocument();

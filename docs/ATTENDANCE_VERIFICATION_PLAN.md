@@ -3,7 +3,7 @@
 | Attribute     | Value                                                                 |
 | ------------- | --------------------------------------------------------------------- |
 | Status        | Implemented, off by default — production gated (§4.1); not independently reviewed |
-| Version       | 0.5                                                                   |
+| Version       | 0.6                                                                   |
 | Date          | 2 November 2026                                                       |
 | Product owner | Developer                                                             |
 | Roadmap       | [`PLANS.md`](PLANS.md) Phase 7 (7.0 privacy gate, 7A location, 7B selfie) |
@@ -120,6 +120,47 @@ Tracked here, apart from the implementation tasks. Each must be met before real 
 - A change to an approved area has no effect until Admin/HR approves it; a manager without explicit authorization gets a refusal.
 - Managers see status and flags only for their direct reports (negative tests).
 
+### 5.5 Office locations
+
+The location check only knew the employee's home, so someone working from the office looked the same as someone at a café: outside the approved area, and flagged. Office locations let the result say where the employee was (decision V13).
+
+**Behaviour**
+
+1. Admin/HR adds an organization's offices: a name, a centre point and a radius (100 m to 10 km, 200 m suggested). They apply to every employee, with no request or approval step. Removing one affects later check-ins only.
+2. Each reading is compared with the employee's approved home area and every office. The results are:
+   - `verified`, shown as "At home": inside the home area.
+   - `at_office`, shown as "At office": inside an office.
+   - `outside_approved_area`: has a home area and is outside it and every office. Flagged, as before.
+   - `low_accuracy`: as before. It never counts as being anywhere.
+   - `no_approved_area`: no home area, and not inside an office. Not flagged, as before.
+3. If a reading is inside both, the nearer centre wins, and a tie goes to home. A home area is usually much larger than an office, so the employee's actual position is the better guide.
+4. An employee with no home area can be `at_office`, so an office-only employee doesn't need to declare a home.
+5. The distance band is measured to the area matched, or to the nearest area when outside them all.
+
+**Not in this change**
+
+- Rules about who works where and when, such as hybrid schedules or assigned office days. Any office is accepted for any employee on any day.
+- Recording which office. The result says "at office" only, to store as little as possible.
+- Changing attendance or its status. As with every result, `at_office` never does (decision V4).
+- Editing an office. Remove it and add it again; no stored result refers to it.
+
+**Changes by layer**
+
+- **Data model:** table `office_locations` (organization, label, centre, radius), and `at_office` added to `VerificationResult`. Both are additive, so they're safe in one deploy.
+- **API:** `GET`, `POST` and `DELETE /attendance-verification/offices`, with `verification:manage`. `GET /attendance-verification/me` gains `offices`, holding names only. The new result value appears wherever results do.
+- **Audit:** `attendance_verification.office_added` and `office_removed`, with the name only.
+- **Frontend:** an "Offices" card on `/settings/verification`, "At home" and "At office" badges, and the office names shown to employees beside their approved area.
+- **Notice:** rewritten to say the result records home or office, so `NOTICE_VERSION` goes to 4 and employees see it again.
+
+**Acceptance criteria**
+
+- With no offices added, results are the same as before.
+- A reading inside an office gives `at_office`, unflagged, with or without a home area.
+- A reading inside both a home area and an office gets the nearer one.
+- A reading outside the home area and all offices is flagged. Without a home area it gives `no_approved_area`, unflagged, and stores no accuracy.
+- Offices can be managed only with `verification:manage`, and only within the caller's organization (404 otherwise).
+- An organization's offices never affect another organization's results.
+
 ## 6. Phase 7B — Selfie at check-in
 
 ### 6.1 Behaviour
@@ -181,6 +222,7 @@ Final for Phase 7.0 (product owner, 2 November 2026). Production activation stay
 | V10 | Declined verification   | Changed 2 November 2026: declining isn't possible while a method is on, because nothing is recorded without evidence. Admin/HR handles anyone who can't comply through a correction. |
 | V11 | Low accuracy            | A neutral "Couldn't confirm", never a failure and never flagged on its own, because desktop browsers often locate by network. Attendance is recorded. A retake before using the photo reads the location again; there is no retry afterwards. |
 | V12 | Employee's own photo    | No in-app viewer at first. Requests go through an authorized Admin/HR process with an identity check, and requests and disclosures are audit-logged. Photos stay under 30-day retention. Employees are told how to use this right. Legal confirms the procedure (Q15). |
+| V13 | Office locations        | Added 2 November 2026: Admin/HR sets organization-wide offices, and the result says whether the employee was at home or at an office. Being at an office is never flagged. There are no rules yet about who works where and when. See §5.5. |
 
 ## 9. Recommended order
 
@@ -190,4 +232,5 @@ Follow decision V7. Both methods are built and off by default; building them nee
 
 - **Backend:** module `attendance-verification` (settings, notice acknowledgement, location, approved areas, selfie, review list, photo access and requests, daily cleanup at 03:15 UTC). New tables `attendance_verifications`, `work_locations`, `verification_notice_acknowledgements`, `verification_photo_requests`; two organization columns; permissions `verification:manage` and `verification:read_photo` for owners and Admin/HR. Audit events `attendance_verification.*`, never with coordinates or results. Unit tests for the distance, accuracy and retry rules; e2e tests for every acceptance criterion above.
 - **Frontend:** a check-in panel next to today's card (notice, area request, location, camera), Admin/HR settings at `/settings/verification` (methods with a reason, area approvals, photo requests), results at `/verification` (managers reach it from Team when the deployment allows checks), and the employee's own evidence at `/attendance/verification`.
+- **Office locations (§5.5):** table `office_locations`, result `at_office`, endpoints under `/attendance-verification/offices`, and an "Offices" card at `/settings/verification`.
 - **Switches:** `VERIFICATION_ENABLED` in both apps, off by default. `Permissions-Policy` allows `camera=(self)` and `geolocation=(self)` only when it is on.

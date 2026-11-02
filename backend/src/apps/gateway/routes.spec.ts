@@ -4,6 +4,7 @@ describe("serviceFor", () => {
   it.each([
     ["/v1/attendance/today", "attendance"],
     ["/v1/attendance-verification/me", "attendance"],
+    ["/v1/attendance-verification/offices/1", "attendance"],
     ["/v1/correction-requests?page=1", "attendance"],
     ["/v1/reports/attendance.csv?from=2026-11-02", "attendance"],
     ["/v1/team/attendance/today", "attendance"],

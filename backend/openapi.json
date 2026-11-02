@@ -927,6 +927,134 @@
         ]
       }
     },
+    "/v1/attendance-verification/offices": {
+      "get": {
+        "operationId": "AttendanceVerificationController_listOffices",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfficeListResponse_Output"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "attendance-verification"
+        ]
+      },
+      "post": {
+        "operationId": "AttendanceVerificationController_addOffice",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddOfficeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfficeResponse_Output"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "attendance-verification"
+        ]
+      }
+    },
+    "/v1/attendance-verification/offices/{id}": {
+      "delete": {
+        "operationId": "AttendanceVerificationController_removeOffice",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "attendance-verification"
+        ]
+      }
+    },
     "/v1/attendance-verification/photo-requests": {
       "post": {
         "operationId": "AttendanceVerificationController_requestPhoto",
@@ -6176,6 +6304,38 @@
         ],
         "additionalProperties": false
       },
+      "AddOfficeDto": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "latitude": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90
+          },
+          "longitude": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180
+          },
+          "radiusMeters": {
+            "type": "integer",
+            "minimum": 100,
+            "maximum": 10000
+          }
+        },
+        "required": [
+          "label",
+          "latitude",
+          "longitude",
+          "radiusMeters"
+        ],
+        "additionalProperties": false
+      },
       "ApproveCorrectionDto": {
         "type": "object",
         "properties": {
@@ -8816,6 +8976,7 @@
                   "type": "string",
                   "enum": [
                     "verified",
+                    "at_office",
                     "outside_approved_area",
                     "low_accuracy",
                     "not_shared",
@@ -8905,6 +9066,7 @@
                   "type": "string",
                   "enum": [
                     "verified",
+                    "at_office",
                     "outside_approved_area",
                     "low_accuracy",
                     "not_shared",
@@ -8980,6 +9142,21 @@
               "pending"
             ],
             "additionalProperties": false
+          },
+          "offices": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "label"
+              ],
+              "additionalProperties": false
+            }
           }
         },
         "required": [
@@ -8987,7 +9164,8 @@
           "selfie",
           "results",
           "notice",
-          "workLocation"
+          "workLocation",
+          "offices"
         ],
         "additionalProperties": false
       },
@@ -9067,6 +9245,82 @@
           "page",
           "pageSize",
           "total"
+        ],
+        "additionalProperties": false
+      },
+      "OfficeListResponse_Output": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "latitude": {
+                  "type": "number"
+                },
+                "longitude": {
+                  "type": "number"
+                },
+                "radiusMeters": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "id",
+                "label",
+                "latitude",
+                "longitude",
+                "radiusMeters"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "additionalProperties": false
+      },
+      "OfficeResponse_Output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "label": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "radiusMeters": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "latitude",
+          "longitude",
+          "radiusMeters"
         ],
         "additionalProperties": false
       },
@@ -11473,6 +11727,7 @@
             "type": "string",
             "enum": [
               "verified",
+              "at_office",
               "outside_approved_area",
               "low_accuracy",
               "not_shared",
@@ -11595,6 +11850,7 @@
                   "type": "string",
                   "enum": [
                     "verified",
+                    "at_office",
                     "outside_approved_area",
                     "low_accuracy",
                     "not_shared",

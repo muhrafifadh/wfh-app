@@ -84,7 +84,7 @@ Limits apply either way: browser location and camera input can be faked, so thes
 | ----------------------------------- | -------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------ |
 | Latitude, longitude, accuracy       | Location | High: for WFH, this reveals the home address                                                           | Used for the comparison on the server, never persisted |
 | Approved home area (centre, radius) | Location | High: long-lived and close to a home address                                                           | Coarsest workable precision; subject to Q4             |
-| Result, distance band, accuracy     | Location | Medium: a record of behaviour over time                                                                | 90 days (V8); managers see the label only (V11)        |
+| Result, distance band, accuracy     | Location | Medium: a record of behaviour over time, including home or office                                                                | 90 days (V8); managers see the label only (V11)        |
 | Selfie                              | Selfie   | Possibly specific personal data; may also show health, religious dress, home interior and other people | Private storage, signed links, audited views           |
 | Result, upload reference            | Selfie   | Medium                                                                                                 | 90 days (V8)                                           |
 | Photo view audit entry              | Selfie   | Low                                                                                                    | Follows the audit retention period                     |
@@ -151,7 +151,7 @@ The notice is shown before the first collection. Square brackets are filled in p
 >
 > From [date], [Organization] needs [your location / a photo] each time you check in and check out, to help confirm that attendance is recorded by the right person from your approved work location.
 >
-> **What is collected.** Location: your position once each time, when you take the photo. It is compared with [your approved area], then discarded. We keep the result and a rough distance. If the reading isn't accurate enough, you'll see "Couldn't confirm". That isn't a failed check and doesn't affect your attendance. Photo: one photo each time, taken when you press the button. Please frame only yourself, and keep other people out of it.
+> **What is collected.** Location: your position once each time, when you take the photo. It is compared with [your approved area] and [Organization]'s offices, then discarded. We keep the result, which says whether you were at home or at an office, and a rough distance. If the reading isn't accurate enough, you'll see "Couldn't confirm". That isn't a failed check and doesn't affect your attendance. Photo: one photo each time, taken when you press the button. Please frame only yourself, and keep other people out of it.
 >
 > **What is not collected.** We never track you between check-in and check-out, and we don't use face recognition.
 >

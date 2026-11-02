@@ -81,7 +81,8 @@ export function VerificationSettingsForm({ settings }: { settings: VerificationS
             onCheckedChange={(next) => setLocationEnabled(next === true)}
           />
           <FieldLabel htmlFor="locationEnabled" className="font-normal">
-            Location at check-in and check-out, compared with each employee&apos;s approved area
+            Location at check-in and check-out, compared with each employee&apos;s approved area and
+            your offices
           </FieldLabel>
         </Field>
         <Field orientation="horizontal">

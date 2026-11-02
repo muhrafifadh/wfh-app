@@ -47,6 +47,7 @@ import {
 } from "@/modules/attendance-verification/attendance-verification.events.js";
 import {
   AttendanceVerificationRepository,
+  type OfficeRow,
   type PhotoRequestRow,
   type VerificationRow,
   type WorkLocationRow,
@@ -57,6 +58,7 @@ import {
   roundCoordinate,
 } from "@/modules/attendance-verification/domain/verification-rules.js";
 import type {
+  AddOfficeInput,
   ApproveWorkLocationInput,
   CreatePhotoUploadInput,
   DisclosePhotoInput,
@@ -69,6 +71,7 @@ import type {
 import type {
   MyResultBody,
   MyVerificationBody,
+  OfficeBody,
   PhotoRequestBody,
   PhotoUploadBody,
   SignedPhotoBody,
@@ -92,6 +95,14 @@ const toWorkLocation = (row: WorkLocationRow): WorkLocationRequestBody => ({
   status: row.status,
   requestedAt: row.createdAt.toISOString(),
   employee: row.employee,
+});
+
+const toOffice = (row: OfficeRow): OfficeBody => ({
+  id: row.id,
+  label: row.label,
+  latitude: row.latitude,
+  longitude: row.longitude,
+  radiusMeters: row.radiusMeters,
 });
 
 const toPhotoRequest = (row: PhotoRequestRow): PhotoRequestBody => ({
@@ -173,12 +184,14 @@ export class AttendanceVerificationService {
       results: [],
       notice: { version: NOTICE_VERSION, acknowledged: false },
       workLocation: { approved: null, pending: null },
+      offices: [],
     };
     if (!employee || (!settings.locationEnabled && !settings.selfieEnabled)) return off;
 
-    const [acknowledged, locations, { record }] = await Promise.all([
+    const [acknowledged, locations, offices, { record }] = await Promise.all([
       this.repo.hasAcknowledged(employee.id, NOTICE_VERSION),
       this.repo.findWorkLocations(employee.id),
+      settings.locationEnabled ? this.repo.listOffices(user.organizationId) : [],
       this.attendance.today(user),
     ]);
     const approved = locations.find((row) => row.status === "approved") ?? null;
@@ -194,6 +207,7 @@ export class AttendanceVerificationService {
         approved: approved && { label: approved.label, radiusMeters: approved.radiusMeters },
         pending: pending && { label: pending.label },
       },
+      offices: offices.map(({ label }) => ({ label })),
     };
   }
 
@@ -260,7 +274,7 @@ export class AttendanceVerificationService {
     const photo = settings.selfieEnabled ? await this.checkedPhoto(employee.id, moment) : null;
     if (settings.locationEnabled && !input.location) throw new VerificationLocationRequiredError();
     const location = settings.locationEnabled
-      ? await this.locationResult(employee.id, input)
+      ? await this.locationResult(user.organizationId, employee.id, input)
       : null;
 
     const result = await attend();
@@ -298,15 +312,21 @@ export class AttendanceVerificationService {
     return result;
   }
 
-  /** Compared with the approved area, then dropped: only the outcome is stored (decision V3). */
-  private async locationResult(employeeId: string, input: RecordWithEvidenceInput) {
-    const locations = await this.repo.findWorkLocations(employeeId);
-    const area = locations.find((location) => location.status === "approved");
-    if (!area || !input.location) return { result: "no_approved_area" as const };
-    return {
-      ...locationOutcome(input.location, area),
-      accuracyMeters: Math.round(input.location.accuracyMeters),
-    };
+  /** Compared with the home area and offices, then dropped: only the outcome is stored (decision V3). */
+  private async locationResult(
+    organizationId: string,
+    employeeId: string,
+    input: RecordWithEvidenceInput,
+  ) {
+    if (!input.location) return { result: "no_approved_area" as const };
+    const [locations, offices] = await Promise.all([
+      this.repo.findWorkLocations(employeeId),
+      this.repo.listOffices(organizationId),
+    ]);
+    const home = locations.find((location) => location.status === "approved") ?? null;
+    const outcome = locationOutcome(input.location, home, offices);
+    if (outcome.result === "no_approved_area") return { result: outcome.result };
+    return { ...outcome, accuracyMeters: Math.round(input.location.accuracyMeters) };
   }
 
   /** The uploaded photo, once what arrived is checked. A bad file is removed, for a retake. */
@@ -425,6 +445,38 @@ export class AttendanceVerificationService {
       employeeId: row.employeeId,
     });
     return toWorkLocation(await this.loadWorkLocation(user, id));
+  }
+
+  // Offices (decision V13)
+
+  async listOffices(user: AuthUser): Promise<{ items: OfficeBody[] }> {
+    const rows = await this.repo.listOffices(user.organizationId);
+    return { items: rows.map(toOffice) };
+  }
+
+  /** Can be set up before location checks are turned on. */
+  async addOffice(user: AuthUser, input: AddOfficeInput): Promise<OfficeBody> {
+    const created = await this.repo.createOffice({
+      organizationId: user.organizationId,
+      label: input.label,
+      latitude: input.latitude,
+      longitude: input.longitude,
+      radiusMeters: input.radiusMeters,
+    });
+    await this.emit(VERIFICATION_EVENTS.officeAdded, user, "office_location", created.id, {
+      label: created.label,
+    });
+    return toOffice(created);
+  }
+
+  /** Results already recorded don't refer to the office, so they stay as they are. */
+  async removeOffice(user: AuthUser, id: string): Promise<void> {
+    const row = await this.repo.findOffice(user.organizationId, id);
+    if (!row) throw new NotFoundError("Office");
+    await this.repo.deleteOffice(id);
+    await this.emit(VERIFICATION_EVENTS.officeRemoved, user, "office_location", id, {
+      label: row.label,
+    });
   }
 
   // Review

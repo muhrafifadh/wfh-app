@@ -34,6 +34,7 @@ model Organization {
 
   attendanceVerifications            AttendanceVerification[]
   workLocations                      WorkLocation[]
+  officeLocations                    OfficeLocation[]
   verificationNoticeAcknowledgements VerificationNoticeAcknowledgement[]
   verificationPhotoRequests          VerificationPhotoRequest[]
   verificationPendingPhotos          VerificationPendingPhoto[]
@@ -435,7 +436,9 @@ enum VerificationMoment {
 
 /// ATTENDANCE_VERIFICATION_PLAN.md §8 (V10, V11). Only outside_approved_area is flagged for review.
 enum VerificationResult {
+  /// Inside the employee's approved home area.
   verified
+  at_office
   outside_approved_area
   low_accuracy
   not_shared
@@ -537,6 +540,24 @@ model WorkLocation {
   @@index([employeeId, status])
   @@index([status, decidedAt])
   @@map("work_locations")
+}
+
+/// An office, for every employee of the organization (decision V13). Set by Admin/HR, with no
+/// approval step, and not rounded: it isn't anyone's home.
+model OfficeLocation {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  label          String   @db.VarChar(120)
+  latitude       Float
+  longitude      Float
+  radiusMeters   Int      @map("radius_meters")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId, createdAt])
+  @@map("office_locations")
 }
 
 /// The employee saw this version of the notice. A record of being told, not consent.

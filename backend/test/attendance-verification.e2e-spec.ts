@@ -28,6 +28,8 @@ const MONDAY = "2026-11-02";
 const HOME = { latitude: -6.2615, longitude: 106.8106 };
 /** About 3 km north of HOME. */
 const ELSEWHERE = { latitude: -6.2345, longitude: 106.8106 };
+/** About 8 km north-east of HOME. */
+const OFFICE = { latitude: -6.2088, longitude: 106.8456 };
 const JPEG = Buffer.from([0xff, 0xd8, 0xff, 0xe0, ...Array.from({ length: 60 }, () => 0x11)]);
 const REASON = "Two documented cases of check-ins from outside the agreed home area.";
 
@@ -560,6 +562,141 @@ describe("Attendance verification (e2e)", () => {
         .post(`/v1/attendance-verification/${row.id}/review`)
         .set(await authHeader(app, outsider))
         .expect(404);
+    });
+  });
+
+  describe("offices (decision V13)", () => {
+    beforeEach(async () => {
+      await start();
+      await enable({ locationEnabled: true, selfieEnabled: false }).expect(200);
+    });
+
+    const share = (auth: Auth, reading: object) => record(auth, "check-in", { location: reading });
+    const addOffice = (auth: Auth = adminAuth) =>
+      http()
+        .post("/v1/attendance-verification/offices")
+        .set(auth)
+        .send({ label: "Jakarta HQ", ...OFFICE, radiusMeters: 200 });
+
+    it("says at office, unflagged, for someone with a home area", async () => {
+      await addOffice().expect(201);
+      const { auth } = await readyEmployee();
+      at(MONDAY, "09:00:00");
+      await share(auth, { ...OFFICE, accuracyMeters: 20 }).expect(201);
+
+      expect((await mine(auth).expect(200)).body.results).toEqual([
+        { moment: "check_in", method: "location", result: "at_office" },
+      ]);
+      const flagged = await http()
+        .get("/v1/attendance-verification?flagged=true")
+        .set(adminAuth)
+        .expect(200);
+      expect(flagged.body.total).toBe(0);
+    });
+
+    it("says at office for someone with no home area, and shows them only the names", async () => {
+      await addOffice().expect(201);
+      const { auth } = await anEmployee();
+      await acknowledge(auth);
+      const shown = (await mine(auth).expect(200)).body.offices;
+      expect(shown).toEqual([{ label: "Jakarta HQ" }]);
+
+      at(MONDAY, "09:00:00");
+      await share(auth, { ...OFFICE, accuracyMeters: 20 }).expect(201);
+      const row = await prisma().attendanceVerification.findFirstOrThrow();
+      expect(row).toMatchObject({ result: "at_office", accuracyMeters: 20 });
+    });
+
+    it("still says at home inside the home area", async () => {
+      await addOffice().expect(201);
+      const { auth } = await readyEmployee();
+      at(MONDAY, "09:00:00");
+      await share(auth, { ...HOME, accuracyMeters: 20 }).expect(201);
+      const row = await prisma().attendanceVerification.findFirstOrThrow();
+      expect(row.result).toBe("verified");
+    });
+
+    it("flags a reading outside the home area and every office", async () => {
+      await addOffice().expect(201);
+      const { auth } = await readyEmployee();
+      at(MONDAY, "09:00:00");
+      await share(auth, { ...ELSEWHERE, accuracyMeters: 20 }).expect(201);
+      const flagged = await http()
+        .get("/v1/attendance-verification?flagged=true")
+        .set(adminAuth)
+        .expect(200);
+      expect(flagged.body.items[0]).toMatchObject({ result: "outside_approved_area" });
+    });
+
+    it("doesn't flag someone with no home area who isn't at an office", async () => {
+      await addOffice().expect(201);
+      const { auth } = await anEmployee();
+      await acknowledge(auth);
+      at(MONDAY, "09:00:00");
+      await share(auth, { ...ELSEWHERE, accuracyMeters: 20 }).expect(201);
+      const row = await prisma().attendanceVerification.findFirstOrThrow();
+      expect(row).toMatchObject({ result: "no_approved_area", accuracyMeters: null });
+    });
+
+    it("stops counting an office once it's removed, and audits by name only", async () => {
+      const office = await addOffice().expect(201);
+      expect(office.body).toMatchObject({ label: "Jakarta HQ", radiusMeters: 200 });
+      await http()
+        .delete(`/v1/attendance-verification/offices/${office.body.id}`)
+        .set(adminAuth)
+        .expect(204);
+      const list = await http().get("/v1/attendance-verification/offices").set(adminAuth);
+      expect(list.body.items).toEqual([]);
+
+      const { auth } = await readyEmployee();
+      at(MONDAY, "09:00:00");
+      await share(auth, { ...OFFICE, accuracyMeters: 20 }).expect(201);
+      const row = await prisma().attendanceVerification.findFirstOrThrow();
+      expect(row.result).toBe("outside_approved_area");
+
+      const audit = await auditOf();
+      expect(audit.map((entry) => entry.action)).toEqual(
+        expect.arrayContaining([
+          "attendance_verification.office_added",
+          "attendance_verification.office_removed",
+        ]),
+      );
+      expect(JSON.stringify(audit)).not.toContain(String(OFFICE.longitude));
+    });
+
+    it("is for verification:manage only", async () => {
+      const { auth } = await anEmployee();
+      await addOffice(auth).expect(403);
+      await http().get("/v1/attendance-verification/offices").set(auth).expect(403);
+      await http()
+        .delete(`/v1/attendance-verification/offices/${randomUUID()}`)
+        .set(auth)
+        .expect(403);
+    });
+
+    it("rejects a radius out of range and unknown fields", async () => {
+      const send = (body: object) =>
+        http()
+          .post("/v1/attendance-verification/offices")
+          .set(adminAuth)
+          .send({ label: "HQ", ...OFFICE, radiusMeters: 200, ...body });
+      await send({ radiusMeters: 99 }).expect(400);
+      await send({ radiusMeters: 10_001 }).expect(400);
+      await send({ organizationId: randomUUID() }).expect(400);
+    });
+
+    it("keeps offices within their organization", async () => {
+      const office = await addOffice().expect(201);
+      const stranger = await createUser(app, {
+        permissions: ["verification:manage", "attendance:read_all"],
+      });
+      const strangerAuth = await authHeader(app, stranger);
+      await http()
+        .delete(`/v1/attendance-verification/offices/${office.body.id}`)
+        .set(strangerAuth)
+        .expect(404);
+      const list = await http().get("/v1/attendance-verification/offices").set(strangerAuth);
+      expect(list.body.items).toEqual([]);
     });
   });
 
