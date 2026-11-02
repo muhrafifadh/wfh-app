@@ -2,16 +2,16 @@
 
 | Attribute | Value                                                         |
 | --------- | ------------------------------------------------------------- |
-| Status    | Built and tested locally. Not deployed. |
+| Status    | Built and tested. Live on the demo site since 2 November 2026, with the gaps in §9. |
 | Date      | 2 November 2026                                               |
-| Scope     | Local only: Docker Compose and dev servers. No production change. |
+| Scope     | Docker Compose and dev servers, then the demo site (§9). |
 | Replaces  | The single-service backend (see `ARCHITECTURE.md` §3, principle 9) |
 
 ## 1. Goal
 
 Split the backend into two services with their own databases, behind one gateway, so that it meets the skill test objective "create API with microservices concept". The frontend and the API contract don't change.
 
-**Out of scope:** deploying this, migrating production data, and splitting attendance, corrections or reports any further. The live site keeps running the current backend, so this work stays on its own branch until a production plan exists (§9).
+**Out of scope at first:** deploying this and migrating production data, both since done (§9). Splitting attendance, corrections or reports any further stays out of scope.
 
 ## 2. Target
 
@@ -102,11 +102,22 @@ The gateway is the frontend's only `API_URL`. It must pass the request ID on, st
 - **E2E tests:** awaiting a request in a spec also waits for the queue messages it caused (`test/helpers.ts`), because specs check audit entries and copied rows straight after a response. Production callers don't get that wait.
 - **Scheduled jobs:** close-day and reminders move with attendance, and `organizationIds()` reads the new settings table.
 - **Seeding:** one script writes both databases directly, so it works before any service has started.
-- **Dev database:** there's no data migration from the single-service database. A new setup starts from the seed.
+- **Dev database:** a new setup starts from the seed. Moving an existing single-service database is a separate step (§9).
 
-## 9. Before this could go live
+## 9. Going live
 
-Not part of this work, but required first: a data migration for the existing database, an outbox for reliable events, service-to-service authentication on the TCP port (it trusts anyone who can reach it), hosting for three processes, and a rollback plan.
+The demo site moved to this version on 2 November 2026.
+
+| Requirement | Status |
+| ----------- | ------ |
+| Data migration | Done: `backend/prisma/migrate-single-service-data.ts`. It only reads the source, needs empty targets, and commits both only after every row count matches. |
+| Hosting for three processes | Done: one system service for each, plus the frontend. |
+| Rollback plan | Done: the old app and its tables stay in place, disabled. Anything recorded after the switch would stay only in the new schemas. |
+| Separate databases | **Not met.** The services use the `employee` and `attendance` schemas of one database, with one login, because creating databases needed an admin login that wasn't available. `?schema=` in the database URLs selects them. The code still keeps the services apart (`src/apps/service-boundaries.spec.ts`), but the database doesn't enforce it. |
+| Service-to-service authentication on the TCP port | **Not built.** It trusts anyone who can reach it. It listens on 127.0.0.1 only. |
+| Outbox for reliable events | **Not built.** A crash can lose an update between services; `pnpm db:resync` repairs the attendance service's copy. |
+
+The two unbuilt items and the shared database were accepted for a demo with no real employee data. Close them before real data goes in.
 
 ## 10. Decisions made
 
