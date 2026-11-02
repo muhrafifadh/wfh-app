@@ -28,7 +28,7 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: hadirin_test
         # Same port as .env.test, so tests and prisma use the committed test config
-        ports: ["5433:5432"]
+        ports: ["5445:5432"]
         options: >-
           --health-cmd "pg_isready -U postgres"
           --health-interval 5s
@@ -37,7 +37,7 @@ jobs:
       # Same ports as .env.test (the redis-test and storage containers in docker-compose.yml)
       redis:
         image: redis:7-alpine
-        ports: ["6380:6379"]
+        ports: ["6381:6379"]
         options: >-
           --health-cmd "redis-cli ping"
           --health-interval 5s
@@ -49,7 +49,7 @@ jobs:
           RUSTFS_ACCESS_KEY: devaccesskey
           RUSTFS_SECRET_KEY: devsecretkey
           RUSTFS_ADDRESS: ":9000"
-        ports: ["9000:9000"]
+        ports: ["9010:9000"]
 
     defaults:
       run:

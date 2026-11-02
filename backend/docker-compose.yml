@@ -1,5 +1,5 @@
 # Local infrastructure: `docker compose up -d`
-name: hadirin
+name: wfh-app
 
 services:
   postgres:
@@ -8,7 +8,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: hadirin
-    ports: ["${POSTGRES_PORT:-5432}:5432"]
+    ports: ["${POSTGRES_PORT:-5444}:5432"]
     volumes: [postgres-data:/var/lib/postgresql/data]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
@@ -22,7 +22,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: hadirin_test
-    ports: ["${POSTGRES_TEST_PORT:-5433}:5432"]
+    ports: ["${POSTGRES_TEST_PORT:-5445}:5432"]
     tmpfs: [/var/lib/postgresql/data]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
@@ -31,13 +31,13 @@ services:
 
   redis:
     image: redis:7-alpine
-    ports: ["${REDIS_PORT:-6379}:6379"]
+    ports: ["${REDIS_PORT:-6390}:6379"]
 
   # Separate Redis for e2e tests (BullMQ queues), nothing persisted
   redis-test:
     image: redis:7-alpine
     command: ["redis-server", "--save", "", "--appendonly", "no"]
-    ports: ["${REDIS_TEST_PORT:-6380}:6379"]
+    ports: ["${REDIS_TEST_PORT:-6381}:6379"]
 
   # S3-compatible storage for uploads (RustFS, a MinIO drop-in: MinIO no longer publishes
   # images). Console: http://localhost:9001, sign in with the keys below.
@@ -51,8 +51,8 @@ services:
       RUSTFS_CONSOLE_ENABLE: "true"
       RUSTFS_CONSOLE_ADDRESS: ":9001"
     ports:
-      - "${STORAGE_PORT:-9000}:9000"
-      - "${STORAGE_CONSOLE_PORT:-9001}:9001"
+      - "${STORAGE_PORT:-9010}:9000"
+      - "${STORAGE_CONSOLE_PORT:-9011}:9001"
     volumes: [storage-data:/data]
 
   # Optional dev inbox: `docker compose --profile mail up -d`, then open
