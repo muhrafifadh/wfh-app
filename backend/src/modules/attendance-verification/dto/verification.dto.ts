@@ -54,6 +54,15 @@ export const approveWorkLocationSchema = z.strictObject({
 export type ApproveWorkLocationInput = z.infer<typeof approveWorkLocationSchema>;
 export class ApproveWorkLocationDto extends createZodDto(approveWorkLocationSchema) {}
 
+export const addOfficeSchema = z.strictObject({
+  label: z.string().trim().min(1, "Name this office").max(120),
+  latitude,
+  longitude,
+  radiusMeters: z.int().min(MIN_RADIUS_METERS).max(MAX_RADIUS_METERS),
+});
+export type AddOfficeInput = z.infer<typeof addOfficeSchema>;
+export class AddOfficeDto extends createZodDto(addOfficeSchema) {}
+
 export const listVerificationsQuerySchema = paginationQuerySchema.extend({
   from: z.iso.date().optional(),
   to: z.iso.date().optional(),

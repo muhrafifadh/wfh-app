@@ -114,7 +114,9 @@ function AreaSection({
         {approved
           ? `Approved area: ${approved.label}.`
           : "You don't have an approved work-from-home area yet."}{" "}
-        {pending && `Waiting for Admin/HR to approve “${pending.label}”.`}
+        {pending && `Waiting for Admin/HR to approve “${pending.label}”.`}{" "}
+        {mine.offices.length > 0 &&
+          `Offices: ${mine.offices.map((office) => office.label).join(", ")}.`}
       </p>
       {changing || (!approved && !pending) ? (
         <WorkLocationForm

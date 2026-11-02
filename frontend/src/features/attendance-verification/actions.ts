@@ -10,6 +10,8 @@ import {
   idSchema,
   justificationIsLongEnough,
   myVerificationSchema,
+  officeFormSchema,
+  officeSchema,
   photoRequestSchema,
   photoUploadInputSchema,
   photoUploadSchema,
@@ -180,6 +182,41 @@ export async function decideWorkLocationAction(
       method: "POST",
       ...(decision === "approve" && { body: {} }),
       schema: workLocationRequestSchema,
+    });
+  } catch (error) {
+    return expectedFailure(error, MESSAGES);
+  }
+  revalidatePath(routes.verificationSettings());
+  return ok(undefined);
+}
+
+export async function addOfficeAction(input: unknown): Promise<ActionResult> {
+  const denied = await authorize("verification:manage");
+  if (denied) return denied;
+  const parsed = officeFormSchema.safeParse(input);
+  if (!parsed.success) return fail(FIX_FIELDS, z.flattenError(parsed.error).fieldErrors);
+  try {
+    await apiFetch("/attendance-verification/offices", {
+      method: "POST",
+      body: parsed.data,
+      schema: officeSchema,
+    });
+  } catch (error) {
+    return expectedFailure(error, MESSAGES);
+  }
+  revalidatePath(routes.verificationSettings());
+  return ok(undefined);
+}
+
+export async function removeOfficeAction(id: unknown): Promise<ActionResult> {
+  const denied = await authorize("verification:manage");
+  if (denied) return denied;
+  const parsed = idSchema.safeParse(id);
+  if (!parsed.success) return fail(MESSAGES.NOT_FOUND);
+  try {
+    await apiFetch(`/attendance-verification/offices/${parsed.data}`, {
+      method: "DELETE",
+      schema: z.undefined(),
     });
   } catch (error) {
     return expectedFailure(error, MESSAGES);

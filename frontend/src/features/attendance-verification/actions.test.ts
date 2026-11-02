@@ -1,4 +1,5 @@
 import {
+  addOfficeAction,
   disclosePhotoAction,
   startPhotoUploadAction,
   updateVerificationSettingsAction,
@@ -132,5 +133,35 @@ describe("photo access", () => {
       fieldErrors: { identityCheck: [expect.any(String)] },
     });
     expect(apiFetch).not.toHaveBeenCalled();
+  });
+});
+
+describe("addOfficeAction", () => {
+  const office = { label: "Jakarta HQ", latitude: -6.2088, longitude: 106.8456, radiusMeters: 200 };
+
+  it("refuses without verification:manage, before calling the backend", async () => {
+    signedInWith(["attendance:self"]);
+    await expect(addOfficeAction(office)).resolves.toMatchObject({ ok: false });
+    expect(apiFetch).not.toHaveBeenCalled();
+  });
+
+  it("says which field is wrong, including one left empty", async () => {
+    signedInWith(["verification:manage"]);
+    const result = await addOfficeAction({ ...office, latitude: Number.NaN, radiusMeters: 50 });
+    expect(result).toMatchObject({
+      ok: false,
+      fieldErrors: { latitude: ["Enter a latitude"], radiusMeters: ["Use at least 100 m"] },
+    });
+    expect(apiFetch).not.toHaveBeenCalled();
+  });
+
+  it("sends a valid office", async () => {
+    signedInWith(["verification:manage"]);
+    vi.mocked(apiFetch).mockResolvedValue({ id: ID, ...office });
+    await expect(addOfficeAction(office)).resolves.toMatchObject({ ok: true });
+    expect(apiFetch).toHaveBeenCalledWith(
+      "/attendance-verification/offices",
+      expect.objectContaining({ method: "POST", body: office }),
+    );
   });
 });

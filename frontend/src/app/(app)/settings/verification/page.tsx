@@ -6,11 +6,13 @@ import { NoAccess } from "@/app/(app)/_components/no-access";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { routes } from "@/config/routes";
+import { Offices } from "@/features/attendance-verification/components/offices";
 import { PhotoRequests } from "@/features/attendance-verification/components/photo-requests";
 import { VerificationSettingsForm } from "@/features/attendance-verification/components/settings-form";
 import { WorkLocationRequests } from "@/features/attendance-verification/components/work-location-requests";
 import {
   getVerificationSettings,
+  listOffices,
   listPhotoRequests,
   listWorkLocationRequests,
 } from "@/features/attendance-verification/queries";
@@ -18,7 +20,7 @@ import { can, requireUser } from "@/lib/auth/session";
 
 export const metadata: Metadata = { title: "Attendance checks" };
 
-// ATTENDANCE_VERIFICATION_PLAN.md §8 — settings, area approvals (V5), photo requests (V12).
+// ATTENDANCE_VERIFICATION_PLAN.md §8 — settings, offices (V13), area approvals (V5), photo requests (V12).
 export default async function VerificationSettingsPage() {
   const user = await requireUser();
   if (!can(user, "verification:manage")) return <NoAccess title="Attendance checks" />;
@@ -51,6 +53,19 @@ export default async function VerificationSettingsPage() {
         <div className="grid gap-4">
           <Card>
             <CardHeader>
+              <CardTitle>Offices</CardTitle>
+              <CardDescription>
+                Check-ins from these places show as “At office”, for every employee.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Suspense fallback={<Skeleton className="h-24" />}>
+                <OfficeList canLocate={settings.available} />
+              </Suspense>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
               <CardTitle>Work-from-home areas</CardTitle>
               <CardDescription>Requests from employees, waiting for approval.</CardDescription>
             </CardHeader>
@@ -77,6 +92,10 @@ export default async function VerificationSettingsPage() {
       </div>
     </>
   );
+}
+
+async function OfficeList({ canLocate }: { canLocate: boolean }) {
+  return <Offices offices={await listOffices()} canLocate={canLocate} />;
 }
 
 async function PendingAreas() {

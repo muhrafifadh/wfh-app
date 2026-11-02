@@ -1,10 +1,15 @@
 /** Backend attendance-verification.constants.ts. */
-export const NOTICE_VERSION = 3;
+export const NOTICE_VERSION = 4;
 export const MAX_PHOTO_BYTES = 2 * 1024 * 1024;
 export const MIN_JUSTIFICATION_LENGTH = 20;
+export const MIN_RADIUS_METERS = 100;
+export const MAX_RADIUS_METERS = 10_000;
+/** A suggestion in the form: an office is usually much smaller than a home area. */
+export const SUGGESTED_OFFICE_RADIUS_METERS = 200;
 
 export const VERIFICATION_RESULTS = [
   "verified",
+  "at_office",
   "outside_approved_area",
   "low_accuracy",
   "not_shared",
@@ -24,7 +29,8 @@ export type VerificationMethod = (typeof VERIFICATION_METHODS)[number];
  * to look at. Managers see these labels and nothing more technical.
  */
 export const RESULT_LABELS: Record<VerificationResult, string> = {
-  verified: "Verified",
+  verified: "At home",
+  at_office: "At office",
   outside_approved_area: "Outside approved area",
   low_accuracy: "Couldn't confirm",
   not_shared: "Not shared",

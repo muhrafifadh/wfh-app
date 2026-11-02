@@ -1,7 +1,9 @@
 import { z } from "zod";
 
 import {
+  MAX_RADIUS_METERS,
   MIN_JUSTIFICATION_LENGTH,
+  MIN_RADIUS_METERS,
   VERIFICATION_METHODS,
   VERIFICATION_MOMENTS,
   VERIFICATION_RESULTS,
@@ -30,6 +32,7 @@ export const myVerificationSchema = z.object({
     approved: z.object({ label: z.string(), radiusMeters: z.int() }).nullable(),
     pending: z.object({ label: z.string() }).nullable(),
   }),
+  offices: z.array(z.object({ label: z.string() })),
 });
 export type MyVerification = z.infer<typeof myVerificationSchema>;
 
@@ -85,6 +88,16 @@ export type WorkLocationRequest = z.infer<typeof workLocationRequestSchema>;
 export const workLocationRequestListSchema = z.object({
   items: z.array(workLocationRequestSchema),
 });
+
+export const officeSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  latitude: z.number(),
+  longitude: z.number(),
+  radiusMeters: z.int(),
+});
+export type Office = z.infer<typeof officeSchema>;
+export const officeListSchema = z.object({ items: z.array(officeSchema) });
 
 export const photoRequestSchema = z.object({
   id: z.string(),
@@ -146,6 +159,24 @@ export const workLocationFormSchema = z
     label: z.string().trim().min(1, "Name this location").max(120, "Use at most 120 characters"),
     latitude: z.number().min(-90).max(90),
     longitude: z.number().min(-180).max(180),
+  })
+  .strict();
+
+export const officeFormSchema = z
+  .object({
+    label: z.string().trim().min(1, "Name this office").max(120, "Use at most 120 characters"),
+    latitude: z
+      .number("Enter a latitude")
+      .min(-90, "Latitude is between -90 and 90")
+      .max(90, "Latitude is between -90 and 90"),
+    longitude: z
+      .number("Enter a longitude")
+      .min(-180, "Longitude is between -180 and 180")
+      .max(180, "Longitude is between -180 and 180"),
+    radiusMeters: z
+      .int("Enter a whole number of metres")
+      .min(MIN_RADIUS_METERS, `Use at least ${MIN_RADIUS_METERS} m`)
+      .max(MAX_RADIUS_METERS, `Use at most ${MAX_RADIUS_METERS.toLocaleString("en")} m`),
   })
   .strict();
 

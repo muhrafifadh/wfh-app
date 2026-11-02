@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Headers,
   HttpCode,
@@ -33,6 +34,7 @@ import { ErrorResponse } from "@/common/dto/error.response.js";
 import type { AuthUser } from "@/common/types/auth.js";
 import { AttendanceVerificationService } from "@/modules/attendance-verification/attendance-verification.service.js";
 import {
+  AddOfficeDto,
   ApproveWorkLocationDto,
   CreatePhotoUploadDto,
   DisclosePhotoDto,
@@ -45,6 +47,8 @@ import {
 import {
   MyResultsResponse,
   MyVerificationResponse,
+  OfficeListResponse,
+  OfficeResponse,
   PhotoRequestListResponse,
   PhotoRequestResponse,
   PhotoUploadResponse,
@@ -213,6 +217,33 @@ export class AttendanceVerificationController {
   @ApiConflictResponse({ type: ErrorResponse, description: "WORK_LOCATION_ALREADY_DECIDED" })
   rejectWorkLocation(@CurrentUser() user: AuthUser, @Param("id", ParseUUIDPipe) id: string) {
     return this.verification.rejectWorkLocation(user, id);
+  }
+
+  @Get("offices")
+  @RequirePermissions("verification:manage")
+  @ZodResponse({ status: 200, type: OfficeListResponse })
+  listOffices(@CurrentUser() user: AuthUser) {
+    return this.verification.listOffices(user);
+  }
+
+  /** An office counts for every employee, with no approval step (decision V13). */
+  @Post("offices")
+  @RequirePermissions("verification:manage")
+  @ZodResponse({ status: 201, type: OfficeResponse })
+  addOffice(@CurrentUser() user: AuthUser, @Body() dto: AddOfficeDto) {
+    return this.verification.addOffice(user, dto);
+  }
+
+  @Delete("offices/:id")
+  @RequirePermissions("verification:manage")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiNoContentResponse()
+  @ApiNotFoundResponse({ type: ErrorResponse, description: "NOT_FOUND" })
+  async removeOffice(
+    @CurrentUser() user: AuthUser,
+    @Param("id", ParseUUIDPipe) id: string,
+  ): Promise<void> {
+    await this.verification.removeOffice(user, id);
   }
 
   /** An employee asks for their own photo; there is no in-app viewer for them (decision V12). */

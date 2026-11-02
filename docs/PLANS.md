@@ -794,6 +794,8 @@ pnpm build
 
 **Sub-phases:** 7.0 product decisions and draft assessment (no code) → 7A approved-area location → 7B selfie. Both are optional infrastructure; turning one on for an organization needs documented justification (decision V7). No face matching.
 
+**Office locations:** organization-wide offices, so a result says whether the employee was at home or at an office (decision V13, plan §5.5). Built and tested, under the same switches.
+
 **Production gate:** `VERIFICATION_ENABLED` stays off in production until the legal requirements are reassessed and the hosting inventory is complete (plan §4.1). Phase 7 completion doesn't mean production readiness.
 
 ---

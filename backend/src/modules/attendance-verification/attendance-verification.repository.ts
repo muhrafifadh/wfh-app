@@ -41,6 +41,16 @@ const workLocationRow = {
 
 export type WorkLocationRow = Prisma.WorkLocationGetPayload<{ select: typeof workLocationRow }>;
 
+const officeRow = {
+  id: true,
+  label: true,
+  latitude: true,
+  longitude: true,
+  radiusMeters: true,
+} satisfies Prisma.OfficeLocationSelect;
+
+export type OfficeRow = Prisma.OfficeLocationGetPayload<{ select: typeof officeRow }>;
+
 const photoRequestRow = {
   id: true,
   employeeId: true,
@@ -268,6 +278,31 @@ export class AttendanceVerificationRepository {
       where: { employeeId, status: "approved" },
       data: { status: "superseded", decidedAt },
     });
+  }
+
+  // Offices
+
+  listOffices(organizationId: string, tx: Tx = this.prisma): Promise<OfficeRow[]> {
+    return tx.officeLocation.findMany({
+      where: { organizationId },
+      select: officeRow,
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    });
+  }
+
+  findOffice(organizationId: string, id: string, tx: Tx = this.prisma) {
+    return tx.officeLocation.findFirst({ where: { id, organizationId }, select: officeRow });
+  }
+
+  createOffice(
+    data: Prisma.OfficeLocationUncheckedCreateInput,
+    tx: Tx = this.prisma,
+  ): Promise<OfficeRow> {
+    return tx.officeLocation.create({ data, select: officeRow });
+  }
+
+  async deleteOffice(id: string, tx: Tx = this.prisma): Promise<void> {
+    await tx.officeLocation.deleteMany({ where: { id } });
   }
 
   // Photo requests

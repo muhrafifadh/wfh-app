@@ -5,6 +5,7 @@ import { paginated } from "@/common/dto/pagination.js";
 
 const RESULTS = [
   "verified",
+  "at_office",
   "outside_approved_area",
   "low_accuracy",
   "not_shared",
@@ -37,6 +38,8 @@ export const myVerificationSchema = z.object({
     approved: z.object({ label: z.string(), radiusMeters: z.int() }).nullable(),
     pending: z.object({ label: z.string() }).nullable(),
   }),
+  /** Names only: an employee has no need for the coordinates. */
+  offices: z.array(z.object({ label: z.string() })),
 });
 export type MyVerificationBody = z.infer<typeof myVerificationSchema>;
 export class MyVerificationResponse extends createZodDto(myVerificationSchema) {}
@@ -105,6 +108,17 @@ export class WorkLocationRequestResponse extends createZodDto(workLocationReques
 export class WorkLocationRequestListResponse extends createZodDto(
   z.object({ items: z.array(workLocationRequestSchema) }),
 ) {}
+
+export const officeSchema = z.object({
+  id: z.uuid(),
+  label: z.string(),
+  latitude: z.number(),
+  longitude: z.number(),
+  radiusMeters: z.int(),
+});
+export type OfficeBody = z.infer<typeof officeSchema>;
+export class OfficeResponse extends createZodDto(officeSchema) {}
+export class OfficeListResponse extends createZodDto(z.object({ items: z.array(officeSchema) })) {}
 
 export const photoRequestSchema = z.object({
   id: z.uuid(),
