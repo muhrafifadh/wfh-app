@@ -3,7 +3,6 @@ import { Module } from "@nestjs/common";
 
 import { AttendanceModule } from "@/modules/attendance/attendance.module.js";
 import { CorrectionsModule } from "@/modules/corrections/corrections.module.js";
-import { EmployeesModule } from "@/modules/employees/employees.module.js";
 import { HolidaysModule } from "@/modules/holidays/holidays.module.js";
 import { NotificationEmailsProcessor } from "@/modules/notifications/jobs/notification-emails.processor.js";
 import { NOTIFICATION_EMAILS_QUEUE } from "@/modules/notifications/jobs/notification-emails.queue.js";
@@ -13,7 +12,6 @@ import { NotificationsController } from "@/modules/notifications/notifications.c
 import { NotificationsListener } from "@/modules/notifications/notifications.listener.js";
 import { NotificationsRepository } from "@/modules/notifications/notifications.repository.js";
 import { NotificationsService } from "@/modules/notifications/notifications.service.js";
-import { UsersModule } from "@/modules/users/users.module.js";
 import { WorkSettingsModule } from "@/modules/work-settings/work-settings.module.js";
 
 /** DOMAIN_RULES.md §18 — notifications: created from events and schedules, emailed, listed. */
@@ -25,9 +23,7 @@ import { WorkSettingsModule } from "@/modules/work-settings/work-settings.module
     ),
     AttendanceModule,
     CorrectionsModule,
-    EmployeesModule,
     HolidaysModule,
-    UsersModule,
     WorkSettingsModule,
   ],
   controllers: [NotificationsController],

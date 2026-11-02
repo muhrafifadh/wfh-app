@@ -3,6 +3,11 @@ import { createHash } from "node:crypto";
 import { Injectable } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
+import {
+  EmployeeDirectory,
+  EmployeeProfileRequiredError,
+  type EmployeeProfile,
+} from "@/common/contracts/directory.js";
 import { hashToken } from "@/common/crypto/tokens.js";
 import type { Paginated } from "@/common/dto/pagination.js";
 import { NotFoundError } from "@/common/errors/app-error.js";
@@ -63,8 +68,6 @@ import type {
   ListMyAttendanceQueryInput,
 } from "@/modules/attendance/dto/list-my-attendance.query.js";
 import { IdempotencyRepository } from "@/modules/attendance/idempotency.repository.js";
-import { EmployeeProfileRequiredError } from "@/modules/employees/employees.errors.js";
-import { EmployeesService, type EmployeeProfile } from "@/modules/employees/employees.service.js";
 import { HolidaysService } from "@/modules/holidays/holidays.service.js";
 import { boundariesFor } from "@/modules/work-settings/domain/schedule-policy.js";
 import { WorkSettingsService } from "@/modules/work-settings/work-settings.service.js";
@@ -131,7 +134,7 @@ export class AttendanceService {
     private readonly repo: AttendanceRepository,
     private readonly idempotency: IdempotencyRepository,
     private readonly prisma: PrismaService,
-    private readonly employees: EmployeesService,
+    private readonly employees: EmployeeDirectory,
     private readonly workSettings: WorkSettingsService,
     private readonly holidays: HolidaysService,
     private readonly clock: Clock,

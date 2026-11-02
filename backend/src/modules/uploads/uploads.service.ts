@@ -6,6 +6,8 @@ import { z } from "zod";
 
 import type { Paginated } from "@/common/dto/pagination.js";
 import { NotFoundError } from "@/common/errors/app-error.js";
+import { matchesContentType, SIGNATURE_BYTES } from "@/common/files/file-signature.js";
+import { UploadMismatchError, UploadNotReceivedError } from "@/common/files/upload.errors.js";
 import type { AuthUser } from "@/common/types/auth.js";
 import { SIGNED_URL_TTL_SECONDS, StorageService } from "@/infra/storage/storage.service.js";
 import type { CreateUploadInput } from "@/modules/uploads/dto/create-upload.dto.js";
@@ -14,14 +16,12 @@ import type {
   CreateUploadResponseBody,
   UploadResponseBody,
 } from "@/modules/uploads/dto/upload.response.js";
-import { matchesContentType, SIGNATURE_BYTES } from "@/modules/uploads/file-signature.js";
 import {
   ALLOWED_CONTENT_TYPES,
   CONTENT_TYPE_EXTENSIONS,
   DELETED_UPLOAD_RETENTION_MS,
   PENDING_UPLOAD_TTL_MS,
 } from "@/modules/uploads/uploads.constants.js";
-import { UploadMismatchError, UploadNotReceivedError } from "@/modules/uploads/uploads.errors.js";
 import { UploadsRepository, type UploadRow } from "@/modules/uploads/uploads.repository.js";
 
 /** How many expired uploads one cleanup run handles; the next run picks up the rest. */

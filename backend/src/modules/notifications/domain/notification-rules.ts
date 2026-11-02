@@ -1,4 +1,4 @@
-import type { Contact } from "@/modules/users/users.service.js";
+import type { Contact } from "@/common/contracts/directory.js";
 
 /** DOMAIN_RULES.md §18 — pure rules, so they can be unit-tested without a database. */
 

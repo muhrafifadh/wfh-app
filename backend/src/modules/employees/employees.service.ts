@@ -1,6 +1,13 @@
 import { Injectable } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
+import {
+  EmployeeProfileRequiredError,
+  type EmployeeDirectory,
+  type EmployeeProfile,
+  type EmployeeStatus,
+  type EmployeeSummary,
+} from "@/common/contracts/directory.js";
 import type { Paginated } from "@/common/dto/pagination.js";
 import { NotFoundError } from "@/common/errors/app-error.js";
 import { fromDateColumn, toDateColumn } from "@/common/time/zoned-time.js";
@@ -11,13 +18,10 @@ import type { CreateEmployeeInput } from "@/modules/employees/dto/create-employe
 import type { EmployeeResponseBody } from "@/modules/employees/dto/employee.response.js";
 import type { LinkAccountInput } from "@/modules/employees/dto/link-account.dto.js";
 import type { ListEmployeesQueryInput } from "@/modules/employees/dto/list-employees.query.js";
-import type { MeContextResponseBody } from "@/modules/employees/dto/me-context.response.js";
 import type { UpdateEmployeeInput } from "@/modules/employees/dto/update-employee.dto.js";
-import type { EmployeeStatus } from "@/modules/employees/employees.constants.js";
 import {
   EmployeeHasAccountError,
   EmployeeNumberTakenError,
-  EmployeeProfileRequiredError,
   EmploymentPeriodInvalidError,
   ManagerInactiveError,
   ReportingLineCycleError,
@@ -32,25 +36,6 @@ import {
 } from "@/modules/employees/employees.repository.js";
 import { userStatusOf } from "@/modules/users/users.constants.js";
 import { UsersService } from "@/modules/users/users.service.js";
-import { WorkSettingsService } from "@/modules/work-settings/work-settings.service.js";
-
-/** What attendance needs to know about an employee. */
-export type EmployeeProfile = {
-  id: string;
-  employeeNumber: string;
-  fullName: string;
-  status: EmployeeStatus;
-  employmentStartDate: string;
-  employmentEndDate: string | null;
-};
-
-export type EmployeeSummary = {
-  id: string;
-  employeeNumber: string;
-  fullName: string;
-  status: EmployeeStatus;
-  managerId: string | null;
-};
 
 /** Prisma row → response body (dates become ISO strings, `date` columns YYYY-MM-DD). */
 const toEmployee = (row: EmployeeRow): EmployeeResponseBody => ({
@@ -89,13 +74,12 @@ const toWrite = (input: UpdateEmployeeInput): EmployeeWrite => {
 };
 
 @Injectable()
-export class EmployeesService {
+export class EmployeesService implements EmployeeDirectory {
   constructor(
     private readonly repo: EmployeesRepository,
     private readonly prisma: PrismaService,
     private readonly divisions: DivisionsService,
     private readonly users: UsersService,
-    private readonly workSettings: WorkSettingsService,
     private readonly events: EventEmitter2,
   ) {}
 
@@ -192,23 +176,6 @@ export class EmployeesService {
     const employee = await this.repo.findByUser(user.organizationId, user.id);
     if (!employee) throw new EmployeeProfileRequiredError();
     return toEmployee(employee);
-  }
-
-  /** The app shell's context (GET /me/context): organization basics and the own profile. */
-  async contextFor(user: AuthUser): Promise<MeContextResponseBody> {
-    const [organization, employee] = await Promise.all([
-      this.workSettings.publicSettingsOf(user.organizationId),
-      this.repo.findByUser(user.organizationId, user.id),
-    ]);
-    return {
-      organization,
-      employee: employee && {
-        id: employee.id,
-        employeeNumber: employee.employeeNumber,
-        fullName: employee.fullName,
-        status: employee.status,
-      },
-    };
   }
 
   /** A new employee has no reports yet, so any active manager is fine (no cycle possible). */

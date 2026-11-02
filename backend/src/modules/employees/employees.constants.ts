@@ -1,5 +1,4 @@
-export const EMPLOYEE_STATUSES = ["active", "inactive"] as const;
-export type EmployeeStatus = (typeof EMPLOYEE_STATUSES)[number];
+export { EMPLOYEE_STATUSES, type EmployeeStatus } from "@/common/contracts/directory.js";
 
 export const EMPLOYEE_SORT_FIELDS = ["employeeNumber", "fullName", "createdAt"] as const;
 

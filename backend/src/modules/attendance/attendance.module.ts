@@ -8,14 +8,12 @@ import { CloseDayService } from "@/modules/attendance/close-day.service.js";
 import { IdempotencyRepository } from "@/modules/attendance/idempotency.repository.js";
 import { AttendanceJobsProcessor } from "@/modules/attendance/jobs/attendance-jobs.processor.js";
 import { ATTENDANCE_JOBS_QUEUE } from "@/modules/attendance/jobs/attendance-jobs.queue.js";
-import { EmployeesModule } from "@/modules/employees/employees.module.js";
 import { HolidaysModule } from "@/modules/holidays/holidays.module.js";
 import { WorkSettingsModule } from "@/modules/work-settings/work-settings.module.js";
 
 @Module({
   imports: [
     BullModule.registerQueue({ name: ATTENDANCE_JOBS_QUEUE }),
-    EmployeesModule,
     WorkSettingsModule,
     HolidaysModule,
   ],

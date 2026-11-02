@@ -1,7 +1,7 @@
 import { createZodDto } from "nestjs-zod";
 import { z } from "zod";
 
-import { EMPLOYEE_STATUSES } from "@/modules/employees/employees.constants.js";
+import { EMPLOYEE_STATUSES } from "@/common/contracts/directory.js";
 
 /** What the app shell needs on every page, readable by any signed-in user. */
 export const meContextResponseSchema = z.object({

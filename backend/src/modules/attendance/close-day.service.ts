@@ -5,6 +5,7 @@ import { EventEmitter2 } from "@nestjs/event-emitter";
 
 import { PinoLogger } from "nestjs-pino";
 
+import { EmployeeDirectory } from "@/common/contracts/directory.js";
 import { addDays, toDateColumn, zonedToUtc, type LocalDate } from "@/common/time/zoned-time.js";
 import type { AuthUser } from "@/common/types/auth.js";
 import { Clock } from "@/infra/clock/clock.js";
@@ -15,7 +16,6 @@ import {
 import { CloseDayDateNotEndedError } from "@/modules/attendance/attendance.errors.js";
 import { ATTENDANCE_EVENTS, CloseDayEvent } from "@/modules/attendance/attendance.events.js";
 import { AttendanceRepository } from "@/modules/attendance/attendance.repository.js";
-import { EmployeesService } from "@/modules/employees/employees.service.js";
 import type { NonWorkingReason } from "@/modules/holidays/holidays.constants.js";
 import { HolidaysService } from "@/modules/holidays/holidays.service.js";
 import { boundariesFor } from "@/modules/work-settings/domain/schedule-policy.js";
@@ -54,7 +54,7 @@ export const newCloseDayRunId = () => `cd-${randomUUID()}`;
 export class CloseDayService {
   constructor(
     private readonly repo: AttendanceRepository,
-    private readonly employees: EmployeesService,
+    private readonly employees: EmployeeDirectory,
     private readonly workSettings: WorkSettingsService,
     private readonly holidays: HolidaysService,
     private readonly clock: Clock,

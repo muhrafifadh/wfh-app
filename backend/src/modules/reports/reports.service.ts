@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
+import { EmployeeDirectory, EmployeeProfileRequiredError } from "@/common/contracts/directory.js";
 import type { Paginated } from "@/common/dto/pagination.js";
 import { ForbiddenError } from "@/common/errors/app-error.js";
 import { addDays, formatZoned, type LocalDate } from "@/common/time/zoned-time.js";
@@ -8,8 +9,6 @@ import type { AuthUser, Permission } from "@/common/types/auth.js";
 import { Clock } from "@/infra/clock/clock.js";
 import { toAttendance } from "@/modules/attendance/attendance.mapper.js";
 import { isIncomplete } from "@/modules/attendance/domain/attendance-calculator.js";
-import { EmployeeProfileRequiredError } from "@/modules/employees/employees.errors.js";
-import { EmployeesService } from "@/modules/employees/employees.service.js";
 import { HolidaysService } from "@/modules/holidays/holidays.service.js";
 import { CSV_BOM, csvLine } from "@/modules/reports/domain/csv.js";
 import type {
@@ -101,7 +100,7 @@ const csvRow = (row: ReportRow, now: Date) => {
 export class ReportsService {
   constructor(
     private readonly repo: ReportsRepository,
-    private readonly employees: EmployeesService,
+    private readonly employees: EmployeeDirectory,
     private readonly holidays: HolidaysService,
     private readonly workSettings: WorkSettingsService,
     private readonly clock: Clock,

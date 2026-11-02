@@ -5,6 +5,7 @@ import { EventEmitter2 } from "@nestjs/event-emitter";
 import { hash } from "@node-rs/argon2";
 import type { Queue } from "bullmq";
 
+import type { Contact, UserDirectory } from "@/common/contracts/directory.js";
 import { generateToken, hashToken } from "@/common/crypto/tokens.js";
 import type { Paginated } from "@/common/dto/pagination.js";
 import { NotFoundError } from "@/common/errors/app-error.js";
@@ -58,8 +59,6 @@ export type ActiveUser = {
 };
 
 /** An active account that can receive email, with what its role allows. */
-export type Contact = { id: string; email: string; name: string; permissions: Permission[] };
-
 const toContact = (row: {
   id: string;
   email: string;
@@ -85,7 +84,7 @@ const toUser = (row: UserRow): UserResponseBody => ({
 });
 
 @Injectable()
-export class UsersService {
+export class UsersService implements UserDirectory {
   constructor(
     private readonly repo: UsersRepository,
     private readonly prisma: PrismaService,

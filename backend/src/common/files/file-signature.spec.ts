@@ -1,4 +1,4 @@
-import { matchesContentType } from "@/modules/uploads/file-signature.js";
+import { matchesContentType } from "@/common/files/file-signature.js";
 
 const bytes = (...values: (number | string)[]) =>
   new Uint8Array(

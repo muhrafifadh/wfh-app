@@ -1,3 +1,4 @@
+import type { Contact } from "@/common/contracts/directory.js";
 import type { Permission } from "@/common/types/auth.js";
 import {
   correctionDecidedEmail,
@@ -6,7 +7,6 @@ import {
   dedupeKeyOf,
   formatWorkDate,
 } from "@/modules/notifications/domain/notification-rules.js";
-import type { Contact } from "@/modules/users/users.service.js";
 
 const contact = (id: string, permissions: Permission[] = []): Contact => ({
   id,

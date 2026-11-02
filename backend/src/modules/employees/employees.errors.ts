@@ -66,13 +66,3 @@ export class UserHasEmployeeError extends AppError {
     });
   }
 }
-
-/** DOMAIN_RULES.md §16 — the signed-in user has no employee profile. */
-export class EmployeeProfileRequiredError extends AppError {
-  readonly status = 422;
-  readonly code = "EMPLOYEE_PROFILE_REQUIRED";
-
-  constructor() {
-    super("Your account has no employee profile. Contact HR.");
-  }
-}

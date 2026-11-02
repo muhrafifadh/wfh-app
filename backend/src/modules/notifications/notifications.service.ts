@@ -4,6 +4,7 @@ import { Injectable } from "@nestjs/common";
 import type { Queue } from "bullmq";
 import { PinoLogger } from "nestjs-pino";
 
+import { EmployeeDirectory, UserDirectory, type Contact } from "@/common/contracts/directory.js";
 import type { Paginated } from "@/common/dto/pagination.js";
 import { NotFoundError } from "@/common/errors/app-error.js";
 import { fromDateColumn, toDateColumn, type LocalDate } from "@/common/time/zoned-time.js";
@@ -17,7 +18,6 @@ import {
   CorrectionsService,
   type CorrectionNotice,
 } from "@/modules/corrections/corrections.service.js";
-import { EmployeesService } from "@/modules/employees/employees.service.js";
 import { HolidaysService } from "@/modules/holidays/holidays.service.js";
 import {
   correctionDecidedEmail,
@@ -50,7 +50,6 @@ import {
   type EmailPreferences,
   type NotificationInsert,
 } from "@/modules/notifications/notifications.repository.js";
-import { UsersService, type Contact } from "@/modules/users/users.service.js";
 import { boundariesFor } from "@/modules/work-settings/domain/schedule-policy.js";
 import { WorkSettingsService } from "@/modules/work-settings/work-settings.service.js";
 
@@ -92,8 +91,8 @@ export class NotificationsService {
   constructor(
     private readonly repo: NotificationsRepository,
     private readonly corrections: CorrectionsService,
-    private readonly employees: EmployeesService,
-    private readonly users: UsersService,
+    private readonly employees: EmployeeDirectory,
+    private readonly users: UserDirectory,
     private readonly attendance: AttendanceService,
     private readonly workSettings: WorkSettingsService,
     private readonly holidays: HolidaysService,

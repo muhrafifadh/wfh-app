@@ -7,14 +7,9 @@ import { AttendanceVerificationService } from "@/modules/attendance-verification
 import { VerificationCleanupProcessor } from "@/modules/attendance-verification/jobs/verification-cleanup.processor.js";
 import { VERIFICATION_CLEANUP_QUEUE } from "@/modules/attendance-verification/jobs/verification-cleanup.queue.js";
 import { AttendanceModule } from "@/modules/attendance/attendance.module.js";
-import { EmployeesModule } from "@/modules/employees/employees.module.js";
 
 @Module({
-  imports: [
-    BullModule.registerQueue({ name: VERIFICATION_CLEANUP_QUEUE }),
-    AttendanceModule,
-    EmployeesModule,
-  ],
+  imports: [BullModule.registerQueue({ name: VERIFICATION_CLEANUP_QUEUE }), AttendanceModule],
   controllers: [AttendanceVerificationController],
   providers: [
     AttendanceVerificationService,

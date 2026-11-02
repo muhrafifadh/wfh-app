@@ -1,6 +1,11 @@
 import { Injectable } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
+import {
+  EmployeeDirectory,
+  EmployeeProfileRequiredError,
+  UserDirectory,
+} from "@/common/contracts/directory.js";
 import type { Paginated } from "@/common/dto/pagination.js";
 import { ForbiddenError, NotFoundError } from "@/common/errors/app-error.js";
 import { fromDateColumn, toDateColumn } from "@/common/time/zoned-time.js";
@@ -57,9 +62,6 @@ import type {
   PreviewCorrectionInput,
   SubmitCorrectionInput,
 } from "@/modules/corrections/dto/submit-correction.dto.js";
-import { EmployeeProfileRequiredError } from "@/modules/employees/employees.errors.js";
-import { EmployeesService } from "@/modules/employees/employees.service.js";
-import { UsersService } from "@/modules/users/users.service.js";
 
 /**
  * Who the caller may decide for (§11.4): the whole organization (correction:decide_all),
@@ -102,8 +104,8 @@ export class CorrectionsService {
     private readonly repo: CorrectionsRepository,
     private readonly prisma: PrismaService,
     private readonly attendance: AttendanceService,
-    private readonly employees: EmployeesService,
-    private readonly users: UsersService,
+    private readonly employees: EmployeeDirectory,
+    private readonly users: UserDirectory,
     private readonly clock: Clock,
     private readonly events: EventEmitter2,
   ) {}

@@ -3,8 +3,15 @@ import { randomUUID } from "node:crypto";
 import { Injectable } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
+import {
+  EmployeeDirectory,
+  EmployeeProfileRequiredError,
+  type EmployeeProfile,
+} from "@/common/contracts/directory.js";
 import type { Paginated } from "@/common/dto/pagination.js";
 import { ForbiddenError, NotFoundError } from "@/common/errors/app-error.js";
+import { matchesContentType, SIGNATURE_BYTES } from "@/common/files/file-signature.js";
+import { UploadMismatchError, UploadNotReceivedError } from "@/common/files/upload.errors.js";
 import { fromDateColumn, toDateColumn } from "@/common/time/zoned-time.js";
 import type { AuthUser } from "@/common/types/auth.js";
 import { AppConfig } from "@/config/config.module.js";
@@ -70,10 +77,6 @@ import type {
   WorkLocationRequestBody,
 } from "@/modules/attendance-verification/dto/verification.response.js";
 import { AttendanceService, type ActionResult } from "@/modules/attendance/attendance.service.js";
-import { EmployeeProfileRequiredError } from "@/modules/employees/employees.errors.js";
-import { EmployeesService, type EmployeeProfile } from "@/modules/employees/employees.service.js";
-import { matchesContentType, SIGNATURE_BYTES } from "@/modules/uploads/file-signature.js";
-import { UploadMismatchError, UploadNotReceivedError } from "@/modules/uploads/uploads.errors.js";
 
 type Moment = "check_in" | "check_out";
 
@@ -111,7 +114,7 @@ export class AttendanceVerificationService {
     private readonly repo: AttendanceVerificationRepository,
     private readonly prisma: PrismaService,
     private readonly attendance: AttendanceService,
-    private readonly employees: EmployeesService,
+    private readonly employees: EmployeeDirectory,
     private readonly storage: StorageService,
     private readonly config: AppConfig,
     private readonly clock: Clock,
