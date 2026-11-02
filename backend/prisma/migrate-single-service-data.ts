@@ -60,7 +60,9 @@ const need = (name: string): string => {
 
 const dryRun = process.argv.includes("--dry-run");
 const connect = async (url: string) => {
-  const client = new pg.Client({ connectionString: url });
+  // Targets can be separate databases, or schemas of one database (`?schema=employee`)
+  const schema = new URL(url).searchParams.get("schema") ?? "public";
+  const client = new pg.Client({ connectionString: url, options: `-c search_path=${schema}` });
   await client.connect();
   return client;
 };
@@ -69,13 +71,13 @@ const count = async (client: pg.Client, table: string): Promise<number> =>
 const tablesOf = async (client: pg.Client): Promise<string[]> =>
   (
     await client.query<{ tablename: string }>(
-      "select tablename from pg_tables where schemaname = 'public' and tablename <> '_prisma_migrations'",
+      "select tablename from pg_tables where schemaname = current_schema() and tablename <> '_prisma_migrations'",
     )
   ).rows.map((row) => row.tablename);
 const columnsOf = async (client: pg.Client, table: string): Promise<string[]> =>
   (
     await client.query<{ column_name: string }>(
-      "select column_name from information_schema.columns where table_schema = 'public' and table_name = $1",
+      "select column_name from information_schema.columns where table_schema = current_schema() and table_name = $1",
       [table],
     )
   ).rows.map((row) => row.column_name);
