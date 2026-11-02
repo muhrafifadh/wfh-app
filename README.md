@@ -4,7 +4,7 @@ Hadir.in is a web-based attendance system for people who work from home. It repl
 
 **This repository is the microservices version.** Its backend is split into an employee service and an attendance service behind an API gateway, each with its own database.
 
-**Live demo:** [hadir-in.armerta.biz.id](https://hadir-in.armerta.biz.id) runs the earlier single-service version of the same product. This microservices version runs locally: see [Run it locally](#run-it-locally).
+**Live demo:** [hadir-in.armerta.biz.id](https://hadir-in.armerta.biz.id) runs the earlier single-service version of the same product.
 
 ## Who it's for
 
