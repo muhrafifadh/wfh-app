@@ -18,6 +18,9 @@ export const PERMISSIONS = [
   "division:manage",
   "policy:manage",
   "holiday:manage",
+  // ATTENDANCE_VERIFICATION_PLAN.md §8 (V9): photo access is held apart from everything else
+  "verification:manage",
+  "verification:read_photo",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
@@ -42,6 +45,8 @@ export const DEFAULT_ROLES = {
     "division:manage",
     "policy:manage",
     "holiday:manage",
+    "verification:manage",
+    "verification:read_photo",
     "user:read",
     "user:manage",
     "audit:read",

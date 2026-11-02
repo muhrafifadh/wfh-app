@@ -49,6 +49,12 @@ export const envSchema = z
     REGISTRATION_ENABLED: flag.default(false),
 
     /**
+     * Lets organizations turn on location and selfie checks. Off unless explicitly enabled:
+     * production stays off until the deferred requirements in ATTENDANCE_VERIFICATION_PLAN.md §4 are met.
+     */
+    VERIFICATION_ENABLED: flag.default(false),
+
+    /**
      * smtp: real delivery through SMTP_URL. console: prints emails, links
      * included (development only). memory: keeps them for tests. disabled: drops them.
      */

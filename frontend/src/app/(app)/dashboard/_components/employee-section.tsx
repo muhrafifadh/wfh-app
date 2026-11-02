@@ -10,6 +10,7 @@ import { TodayCard } from "@/features/attendance/components/today-card";
 import { firstDayOf, lastDayOf, monthOf } from "@/features/attendance/dates";
 import { formatMonthYear } from "@/features/attendance/format";
 import type { Today } from "@/features/attendance/schemas";
+import { VerificationPanelLoader } from "@/features/attendance-verification/components/verification-panel-loader";
 import { countMyPendingCorrections } from "@/features/corrections/queries";
 import { SupportContact } from "@/features/profile/components/support-contact";
 
@@ -32,11 +33,14 @@ export function EmployeeSection({
   const month = monthOf(workDate);
   return (
     <section aria-label="My attendance" className="grid items-start gap-4 lg:grid-cols-3">
-      <div className="lg:col-span-2">
+      <div className="grid gap-4 lg:col-span-2">
         <TodayCard
           initialToday={today}
           supportContact={<SupportContact contact={supportContact} />}
         />
+        <Suspense fallback={null}>
+          <VerificationPanelLoader />
+        </Suspense>
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:row-span-2 lg:grid-cols-1">
         <Card>

@@ -384,8 +384,8 @@ Audit stores actor, organization, action, target, timestamp, request ID, and non
 - Export artifacts: deleted automatically after 24 hours.
 - Notifications: 90 days (§18.5).
 - Inactive user/employee data is retained or pseudonymized per legal requirements without breaking historical references.
-- No precise location, photos, biometrics, or device identifiers are collected. This stays true until an organization enables a verification method after legal approval (PRD decision 26); even then, raw coordinates are never persisted, and no biometric matching or device identifiers are used.
-- Planned verification evidence, once enabled: selfies deleted after 30 days and results after 90 days, stored separately from attendance. A failed or declined check never blocks attendance or changes its status.
+- No precise location, photos, biometrics, or device identifiers are collected unless an organization turns on a verification method, which production allows only once PRD decision 26's deferred requirements are met. Even then, raw coordinates are never persisted, and no biometric matching or device identifiers are used.
+- Verification evidence (`ATTENDANCE_VERIFICATION_PLAN.md`): stored apart from attendance; selfies deleted after 30 days and results after 90 days; rejected or replaced areas and decided photo requests after 90 days; areas of inactive employees at the next cleanup. A failed or declined check never blocks attendance or changes its status. Only `outside_approved_area` is flagged for review; `low_accuracy` ("Couldn't confirm") and `not_shared` are neutral.
 
 ## 16. Stable domain error codes
 

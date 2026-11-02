@@ -7,14 +7,20 @@ import { env } from "./src/lib/env";
 
 /**
  * Baseline headers for every response. The app is never framed, and it never asks for
- * camera, microphone or location (UX_FLOWS.md §21), so the browser refuses them too.
+ * camera, microphone or location (UX_FLOWS.md §21), so the browser refuses them too. The
+ * one exception is attendance verification, and only where the deployment switch is on:
+ * then this app's own pages may ask for location and the camera at check-in.
  */
+const devicePermissions = env.VERIFICATION_ENABLED
+  ? "camera=(self), microphone=(), geolocation=(self)"
+  : "camera=(), microphone=(), geolocation=()";
+
 const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+  { key: "Permissions-Policy", value: devicePermissions },
 ];
 
 const nextConfig: NextConfig = {

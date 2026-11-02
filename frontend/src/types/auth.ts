@@ -15,5 +15,7 @@ export const PERMISSIONS = [
   "division:manage",
   "policy:manage",
   "holiday:manage",
+  "verification:manage",
+  "verification:read_photo",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];

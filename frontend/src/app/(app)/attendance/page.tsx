@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { routes } from "@/config/routes";
 import { RecentAttendance } from "@/features/attendance/components/recent-attendance";
 import { TodayCard } from "@/features/attendance/components/today-card";
+import { VerificationPanelLoader } from "@/features/attendance-verification/components/verification-panel-loader";
 import { SupportContact } from "@/features/profile/components/support-contact";
 import { getMeContext } from "@/features/profile/queries";
 import { can, requireUser } from "@/lib/auth/session";
@@ -25,10 +26,17 @@ export default async function AttendancePage() {
       <h1 className="text-2xl font-semibold tracking-tight">Today&apos;s attendance</h1>
       {/* Side by side on wide screens, stacked on phones */}
       <div className="grid items-start gap-6 lg:grid-cols-2">
-        <TodayCard
-          initialToday={today}
-          supportContact={<SupportContact contact={context.organization.supportContact} />}
-        />
+        <div className="grid gap-6">
+          <TodayCard
+            initialToday={today}
+            supportContact={<SupportContact contact={context.organization.supportContact} />}
+          />
+          {context.employee && (
+            <Suspense fallback={null}>
+              <VerificationPanelLoader />
+            </Suspense>
+          )}
+        </div>
         {context.employee && (
           <section aria-labelledby="recent-heading" className="flex flex-col gap-3">
             <div className="flex items-center justify-between gap-2">

@@ -6,6 +6,7 @@ import { NoAccess } from "@/app/(app)/_components/no-access";
 import { EmptyState } from "@/components/shared/empty-state";
 import { TableSkeleton } from "@/components/shared/table-skeleton";
 import { Button } from "@/components/ui/button";
+import { routes } from "@/config/routes";
 import { addDays, isIsoDate } from "@/features/attendance/dates";
 import { formatLongDate } from "@/features/attendance/format";
 import { getMeContext } from "@/features/profile/queries";
@@ -18,6 +19,7 @@ import { loadTeamSearchParams, teamHref, type TeamFilters } from "@/features/rep
 import { matchesTeamFilter, TEAM_CARDS } from "@/features/reports/team";
 import { ApiError } from "@/lib/api/errors";
 import { can, requireUser } from "@/lib/auth/session";
+import { env } from "@/lib/env";
 
 export const metadata: Metadata = { title: "Team" };
 
@@ -38,7 +40,18 @@ export default async function TeamPage({ searchParams }: PageProps<"/team">) {
 
   return (
     <>
-      <h1 className="text-2xl font-semibold tracking-tight">Team</h1>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h1 className="text-2xl font-semibold tracking-tight">Team</h1>
+        {/* Only where the deployment allows attendance checks at all */}
+        {env.VERIFICATION_ENABLED && (
+          <Link
+            href={routes.verificationReview()}
+            className="text-sm text-primary underline-offset-4 hover:underline"
+          >
+            Check-in check results
+          </Link>
+        )}
+      </div>
       <TeamDateFilter key={date} date={date || today} min={earliest} max={today} />
       <Suspense
         key={`${date}|${filters.show}`}

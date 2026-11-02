@@ -55,6 +55,12 @@ export class AuditListener {
   }
 
   /** CORRECTION_EVENTS (src/modules/corrections/corrections.events.ts). */
+  /** VERIFICATION_EVENTS (attendance-verification.events.ts). Never holds coordinates or results. */
+  @OnEvent("attendance_verification.*")
+  async onAttendanceVerificationEvent(event: AuditableEvent): Promise<void> {
+    await this.audit.record(event);
+  }
+
   @OnEvent("correction.*")
   async onCorrectionEvent(event: AuditableEvent): Promise<void> {
     await this.audit.record(event);

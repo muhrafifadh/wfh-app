@@ -2,8 +2,8 @@
 
 | Attribute     | Value                                                                 |
 | ------------- | --------------------------------------------------------------------- |
-| Status        | Phase 7.0 product decisions final — production gated by legal approval |
-| Version       | 0.4                                                                   |
+| Status        | Implemented, off by default — production gated (§4.1); not independently reviewed |
+| Version       | 0.5                                                                   |
 | Date          | 2 November 2026                                                       |
 | Product owner | Developer                                                             |
 | Roadmap       | [`PLANS.md`](PLANS.md) Phase 7 (7.0 privacy gate, 7A location, 7B selfie) |
@@ -61,7 +61,20 @@ These hold for every option below and go into `DOMAIN_RULES.md` when approved.
 
 **Closing 7.0:** the product decisions in §8 are the baseline, and Phase 7.0 closes on them (product owner, 2 November 2026).
 
-**Production gate:** the legal reviewer has to approve the assessment before location or selfie verification is enabled in production. Code may ship with both methods off, but only after each phase passes its step in decision V7. Until legal approves, the promises in `DOMAIN_RULES.md` §15, `UX_FLOWS.md` §21 and PRD §4 still describe what happens, and `Permissions-Policy` keeps blocking the camera and location.
+**Legal compliance status: not independently reviewed.** No external lawyer reviewed the assessment, and none is required for development (product owner, 2 November 2026). Nothing in Phase 7 claims production compliance or readiness.
+
+**Production gate:** location and selfie verification stay off in production until the deferred requirements below are met. Two switches enforce this: the deployment's `VERIFICATION_ENABLED` (backend and frontend, off by default), and each organization's setting, which also needs a recorded reason (decision V7). With the deployment switch off, `Permissions-Policy` keeps blocking the camera and location, and the promises in `DOMAIN_RULES.md` §15, `UX_FLOWS.md` §21 and PRD §4 still describe what happens.
+
+### 4.1 Deferred requirements
+
+Tracked here, apart from the implementation tasks. Each must be met before real employee verification data is collected in production.
+
+| #   | Requirement                                                                                       | Status   |
+| --- | ------------------------------------------------------------------------------------------------- | -------- |
+| D1  | Reassess applicable legal requirements (assessment §10), including PP 33/2026 from 16 January 2027 | Deferred |
+| D2  | Production hosting inventory: providers, regions, database and backup locations, sub-processors  | Deferred |
+| D3  | Documented necessity for each method an organization turns on, from the incident log (decision V7) | Open; log kept in [`ATTENDANCE_INCIDENT_LOG.md`](ATTENDANCE_INCIDENT_LOG.md) |
+| D4  | Breach response procedure (assessment §8)                                                         | Deferred |
 
 ## 5. Phase 7A — Location at check-in
 
@@ -69,7 +82,7 @@ These hold for every option below and go into `DOMAIN_RULES.md` when approved.
 
 1. The organization turns on location checks. The only mode is approved area (decision V2): compare the location with the employee's approved work-from-home area and store the result. If legal doesn't approve it, location verification stays disabled; it isn't replaced with record-only.
 2. When the employee presses Check in, the browser asks for location once (the Geolocation API with a short timeout). The button stays usable while it waits.
-3. The client sends latitude, longitude and accuracy with the check-in request. The server still decides the time; the location is only evidence.
+3. Check-in is recorded first, exactly as today. The client then sends latitude, longitude and accuracy to `POST /attendance-verification/location`, within 5 minutes of the check-in. The check-in request itself still takes no body, so nothing about verification can delay or reject it.
 4. The server computes the result and stores it apart from the attendance record:
    - `verified`, `outside_approved_area`, `low_accuracy` (accuracy worse than a threshold, for example 500 m), `not_shared` (denied, unavailable or timed out).
 5. Attendance is recorded normally whatever the result. `outside_approved_area` is flagged for review. `not_shared` is shown as a neutral "Not shared", never as failed or outside (decision V10). `low_accuracy` is shown as a neutral "Couldn't confirm", isn't a failure, and is never flagged on its own (decision V11).
@@ -81,14 +94,14 @@ These hold for every option below and go into `DOMAIN_RULES.md` when approved.
 ### 5.2 Approved areas
 
 - An area is a centre point and a radius (for example 1 km), per employee.
-- The employee declares their area and Admin/HR approves it. Changes are requested the same way and only become active once approved. Managers may recommend a change but can't approve one unless explicitly authorized (decision V5).
+- The employee declares their area and Admin/HR approves it. Changes are requested the same way and only become active once approved. Managers may recommend a change but can't approve one unless explicitly authorized (decision V5). Approving needs `verification:manage`; a recommendation is made outside the app for now.
 - Every request, approval and change is in the audit history, which records who, when and the outcome, never the centre point.
 - Storing an employee's home area is the most sensitive part of this phase; legal review in 7.0 decides whether it is allowed and at what precision.
 
 ### 5.3 Changes by layer
 
 - **Data model:** `AttendanceVerification` (its own table referencing the attendance record; method `location`, result, accuracy in metres, distance band, server time captured, deletion date), `WorkLocation` (organization, optional employee, label, centre, radius, status, effective dates), and verification settings on the organization (each method on/off, off by default; accuracy threshold).
-- **API:** check-in accepts an optional `location { latitude, longitude, accuracyMeters }` (strict Zod; rejected when the organization hasn't turned location on), plus an endpoint for the employee's own retry, accepted only after `low_accuracy`. Responses for managers leave out accuracy and distance band, enforced by the backend. New endpoints to manage work locations and verification settings (`policy:manage`). Team and organization views gain a verification flag and filter. OpenAPI regenerated.
+- **API:** `POST /attendance-verification/location` takes `{ latitude, longitude, accuracyMeters }` (strict Zod; refused when the method is off, the notice hasn't been acknowledged, or there is no check-in today). The same endpoint takes the employee's retry, accepted only after `low_accuracy`. The check-in endpoint is unchanged. Responses for managers leave out accuracy and distance band, enforced by the backend. New endpoints to manage work locations and verification settings (`policy:manage`). Team and organization views gain a verification flag and filter. OpenAPI regenerated.
 - **Permissions:** viewing status and flags follows existing scopes (`attendance:read_team`, `attendance:read_all`); approving areas uses `policy:manage`. Enabling a method also requires a deployment-level switch, off by default, so it can't be turned on in production from the settings page alone.
 - **Frontend:** location request on the today card, with clear states (asking, verified, not shared, couldn't confirm with a retry button) and a link to the privacy notice; a flag badge in team, record and report views; an Admin/HR settings page; `Permissions-Policy` allows `geolocation=(self)` only after legal approval (only when the organization has it on, if feasible, otherwise for the app's own origin).
 - **Domain rules:** a new section for verification results, the accuracy threshold, the distance bands and the "never blocks attendance" rule.
@@ -112,17 +125,17 @@ These hold for every option below and go into `DOMAIN_RULES.md` when approved.
 
 1. The organization turns on selfie checks, which apply at check-in only (decision V6). Decision V7 sets when this phase may start.
 2. Pressing Check in opens the camera (`getUserMedia`) in the browser; the employee takes one photo and can retake it. Uploading a file from the gallery is not offered.
-3. The photo is uploaded through the existing presigned upload flow (`uploads` module) to private object storage, then attached to the check-in request by upload ID. The server checks the upload belongs to the caller, is an image, and was created moments before.
+3. The photo goes straight from the browser to private object storage through a signed URL, under its own key prefix. It is not in the `uploads` module, whose files anyone in the organization can list and read. The server checks the bytes are a JPEG or WebP of the declared size, and that capture started within 5 minutes of the check-in.
 4. Attendance is recorded normally whatever happens with the photo. A missing photo shows as a neutral "Not shared" (decision V10). Selfies are review evidence only.
 5. Authorized Admin/HR personnel can view the photo through a short-lived signed URL, and each view is audited. Direct managers see status and flags, and can't view or download photos (decision V9).
-6. Photos are deleted automatically after 30 days. An exception needs a documented legal or investigation requirement (decision V3).
+6. Photos are deleted automatically after 30 days. An exception needs a documented legal or investigation requirement (decision V3); there is no hold mechanism yet, so every photo is deleted on schedule.
 7. There is no in-app photo viewer in the initial implementation, including for the employee. An employee can request their own photos through an authorized Admin/HR process. Admin/HR verifies the requester's identity before disclosing anything, and both the request and the disclosure are audit-logged (decision V12).
 
 ### 6.2 Changes by layer
 
 - **Data model:** `AttendanceVerification` with method `selfie`, result (`captured`, `not_captured`), upload reference; a retention date per photo, stored apart from the attendance record.
-- **Uploads:** a new upload purpose for attendance photos, smaller size limit (for example 2 MB, JPEG/WebP), stricter key prefix, and a cleanup job for expired photos that deletes the file outright, skipping the seven-day soft-delete window other uploads get.
-- **API:** check-in accepts an optional `selfieUploadId`; a `GET` for a photo's signed URL, audited and limited to a new least-privilege permission (for example `verification:read_photo`) that is granted separately from `attendance:read_all`.
+- **Storage:** its own signed-URL flow (not the `uploads` table), 2 MB, JPEG or WebP, key prefix `verification-selfies/<organization>/`, and a cleanup job that deletes the file outright, skipping the seven-day soft-delete window other uploads get.
+- **API:** `POST /attendance-verification/selfie` signs the upload and `POST /attendance-verification/selfie/complete` checks it; `GET /attendance-verification/:id/photo` returns a signed URL, audited and limited to `verification:read_photo`, which is granted separately from `attendance:read_all` and `verification:manage`.
 - **Frontend:** camera capture dialog with retake, upload progress, failure states that don't block check-in, and a photo viewer for reviewers. `Permissions-Policy` allows `camera=(self)` only after legal approval.
 - **Domain rules and audit:** as for location; audit records each photo view (who viewed whose photo, when) and each access request and disclosure. Photos and results are never included in attendance exports.
 
@@ -135,7 +148,7 @@ Comparing the selfie with a reference face would process biometric data: the str
 - With selfies off, the camera is never requested.
 - A photo from another user, another organization, a non-image or an old upload is rejected.
 - Only Admin/HR personnel holding the photo permission can open a photo; every open is in the audit log; everyone else, including direct managers, gets 404.
-- Photos are deleted after 30 days unless a documented exception is recorded (e2e with the fixed clock).
+- Photos are deleted after 30 days (e2e with the fixed clock).
 - Denying camera access still allows check-in, with a neutral "Not shared" and no failed flag.
 - An employee has no in-app route to a photo; a disclosure can't be recorded without an identity check, and the request and disclosure are both in the audit log.
 
@@ -170,4 +183,10 @@ Final for Phase 7.0 (product owner, 2 November 2026). Production activation stay
 
 ## 9. Recommended order
 
-Follow decision V7. Phase 7.0 closes on the decisions above, and step 1 is already live. Phase 7A starts only with evidence that location checks are needed, and Phase 7B only if location and existing controls don't address the risk. Legal approval is required before either is enabled in production.
+Follow decision V7. Both methods are built and off by default; building them needed no incidents (product owner, 2 November 2026). Turning one on for an organization is what needs documented justification: location only with evidence from the incident log, and selfies only if location and existing controls don't address the risk. Production stays off until §4.1 is met.
+
+## 10. What was built
+
+- **Backend:** module `attendance-verification` (settings, notice acknowledgement, location, approved areas, selfie, review list, photo access and requests, daily cleanup at 03:15 UTC). New tables `attendance_verifications`, `work_locations`, `verification_notice_acknowledgements`, `verification_photo_requests`; two organization columns; permissions `verification:manage` and `verification:read_photo` for owners and Admin/HR. Audit events `attendance_verification.*`, never with coordinates or results. Unit tests for the distance, accuracy and retry rules; e2e tests for every acceptance criterion above.
+- **Frontend:** a check-in panel next to today's card (notice, area request, location, camera), Admin/HR settings at `/settings/verification` (methods with a reason, area approvals, photo requests), results at `/verification` (managers reach it from Team when the deployment allows checks), and the employee's own evidence at `/attendance/verification`.
+- **Switches:** `VERIFICATION_ENABLED` in both apps, off by default. `Permissions-Policy` allows `camera=(self)` and `geolocation=(self)` only when it is on.

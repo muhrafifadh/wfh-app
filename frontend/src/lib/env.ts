@@ -12,6 +12,12 @@ export const env = createEnv({
       .enum(["true", "false"])
       .default("false")
       .transform((v) => v === "true"),
+    // Lets the app ask for location and camera at check-in (ATTENDANCE_VERIFICATION_PLAN.md).
+    // Keep in sync with the backend's VERIFICATION_ENABLED; off until legal and hosting are cleared.
+    VERIFICATION_ENABLED: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((v) => v === "true"),
     // Shows one-click test personas on the login page. Never set this where real people sign in.
     DEMO_LOGIN_PASSWORD: z.string().min(1).optional(),
     // Sentry source map upload at build time (docs/13-error-handling.md#error-tracking). All optional.
@@ -30,6 +36,7 @@ export const env = createEnv({
     NODE_ENV: process.env.NODE_ENV,
     REGISTRATION_ENABLED: process.env.REGISTRATION_ENABLED,
     DEMO_LOGIN_PASSWORD: process.env.DEMO_LOGIN_PASSWORD,
+    VERIFICATION_ENABLED: process.env.VERIFICATION_ENABLED,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     SENTRY_AUTH_TOKEN: process.env.SENTRY_AUTH_TOKEN,
     SENTRY_ORG: process.env.SENTRY_ORG,

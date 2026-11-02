@@ -17,6 +17,7 @@ import type { Env } from "@/config/env.js";
 import { configureApp } from "@/configure-app.js";
 import { Clock, FixedClock } from "@/infra/clock/clock.js";
 import { PrismaService } from "@/infra/prisma/prisma.service.js";
+import { VERIFICATION_CLEANUP_QUEUE } from "@/modules/attendance-verification/jobs/verification-cleanup.queue.js";
 import { ATTENDANCE_JOBS_QUEUE } from "@/modules/attendance/jobs/attendance-jobs.queue.js";
 import { PASSWORD_RESET_QUEUE } from "@/modules/auth/jobs/password-reset.queue.js";
 import { NOTIFICATION_EMAILS_QUEUE } from "@/modules/notifications/jobs/notification-emails.queue.js";
@@ -29,6 +30,7 @@ const QUEUES = [
   PASSWORD_RESET_QUEUE,
   UPLOADS_CLEANUP_QUEUE,
   ATTENDANCE_JOBS_QUEUE,
+  VERIFICATION_CLEANUP_QUEUE,
   NOTIFICATION_EMAILS_QUEUE,
   NOTIFICATION_JOBS_QUEUE,
 ];
@@ -91,7 +93,7 @@ export const clockOf = (app: NestExpressApplication): FixedClock => app.get(Cloc
 
 export async function resetDatabase(app: NestExpressApplication): Promise<void> {
   await app.get(PrismaService)
-    .$executeRaw`TRUNCATE audit_logs, correction_snapshots, correction_requests, idempotency_records, attendances, holidays, work_schedules, employees, divisions, uploads, user_tokens, password_reset_tokens, refresh_tokens, sessions, users, roles, organizations RESTART IDENTITY CASCADE`;
+    .$executeRaw`TRUNCATE audit_logs, verification_photo_requests, attendance_verifications, work_locations, verification_notice_acknowledgements, correction_snapshots, correction_requests, idempotency_records, attendances, holidays, work_schedules, employees, divisions, uploads, user_tokens, password_reset_tokens, refresh_tokens, sessions, users, roles, organizations RESTART IDENTITY CASCADE`;
 }
 
 const queue = (app: NestExpressApplication, name: string): Queue =>

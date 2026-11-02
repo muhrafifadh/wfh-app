@@ -19,6 +19,7 @@ import { MailModule } from "@/infra/mail/mail.module.js";
 import { PrismaModule } from "@/infra/prisma/prisma.module.js";
 import { QueueModule } from "@/infra/queue/queue.module.js";
 import { StorageModule } from "@/infra/storage/storage.module.js";
+import { AttendanceVerificationModule } from "@/modules/attendance-verification/attendance-verification.module.js";
 import { AttendanceModule } from "@/modules/attendance/attendance.module.js";
 import { AuditModule } from "@/modules/audit/audit.module.js";
 import { AuthModule } from "@/modules/auth/auth.module.js";
@@ -104,6 +105,7 @@ import { WorkSettingsModule } from "@/modules/work-settings/work-settings.module
     WorkSettingsModule,
     HolidaysModule,
     AttendanceModule,
+    AttendanceVerificationModule,
     CorrectionsModule,
     ReportsModule,
     NotificationsModule,

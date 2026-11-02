@@ -4,6 +4,9 @@ export const routes = {
   attendance: () => "/attendance",
   attendanceHistory: () => "/attendance/history",
   attendanceRecord: (id: string) => `/attendance/${encodeURIComponent(id)}`,
+  myVerification: () => "/attendance/verification",
+  myVerificationApi: () => "/api/attendance-verification/me",
+  verificationReview: () => "/verification",
   corrections: () => "/corrections",
   newCorrection: (attendanceId: string) =>
     `/corrections/new?attendanceId=${encodeURIComponent(attendanceId)}`,
@@ -21,6 +24,7 @@ export const routes = {
   divisions: () => "/divisions",
   holidays: () => "/holidays",
   attendanceSettings: () => "/settings/attendance",
+  verificationSettings: () => "/settings/verification",
   profile: () => "/profile",
   notifications: () => "/notifications",
   unreadNotifications: () => "/notifications?show=unread",

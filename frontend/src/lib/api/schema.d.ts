@@ -772,6 +772,262 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/attendance-verification/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AttendanceVerificationController_settings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["AttendanceVerificationController_updateSettings"];
+        trace?: never;
+    };
+    "/v1/attendance-verification/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AttendanceVerificationController_mine"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/attendance-verification/me/results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AttendanceVerificationController_myResults"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/attendance-verification/notice/acknowledge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AttendanceVerificationController_acknowledgeNotice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/attendance-verification/location": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AttendanceVerificationController_submitLocation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/attendance-verification/selfie": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AttendanceVerificationController_createSelfieUpload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/attendance-verification/selfie/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AttendanceVerificationController_completeSelfie"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/attendance-verification/work-locations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AttendanceVerificationController_listWorkLocationRequests"];
+        put?: never;
+        post: operations["AttendanceVerificationController_requestWorkLocation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/attendance-verification/work-locations/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AttendanceVerificationController_approveWorkLocation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/attendance-verification/work-locations/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AttendanceVerificationController_rejectWorkLocation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/attendance-verification/photo-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AttendanceVerificationController_listPhotoRequests"];
+        put?: never;
+        post: operations["AttendanceVerificationController_requestPhoto"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/attendance-verification/photo-requests/{id}/disclose": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AttendanceVerificationController_disclosePhoto"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/attendance-verification/photo-requests/{id}/decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AttendanceVerificationController_declinePhotoRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/attendance-verification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AttendanceVerificationController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/attendance-verification/{id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AttendanceVerificationController_review"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/attendance-verification/{id}/photo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AttendanceVerificationController_viewPhoto"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/correction-requests": {
         parameters: {
             query?: never;
@@ -1117,7 +1373,7 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 name: string;
-                permissions: ("user:read" | "user:manage" | "audit:read" | "attendance:self" | "attendance:read_team" | "attendance:read_all" | "correction:submit" | "correction:decide_team" | "correction:decide_all" | "report:read_team" | "report:read_all" | "employee:manage" | "division:manage" | "policy:manage" | "holiday:manage")[];
+                permissions: ("user:read" | "user:manage" | "audit:read" | "attendance:self" | "attendance:read_team" | "attendance:read_all" | "correction:submit" | "correction:decide_team" | "correction:decide_all" | "report:read_team" | "report:read_all" | "employee:manage" | "division:manage" | "policy:manage" | "holiday:manage" | "verification:manage" | "verification:read_photo")[];
             }[];
         };
         RegisterDto: {
@@ -1169,7 +1425,7 @@ export interface components {
                 id: string;
                 name: string;
             };
-            permissions: ("user:read" | "user:manage" | "audit:read" | "attendance:self" | "attendance:read_team" | "attendance:read_all" | "correction:submit" | "correction:decide_team" | "correction:decide_all" | "report:read_team" | "report:read_all" | "employee:manage" | "division:manage" | "policy:manage" | "holiday:manage")[];
+            permissions: ("user:read" | "user:manage" | "audit:read" | "attendance:self" | "attendance:read_team" | "attendance:read_all" | "correction:submit" | "correction:decide_team" | "correction:decide_all" | "report:read_team" | "report:read_all" | "employee:manage" | "division:manage" | "policy:manage" | "holiday:manage" | "verification:manage" | "verification:read_photo")[];
         };
         AuditLogListResponse_Output: {
             items: {
@@ -1885,6 +2141,231 @@ export interface components {
             incomplete: number;
             workedMinutes: number;
             lateMinutes: number;
+        };
+        VerificationSettingsResponse_Output: {
+            available: boolean;
+            locationEnabled: boolean;
+            selfieEnabled: boolean;
+        };
+        UpdateVerificationSettingsDto: {
+            locationEnabled: boolean;
+            selfieEnabled: boolean;
+            justification?: string;
+        };
+        MyVerificationResponse_Output: {
+            location: {
+                enabled: boolean;
+                /** @enum {string|null} */
+                result: "verified" | "outside_approved_area" | "low_accuracy" | "not_shared" | "no_approved_area" | "captured" | null;
+                canSubmit: boolean;
+            };
+            selfie: {
+                enabled: boolean;
+                /** @enum {string|null} */
+                result: "verified" | "outside_approved_area" | "low_accuracy" | "not_shared" | "no_approved_area" | "captured" | null;
+                canSubmit: boolean;
+            };
+            notice: {
+                version: number;
+                acknowledged: boolean;
+            };
+            workLocation: {
+                approved: {
+                    label: string;
+                    radiusMeters: number;
+                } | null;
+                pending: {
+                    label: string;
+                } | null;
+            };
+        };
+        MyResultsResponse_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** Format: date */
+                workDate: string;
+                /** @enum {string} */
+                method: "location" | "selfie";
+                /** @enum {string} */
+                result: "verified" | "outside_approved_area" | "low_accuracy" | "not_shared" | "no_approved_area" | "captured";
+                photoAvailable: boolean;
+                /** @enum {string|null} */
+                photoRequest: "open" | "disclosed" | "declined" | null;
+            }[];
+        };
+        SubmitLocationDto: {
+            latitude: number;
+            longitude: number;
+            accuracyMeters: number;
+        };
+        CreateSelfieUploadDto: {
+            /** @enum {string} */
+            contentType: "image/jpeg" | "image/webp";
+            size: number;
+        };
+        SelfieUploadResponse_Output: {
+            /** Format: uri */
+            uploadUrl: string;
+            uploadHeaders: {
+                [key: string]: string;
+            };
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        RequestWorkLocationDto: {
+            label: string;
+            latitude: number;
+            longitude: number;
+        };
+        WorkLocationRequestListResponse_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                label: string;
+                latitude: number;
+                longitude: number;
+                radiusMeters: number;
+                /** @enum {string} */
+                status: "pending" | "approved" | "rejected" | "superseded";
+                /** Format: date-time */
+                requestedAt: string;
+                employee: {
+                    /** Format: uuid */
+                    id: string;
+                    employeeNumber: string;
+                    fullName: string;
+                };
+            }[];
+        };
+        ApproveWorkLocationDto: {
+            radiusMeters?: number;
+        };
+        WorkLocationRequestResponse_Output: {
+            /** Format: uuid */
+            id: string;
+            label: string;
+            latitude: number;
+            longitude: number;
+            radiusMeters: number;
+            /** @enum {string} */
+            status: "pending" | "approved" | "rejected" | "superseded";
+            /** Format: date-time */
+            requestedAt: string;
+            employee: {
+                /** Format: uuid */
+                id: string;
+                employeeNumber: string;
+                fullName: string;
+            };
+        };
+        RequestPhotoDto: {
+            /** Format: uuid */
+            verificationId: string;
+        };
+        PhotoRequestResponse_Output: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            verificationId: string | null;
+            /** Format: date */
+            workDate: string;
+            /** @enum {string} */
+            status: "open" | "disclosed" | "declined";
+            /** Format: date-time */
+            requestedAt: string;
+            employee: {
+                /** Format: uuid */
+                id: string;
+                employeeNumber: string;
+                fullName: string;
+            };
+        };
+        PhotoRequestListResponse_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                verificationId: string | null;
+                /** Format: date */
+                workDate: string;
+                /** @enum {string} */
+                status: "open" | "disclosed" | "declined";
+                /** Format: date-time */
+                requestedAt: string;
+                employee: {
+                    /** Format: uuid */
+                    id: string;
+                    employeeNumber: string;
+                    fullName: string;
+                };
+            }[];
+        };
+        DisclosePhotoDto: {
+            identityCheck: string;
+        };
+        SignedPhotoResponse_Output: {
+            /** Format: uri */
+            url: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        VerificationListResponse_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                attendanceId: string;
+                /** Format: date */
+                workDate: string;
+                /** @enum {string} */
+                method: "location" | "selfie";
+                /** @enum {string} */
+                result: "verified" | "outside_approved_area" | "low_accuracy" | "not_shared" | "no_approved_area" | "captured";
+                flagged: boolean;
+                /** Format: date-time */
+                reviewedAt: string | null;
+                employee: {
+                    /** Format: uuid */
+                    id: string;
+                    employeeNumber: string;
+                    fullName: string;
+                };
+                diagnostics: {
+                    accuracyMeters: number | null;
+                    distanceBand: string | null;
+                } | null;
+                photoAvailable: boolean | null;
+            }[];
+            page: number;
+            pageSize: number;
+            total: number;
+        };
+        VerificationItemResponse_Output: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            attendanceId: string;
+            /** Format: date */
+            workDate: string;
+            /** @enum {string} */
+            method: "location" | "selfie";
+            /** @enum {string} */
+            result: "verified" | "outside_approved_area" | "low_accuracy" | "not_shared" | "no_approved_area" | "captured";
+            flagged: boolean;
+            /** Format: date-time */
+            reviewedAt: string | null;
+            employee: {
+                /** Format: uuid */
+                id: string;
+                employeeNumber: string;
+                fullName: string;
+            };
+            diagnostics: {
+                accuracyMeters: number | null;
+                distanceBand: string | null;
+            } | null;
+            photoAvailable: boolean | null;
         };
         SubmitCorrectionDto: {
             /** Format: uuid */
@@ -4830,6 +5311,753 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AttendanceResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AttendanceVerificationController_settings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VerificationSettingsResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AttendanceVerificationController_updateSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateVerificationSettingsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VerificationSettingsResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VERIFICATION_NOT_AVAILABLE */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VERIFICATION_JUSTIFICATION_REQUIRED */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AttendanceVerificationController_mine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyVerificationResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AttendanceVerificationController_myResults: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyResultsResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AttendanceVerificationController_acknowledgeNotice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AttendanceVerificationController_submitLocation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmitLocationDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyVerificationResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VERIFICATION_DISABLED, VERIFICATION_NOTICE_REQUIRED, ATTENDANCE_NOT_CHECKED_IN, VERIFICATION_ALREADY_RECORDED, VERIFICATION_WINDOW_CLOSED */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AttendanceVerificationController_createSelfieUpload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateSelfieUploadDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SelfieUploadResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VERIFICATION_DISABLED, VERIFICATION_NOTICE_REQUIRED, ATTENDANCE_NOT_CHECKED_IN, VERIFICATION_ALREADY_RECORDED, VERIFICATION_WINDOW_CLOSED */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AttendanceVerificationController_completeSelfie: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyVerificationResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VERIFICATION_DISABLED, VERIFICATION_NOTICE_REQUIRED, ATTENDANCE_NOT_CHECKED_IN, VERIFICATION_ALREADY_RECORDED, VERIFICATION_WINDOW_CLOSED, UPLOAD_NOT_RECEIVED */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description UPLOAD_MISMATCH */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AttendanceVerificationController_listWorkLocationRequests: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkLocationRequestListResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AttendanceVerificationController_requestWorkLocation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RequestWorkLocationDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyVerificationResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VERIFICATION_DISABLED, VERIFICATION_NOTICE_REQUIRED */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AttendanceVerificationController_approveWorkLocation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApproveWorkLocationDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkLocationRequestResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description WORK_LOCATION_ALREADY_DECIDED */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AttendanceVerificationController_rejectWorkLocation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkLocationRequestResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description WORK_LOCATION_ALREADY_DECIDED */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AttendanceVerificationController_listPhotoRequests: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhotoRequestListResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AttendanceVerificationController_requestPhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RequestPhotoDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhotoRequestResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description PHOTO_NOT_AVAILABLE */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AttendanceVerificationController_disclosePhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DisclosePhotoDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SignedPhotoResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description PHOTO_NOT_AVAILABLE, PHOTO_REQUEST_ALREADY_DECIDED */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AttendanceVerificationController_declinePhotoRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhotoRequestResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description PHOTO_REQUEST_ALREADY_DECIDED */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AttendanceVerificationController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                from?: string;
+                to?: string;
+                flagged?: "true" | "false";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VerificationListResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AttendanceVerificationController_review: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VerificationItemResponse_Output"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AttendanceVerificationController_viewPhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SignedPhotoResponse_Output"];
                 };
             };
             /** @description FORBIDDEN */
