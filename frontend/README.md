@@ -83,4 +83,4 @@ Before calling a change done: `pnpm lint && pnpm typecheck && pnpm test`. CI run
 
 ## Docs
 
-The rules live in [`docs/`](docs/README.md). Start with [`docs/quick-reference.md`](docs/quick-reference.md). AI agents: see [`CLAUDE.md`](CLAUDE.md).
+The rules live in [`docs/`](docs/README.md). Start with [`docs/quick-reference.md`](docs/quick-reference.md).

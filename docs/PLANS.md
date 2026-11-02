@@ -23,7 +23,7 @@ Read these before planning or implementing a phase:
 3. [`ARCHITECTURE.md`](ARCHITECTURE.md) — components, modules, runtime flows, API resources, reliability.
 4. [`DATA_MODEL.md`](DATA_MODEL.md) — entities, permissions, constraints, indexes, retention, migrations, seed.
 5. [`UX_FLOWS.md`](UX_FLOWS.md) — routes, screen states, copy, branding, accessibility.
-6. Engineering docs in `backend/docs/` and `frontend/docs/`, plus each repo's `CLAUDE.md`/`AGENTS.md`.
+6. Engineering docs in `backend/docs/` and `frontend/docs/`.
 7. `backend/openapi.json` — the machine-readable API contract once endpoints exist.
 
 The official take-home assignment brief overrides all of the above on conflict.

@@ -77,7 +77,6 @@ Same conventions as `frontend/`:
 
 - **Branches:** `<type>/<short-kebab-description>` from `main`: `feat/invoice-void`, `fix/refresh-token-reuse`.
 - **Commits:** [Conventional Commits](https://www.conventionalcommits.org/), e.g. `feat(invoices): add void endpoint`. Imperative mood, lowercase, no period, under 72 characters. Use `feat!:` or a `BREAKING CHANGE:` footer for API contract breaks.
-- **No AI co-authors.** Commit messages and PR descriptions must not credit Claude, Anthropic, or another AI tool as a co-author (no `Co-Authored-By: Claude …` trailer, no "Generated with Claude Code" line). commitlint rejects a Claude/Anthropic `Co-Authored-By` trailer (`no-ai-co-author`).
 - **PRs:**
   - Keep them small (aim for under ~400 changed lines) and use the PR template.
   - **Schema changes and API contract changes are called out at the top of the description.**

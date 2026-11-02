@@ -125,4 +125,4 @@ Before calling a change done: `pnpm lint && pnpm typecheck && pnpm test && pnpm 
 
 ## Docs
 
-The rules live in [`docs/`](docs/README.md). Start with [`docs/quick-reference.md`](docs/quick-reference.md). The API contract shared with the frontend is [`docs/05-api-design.md`](docs/05-api-design.md). AI agents: see [`CLAUDE.md`](CLAUDE.md).
+The rules live in [`docs/`](docs/README.md). Start with [`docs/quick-reference.md`](docs/quick-reference.md). The API contract shared with the frontend is [`docs/05-api-design.md`](docs/05-api-design.md).
