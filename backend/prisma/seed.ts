@@ -190,7 +190,13 @@ async function main(): Promise<void> {
     })) ?? (await prisma.organization.create({ data: { name: ORGANIZATION_NAME } }));
   await prisma.organization.update({
     where: { id: organization.id },
-    data: { name: ORGANIZATION_NAME, timezone: "Asia/Jakarta", supportContact: "hr@example.com" },
+    data: {
+      name: ORGANIZATION_NAME,
+      timezone: "Asia/Jakarta",
+      supportContact: "hr@example.com",
+      // The use case asks for a photo as proof of working from home. Takes effect only with VERIFICATION_ENABLED on.
+      selfieVerificationEnabled: true,
+    },
   });
 
   const roles = {} as Record<DefaultRoleName, string>;
