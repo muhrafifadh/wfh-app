@@ -4,7 +4,7 @@ Hadir.in is a web-based attendance system for people who work from home. It repl
 
 **This repository is the microservices version.** Its backend is split into an employee service and an attendance service behind an API gateway, each with its own database.
 
-**Live demo:** [hadir-in.armerta.biz.id](https://hadir-in.armerta.biz.id) runs the earlier single-service version of the same product.
+**Live demo:** [hadir-in.armerta.biz.id](https://hadir-in.armerta.biz.id) runs this version, with demo data.
 
 ## Who it's for
 
@@ -26,7 +26,7 @@ Hadir.in is a web-based attendance system for people who work from home. It repl
 
 The default policy is Monday to Friday, 09:00–17:00 in `Asia/Jakarta`, with 15 minutes of late tolerance.
 
-- **Photo proof:** each check-in and check-out needs a photo, which Admin/HR can open and every view is audited. Location checks are available as a setting. Both are off in production until a privacy and legal review is complete.
+- **Photo proof:** each check-in and check-out needs a photo, which Admin/HR can open and every view is audited. Location checks are available as a setting. The live demo has photo checks on, with demo data only. Real employee data needs a privacy and legal review first.
 
 Hadir.in deliberately doesn't calculate payroll or track activity, screens or productivity, and it doesn't use biometric matching.
 
@@ -50,7 +50,7 @@ flowchart LR
 | `employee-service`   | Sign-in, users and roles, employee master data, divisions, the audit log, file uploads            |
 | `attendance-service` | Check-in and check-out, photo evidence, corrections, schedules, holidays, reports, notifications  |
 
-- **Each service owns its data.** Neither connects to the other's database, and `src/apps/service-boundaries.spec.ts` fails the build if a module crosses the line.
+- **Each service owns its data.** Neither connects to the other's database (the live demo keeps them in separate schemas of one database, see `docs/EMPLOYEE_ATTENDANCE_SPLIT_PLAN.md` §9), and `src/apps/service-boundaries.spec.ts` fails the build if a module crosses the line.
 - **Request-response over TCP.** The attendance service asks the employee service to validate each session, so logging out takes effect immediately.
 - **Events over queues.** Employee changes and audit events go through BullMQ, so a message waits in Redis if its consumer is down.
 - **A local copy for reports.** Reports sort and filter by employee fields, which can't be done efficiently across two databases, so the attendance service keeps a copy of employees and divisions. Messages carry the full row and older ones are ignored, so repeats and reordering are safe.
